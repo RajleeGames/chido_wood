@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}
+Products | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage wood sizes, boards, plywood and accessories.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>Products</h2>
+        <p>
+            Every wood size is stored as a separate product.
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'category-list' %}"
+            class="button button-secondary"
+        >
+            Categories
+        </a>
+
+        <button
+            type="button"
+            class="button button-primary"
+            onclick="openModal('productModal')"
+        >
+            Add product
+        </button>
+    </div>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="table-search-form"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Search product, code or category"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Search
+            </button>
+
+            {% if search_query %}
+                <a
+                    href="{% url 'product-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th>Stock</th>
+                    <th>Selling price</th>
+                    <th>Cutting</th>
+                    <th>Status</th>
+                    <th class="table-action-column">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <strong>{{ product.name }}</strong>
+
+                            <small class="table-subtitle">
+                                {{ product.code }}
+
+                                {% if product.dimension_note %}
+                                    · {{ product.dimension_note }}
+                                {% endif %}
+                            </small>
+                        </td>
+
+                        <td>{{ product.category.name }}</td>
+
+                        <td>
+                            {{ product.get_measurement_unit_display }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ product.current_stock|floatformat:3 }}
+                            </strong>
+
+                            {% if product.current_stock <= product.low_stock_level %}
+                                <span class="badge badge-warning">
+                                    Low
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ product.selling_price|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {% if product.allow_customer_cutting %}
+                                <span class="badge badge-success">
+                                    TZS {{ product.effective_cutting_fee|floatformat:0 }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-muted">
+                                    No
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if product.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="?edit={{ product.id }}"
+                                class="table-link"
+                            >
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="table-empty">
+                                No products have been added.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    class="app-modal modal-large {% if modal_open %}open{% endif %}"
+    id="productModal"
+    aria-hidden="{% if modal_open %}false{% else %}true{% endif %}"
+>
+    <div
+        class="modal-backdrop"
+        data-modal-close
+    ></div>
+
+    <div class="modal-dialog">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if editing_product %}
+                <input
+                    type="hidden"
+                    name="object_id"
+                    value="{{ editing_product.id }}"
+                >
+            {% endif %}
+
+            <div class="modal-header">
+                <div>
+                    <h2>
+                        {% if editing_product %}
+                            Edit product
+                        {% else %}
+                            Add product
+                        {% endif %}
+                    </h2>
+
+                    <p>
+                        Enter product, price, stock and cutting settings.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-modal-close
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                {% if form.non_field_errors %}
+                    <div class="form-error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h3>Basic information</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.category.id_for_label }}">
+                                Category
+                            </label>
+
+                            {{ form.category }}
+                            {{ form.category.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.code.id_for_label }}">
+                                Product code
+                            </label>
+
+                            {{ form.code }}
+                            {{ form.code.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">
+                                Product name
+                            </label>
+
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.wood_type.id_for_label }}">
+                                Wood type
+                            </label>
+
+                            {{ form.wood_type }}
+                            {{ form.wood_type.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.dimension_note.id_for_label }}">
+                                Size or dimensions
+                            </label>
+
+                            {{ form.dimension_note }}
+                            {{ form.dimension_note.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.measurement_unit.id_for_label }}">
+                                Measurement unit
+                            </label>
+
+                            {{ form.measurement_unit }}
+                            {{ form.measurement_unit.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Prices</h3>
+
+                    <div class="form-grid form-grid-three">
+                        <div class="form-group">
+                            <label for="{{ form.selling_price.id_for_label }}">
+                                Selling price
+                            </label>
+
+                            {{ form.selling_price }}
+                            {{ form.selling_price.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.wholesale_price.id_for_label }}">
+                                Wholesale price
+                            </label>
+
+                            {{ form.wholesale_price }}
+                            {{ form.wholesale_price.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.minimum_selling_price.id_for_label }}">
+                                Minimum price
+                            </label>
+
+                            {{ form.minimum_selling_price }}
+                            {{ form.minimum_selling_price.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Stock and cutting</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <label class="checkbox-card">
+                            {{ form.track_stock }}
+
+                            <span>
+                                <strong>Track stock</strong>
+                                <small>
+                                    Monitor quantities and batches.
+                                </small>
+                            </span>
+                        </label>
+
+                        <div class="form-group">
+                            <label for="{{ form.low_stock_level.id_for_label }}">
+                                Low-stock level
+                            </label>
+
+                            {{ form.low_stock_level }}
+                            {{ form.low_stock_level.errors }}
+                        </div>
+
+                        <label class="checkbox-card">
+                            {{ form.allow_customer_cutting }}
+
+                            <span>
+                                <strong>Allow customer cutting</strong>
+                                <small>
+                                    Display the cutting button in POS.
+                                </small>
+                            </span>
+                        </label>
+
+                        <div class="form-group">
+                            <label for="{{ form.default_cutting_fee.id_for_label }}">
+                                Product cutting fee
+                            </label>
+
+                            {{ form.default_cutting_fee }}
+                            {{ form.default_cutting_fee.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Additional information</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.barcode.id_for_label }}">
+                                Barcode
+                            </label>
+
+                            {{ form.barcode }}
+                            {{ form.barcode.errors }}
+                        </div>
+
+                        <label class="checkbox-card">
+                            {{ form.is_active }}
+
+                            <span>
+                                <strong>Active product</strong>
+                                <small>
+                                    Allow this product to be used.
+                                </small>
+                            </span>
+                        </label>
+
+                        <div class="form-group form-grid-full">
+                            <label for="{{ form.notes.id_for_label }}">
+                                Notes
+                            </label>
+
+                            {{ form.notes }}
+                            {{ form.notes.errors }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="{% url 'product-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

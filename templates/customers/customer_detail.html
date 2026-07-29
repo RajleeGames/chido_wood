@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ customer.name }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Customer contact, credit and account information.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ customer.name }}</h2>
+
+        <p>
+            {{ customer.customer_code }}
+
+            {% if customer.phone %}
+                · {{ customer.phone }}
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'customer-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        <a
+            href="{% url 'customer-list' %}?edit={{ customer.pk }}"
+            class="button button-primary"
+        >
+            Edit customer
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Opening balance</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ customer.opening_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Debt before system usage</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Credit limit</span>
+            <span class="stat-icon">CRD</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if customer.credit_limit > 0 %}
+                TZS {{ customer.credit_limit|floatformat:0|intcomma }}
+            {% else %}
+                Not configured
+            {% endif %}
+        </strong>
+
+        <small>Maximum allowed credit</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current balance</span>
+            <span class="stat-icon">BAL</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ customer.opening_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Sales and payments will update this later</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if customer.is_active %}
+                Active
+            {% else %}
+                Inactive
+            {% endif %}
+        </strong>
+
+        <small>
+            Added {{ customer.created_at|date:"d M Y" }}
+        </small>
+    </article>
+</div>
+
+<section class="card customer-information-card">
+    <div class="card-header">
+        <div>
+            <h2>Customer information</h2>
+
+            <p>Contact and account details.</p>
+        </div>
+    </div>
+
+    <div class="customer-detail-grid">
+        <div>
+            <span>Customer name</span>
+            <strong>{{ customer.name }}</strong>
+        </div>
+
+        <div>
+            <span>Phone number</span>
+            <strong>{{ customer.phone|default:"—" }}</strong>
+        </div>
+
+        <div>
+            <span>Email address</span>
+            <strong>{{ customer.email|default:"—" }}</strong>
+        </div>
+
+        <div>
+            <span>Address</span>
+            <strong>{{ customer.address|default:"—" }}</strong>
+        </div>
+
+        <div>
+            <span>Created by</span>
+
+            <strong>
+                {% if customer.created_by %}
+                    {{ customer.created_by.get_full_name|default:customer.created_by.username }}
+                {% else %}
+                    System
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Notes</span>
+            <strong>{{ customer.notes|default:"—" }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="table-card">
+    <div class="card-header">
+        <div>
+            <h2>Customer account activity</h2>
+
+            <p>
+                Credit sales, payments and cutting services
+                will appear here after we build Sales/POS.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-empty">
+        No customer transactions have been recorded yet.
+    </div>
+</section>
+{% endblock %}

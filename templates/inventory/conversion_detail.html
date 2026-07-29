@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ conversion.conversion_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Source FIFO usage and converted output stock batches.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ conversion.conversion_number }}</h2>
+
+        <p>
+            {{ conversion.source_product.name }}
+            ·
+            {{ conversion.conversion_date|date:"d M Y" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'wood-conversion-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        {% if conversion.status == "draft" %}
+            <a
+                href="{% url 'wood-conversion-edit' conversion.pk %}"
+                class="button button-secondary"
+            >
+                Edit
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'wood-conversion-cancel' conversion.pk %}"
+                data-loading-message="Cancelling conversion"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-danger"
+                >
+                    Cancel conversion
+                </button>
+            </form>
+
+            <form
+                method="post"
+                action="{% url 'wood-conversion-post' conversion.pk %}"
+                data-loading-message="Posting conversion"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Post conversion
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Source quantity</span>
+            <span class="stat-icon">QTY</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ conversion.source_quantity|floatformat:3|intcomma }}
+        </strong>
+
+        <small>
+            {{ conversion.source_product.get_measurement_unit_display }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Source FIFO cost</span>
+            <span class="stat-icon">FIFO</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if conversion.status == "posted" %}
+                TZS {{ conversion.source_cost|floatformat:0|intcomma }}
+            {% else %}
+                Not calculated
+            {% endif %}
+        </strong>
+
+        <small>Cost of original stock consumed</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Processing cost</span>
+            <span class="stat-icon">CUT</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ conversion.additional_cutting_cost|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Additional internal conversion cost</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total conversion cost</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if conversion.status == "posted" %}
+                TZS {{ conversion.total_conversion_cost|floatformat:0|intcomma }}
+            {% else %}
+                Not calculated
+            {% endif %}
+        </strong>
+
+        <small>{{ conversion.get_status_display }}</small>
+    </article>
+</div>
+
+<section class="card adjustment-information-card">
+    <div class="card-header">
+        <div>
+            <h2>Conversion information</h2>
+
+            <p>Source product and audit details.</p>
+        </div>
+    </div>
+
+    <div class="adjustment-detail-grid">
+        <div>
+            <span>Source product</span>
+            <strong>
+                {{ conversion.source_product.name }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Product code</span>
+            <strong>
+                {{ conversion.source_product.code }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Conversion date</span>
+            <strong>
+                {{ conversion.conversion_date|date:"d M Y" }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Created by</span>
+            <strong>
+                {{ conversion.created_by.get_full_name|default:conversion.created_by.username }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Status</span>
+            <strong>
+                {{ conversion.get_status_display }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Notes</span>
+            <strong>
+                {{ conversion.notes|default:"—" }}
+            </strong>
+        </div>
+    </div>
+</section>
+
+<section class="table-card inventory-detail-section">
+    <div class="card-header">
+        <div>
+            <h2>Converted output products</h2>
+
+            <p>
+                New stock batches created from the source cost.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Output product</th>
+                    <th>Quantity</th>
+                    <th>Allocated cost</th>
+                    <th>Effective unit cost</th>
+                    <th>Output batch</th>
+                    <th>Batch remaining</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for output in conversion.outputs.all %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ output.product.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ output.product.code }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ output.quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if conversion.status == "posted" %}
+                                TZS {{ output.allocated_cost|floatformat:0|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if conversion.status == "posted" %}
+                                TZS {{ output.unit_cost|floatformat:2|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if output.output_batch %}
+                                #{{ output.output_batch.id }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if output.output_batch %}
+                                {{ output.output_batch.remaining_quantity|floatformat:3|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="table-empty">
+                                No output products were added.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if conversion.batch_usages.exists %}
+    <section class="table-card inventory-detail-section">
+        <div class="card-header">
+            <div>
+                <h2>Source FIFO batch usage</h2>
+
+                <p>
+                    Original Timber stock consumed from the
+                    oldest available batches.
+                </p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Source</th>
+                        <th>Reference</th>
+                        <th>Supplier</th>
+                        <th>Quantity used</th>
+                        <th>Unit cost</th>
+                        <th>Total cost</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for usage in conversion.batch_usages.all %}
+                        <tr>
+                            <td>#{{ usage.batch.id }}</td>
+
+                            <td>
+                                {{ usage.batch.get_source_type_display }}
+                            </td>
+
+                            <td>
+                                {{ usage.batch.source_reference|default:"—" }}
+                            </td>
+
+                            <td>
+                                {% if usage.batch.supplier %}
+                                    {{ usage.batch.supplier.name }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ usage.quantity_used|floatformat:3|intcomma }}
+                            </td>
+
+                            <td>
+                                TZS {{ usage.unit_cost|floatformat:2|intcomma }}
+                            </td>
+
+                            <td>
+                                TZS {{ usage.total_cost|floatformat:0|intcomma }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

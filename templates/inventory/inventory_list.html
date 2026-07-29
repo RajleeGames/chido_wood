@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Inventory | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Current stock quantities, FIFO costs and expected profit.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Stock products</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ total_product_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ available_product_count|intcomma }} currently available
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current stock value</span>
+            <span class="stat-icon">COST</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_stock_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Value using FIFO batch costs
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Expected selling value</span>
+            <span class="stat-icon">SALE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_selling_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Based on current selling prices
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Expected stock profit</span>
+            <span class="stat-icon">GP</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_expected_profit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Selling value minus stock cost
+        </small>
+    </article>
+</div>
+
+<div class="inventory-alert-grid">
+    <article class="inventory-alert-card">
+        <div>
+            <span>Low-stock products</span>
+            <strong>{{ low_stock_count|intcomma }}</strong>
+        </div>
+
+        <a
+            href="?status=low"
+            class="table-link"
+        >
+            View low stock
+        </a>
+    </article>
+
+    <article class="inventory-alert-card">
+        <div>
+            <span>Out-of-stock products</span>
+            <strong>{{ out_of_stock_count|intcomma }}</strong>
+        </div>
+
+        <a
+            href="?status=out"
+            class="table-link"
+        >
+            View unavailable
+        </a>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Current inventory</h2>
+
+        <p>
+            Stock changes only through posted purchases,
+            conversions, sales, returns and adjustments.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'purchase-create' %}"
+        class="button button-primary"
+    >
+        Record purchase
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar inventory-toolbar">
+        <form
+            method="get"
+            class="inventory-filter-form"
+            data-loading-message="Filtering inventory"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Search product, code, category or barcode"
+            >
+
+            <select
+                name="category"
+                class="form-control"
+            >
+                <option value="">
+                    All categories
+                </option>
+
+                {% for category in categories %}
+                    <option
+                        value="{{ category.id }}"
+                        {% if category_filter == category.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">
+                    All stock statuses
+                </option>
+
+                <option
+                    value="available"
+                    {% if status_filter == "available" %}
+                        selected
+                    {% endif %}
+                >
+                    Available
+                </option>
+
+                <option
+                    value="low"
+                    {% if status_filter == "low" %}
+                        selected
+                    {% endif %}
+                >
+                    Low stock
+                </option>
+
+                <option
+                    value="out"
+                    {% if status_filter == "out" %}
+                        selected
+                    {% endif %}
+                >
+                    Out of stock
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or category_filter or status_filter %}
+                <a
+                    href="{% url 'inventory-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table inventory-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Current stock</th>
+                    <th>Average cost</th>
+                    <th>Stock value</th>
+                    <th>Selling price</th>
+                    <th>Expected profit</th>
+                    <th>Batches</th>
+                    <th>Status</th>
+                    <th class="table-action-column">
+                        Action
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ product.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ product.code }}
+
+                                {% if product.dimension_note %}
+                                    · {{ product.dimension_note }}
+                                {% endif %}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ product.category.name }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ product.current_stock|floatformat:3|intcomma }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ product.get_measurement_unit_display }}
+                            </small>
+                        </td>
+
+                        <td>
+                            TZS {{ product.average_unit_cost|floatformat:2|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ product.current_stock_value|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ product.selling_price|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if product.expected_profit >= 0 %}
+                                <span class="money-positive">
+                                    TZS {{ product.expected_profit|floatformat:0|intcomma }}
+                                </span>
+                            {% else %}
+                                <span class="money-negative">
+                                    TZS {{ product.expected_profit|floatformat:0|intcomma }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ product.active_batch_count|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if product.inventory_status == "available" %}
+                                <span class="badge badge-success">
+                                    Available
+                                </span>
+
+                            {% elif product.inventory_status == "low" %}
+                                <span class="badge badge-warning">
+                                    Low stock
+                                </span>
+
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Out of stock
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'inventory-detail' product.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="table-empty">
+                                No inventory products matched your filters.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Page {{ page_obj.number|intcomma }}
+                of {{ page_obj.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&category={{ category_filter }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&category={{ category_filter }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}
+Suppliers | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage wood suppliers and opening balances.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total suppliers</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ supplier_count }}
+        </strong>
+
+        <small>Registered suppliers</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Active suppliers</span>
+            <span class="stat-icon">ACT</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ active_supplier_count }}
+        </strong>
+
+        <small>Available for purchases</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Opening balances</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_opening_balance|floatformat:0 }}
+        </strong>
+
+        <small>Starting supplier debt</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Inactive suppliers</span>
+            <span class="stat-icon">OFF</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ inactive_supplier_count }}
+        </strong>
+
+        <small>Currently unavailable</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Supplier directory</h2>
+
+        <p>
+            Add suppliers before recording stock purchases.
+        </p>
+    </div>
+
+    <button
+        type="button"
+        class="button button-primary"
+        onclick="openModal('supplierModal')"
+    >
+        Add supplier
+    </button>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="table-search-form"
+            data-loading-message="Searching"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Search supplier, phone, email or TIN"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Search
+            </button>
+
+            {% if search_query %}
+                <a
+                    href="{% url 'supplier-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Contact person</th>
+                    <th>Phone</th>
+                    <th>TIN</th>
+                    <th>Opening balance</th>
+                    <th>Status</th>
+
+                    <th class="table-action-column">
+                        Action
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for supplier in suppliers %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ supplier.name }}
+                            </strong>
+
+                            {% if supplier.email %}
+                                <small class="table-subtitle">
+                                    {{ supplier.email }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ supplier.contact_person|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ supplier.phone|default:"—" }}
+                        </td>
+
+                        <td>
+                            {% if supplier.tin %}
+                                <span class="code-text">
+                                    {{ supplier.tin }}
+                                </span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ supplier.opening_balance|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {% if supplier.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="?edit={{ supplier.id }}"
+                                class="table-link"
+                            >
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                {% if search_query %}
+                                    No suppliers matched your search.
+                                {% else %}
+                                    No suppliers have been added.
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    class="app-modal modal-large {% if modal_open %}open{% endif %}"
+    id="supplierModal"
+    aria-hidden="{% if modal_open %}false{% else %}true{% endif %}"
+>
+    <div
+        class="modal-backdrop"
+        data-modal-close
+    ></div>
+
+    <div class="modal-dialog">
+        <form
+            method="post"
+            data-loading-message="Saving supplier"
+        >
+            {% csrf_token %}
+
+            {% if editing_supplier %}
+                <input
+                    type="hidden"
+                    name="object_id"
+                    value="{{ editing_supplier.id }}"
+                >
+            {% endif %}
+
+            <div class="modal-header">
+                <div>
+                    <h2>
+                        {% if editing_supplier %}
+                            Edit supplier
+                        {% else %}
+                            Add supplier
+                        {% endif %}
+                    </h2>
+
+                    <p>
+                        Enter the supplier’s contact and balance information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-modal-close
+                    aria-label="Close modal"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                {% if form.non_field_errors %}
+                    <div class="form-error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h3>Supplier information</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">
+                                Supplier name
+                            </label>
+
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.contact_person.id_for_label }}">
+                                Contact person
+                            </label>
+
+                            {{ form.contact_person }}
+                            {{ form.contact_person.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">
+                                Phone number
+                            </label>
+
+                            {{ form.phone }}
+                            {{ form.phone.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">
+                                Email address
+                            </label>
+
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.tin.id_for_label }}">
+                                TIN
+                            </label>
+
+                            {{ form.tin }}
+                            {{ form.tin.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.opening_balance.id_for_label }}">
+                                Opening balance
+                            </label>
+
+                            {{ form.opening_balance }}
+                            {{ form.opening_balance.errors }}
+
+                            <small class="field-help">
+                                Amount already owed to this supplier
+                                before using the system.
+                            </small>
+                        </div>
+
+                        <div class="form-group form-grid-full">
+                            <label for="{{ form.address.id_for_label }}">
+                                Address
+                            </label>
+
+                            {{ form.address }}
+                            {{ form.address.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Additional settings</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}">
+                                Notes
+                            </label>
+
+                            {{ form.notes }}
+                            {{ form.notes.errors }}
+                        </div>
+
+                        <label class="checkbox-card">
+                            {{ form.is_active }}
+
+                            <span>
+                                <strong>Active supplier</strong>
+
+                                <small>
+                                    Allow this supplier to be selected
+                                    during purchases.
+                                </small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="{% url 'supplier-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save supplier
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

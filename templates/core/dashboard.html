@@ -1,0 +1,717 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}
+Dashboard | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Business performance, inventory value and recent operations.
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-toolbar">
+    <div>
+        <span class="dashboard-eyebrow">
+            Admin overview
+        </span>
+
+        <h2>
+            {{ period_label }}
+        </h2>
+
+        <p>
+            {{ date_from|date:"d M Y" }}
+            –
+            {{ date_to|date:"d M Y" }}
+        </p>
+    </div>
+
+    {% if can_view_financials %}
+        <div
+            class="dashboard-period-filter"
+            aria-label="Dashboard period"
+        >
+            <a
+                href="?period=today"
+                class="dashboard-period-link {% if selected_period == 'today' %}active{% endif %}"
+            >
+                Today
+            </a>
+
+            <a
+                href="?period=7d"
+                class="dashboard-period-link {% if selected_period == '7d' %}active{% endif %}"
+            >
+                7 days
+            </a>
+
+            <a
+                href="?period=30d"
+                class="dashboard-period-link {% if selected_period == '30d' %}active{% endif %}"
+            >
+                30 days
+            </a>
+
+            <a
+                href="?period=month"
+                class="dashboard-period-link {% if selected_period == 'month' %}active{% endif %}"
+            >
+                This month
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% if can_view_financials %}
+    <div class="dashboard-kpi-grid">
+        <article class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span>Sales revenue</span>
+                <span class="dashboard-kpi-code">
+                    REV
+                </span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                TZS
+                {{ report.sales_revenue|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    {{ report.sales_count|intcomma }}
+                    completed sale{{ report.sales_count|pluralize }}
+                </span>
+
+                <a href="{% url 'sale-list' %}">
+                    View sales
+                </a>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span>Gross profit</span>
+                <span class="dashboard-kpi-code">
+                    GP
+                </span>
+            </div>
+
+            <strong
+                class="dashboard-kpi-value {% if report.gross_profit < 0 %}money-negative{% else %}money-positive{% endif %}"
+            >
+                TZS
+                {{ report.gross_profit|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    Margin
+                    {{ report.gross_profit_margin|floatformat:1 }}%
+                </span>
+
+                <span>
+                    COGS:
+                    TZS
+                    {{ report.cost_of_goods|floatformat:0|intcomma }}
+                </span>
+            </div>
+        </article>
+
+        <article
+            class="dashboard-kpi-card {% if report.net_profit < 0 %}dashboard-kpi-card-danger{% else %}dashboard-kpi-card-success{% endif %}"
+        >
+            <div class="dashboard-kpi-top">
+                <span>
+                    {{ report.net_result_label }}
+                </span>
+
+                <span class="dashboard-kpi-code">
+                    NET
+                </span>
+            </div>
+
+            <strong
+                class="dashboard-kpi-value {% if report.net_profit < 0 %}money-negative{% else %}money-positive{% endif %}"
+            >
+                TZS
+                {{ report.net_result_amount|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    Margin
+                    {{ report.net_profit_margin|floatformat:1 }}%
+                </span>
+
+                <a href="{% url 'business-report' %}">
+                    Full report
+                </a>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span>Stock worth</span>
+                <span class="dashboard-kpi-code">
+                    STK
+                </span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                TZS
+                {{ report.stock_value|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    Cost value of available stock
+                </span>
+
+                <a href="{% url 'inventory-list' %}">
+                    Inventory
+                </a>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card dashboard-kpi-card-compact">
+            <div class="dashboard-kpi-top">
+                <span>Cutting income</span>
+                <span class="dashboard-kpi-code">
+                    CUT
+                </span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                TZS
+                {{ report.cutting_income|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    {{ report.cutting_service_count|intcomma }}
+                    completed service{{ report.cutting_service_count|pluralize }}
+                </span>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card dashboard-kpi-card-compact">
+            <div class="dashboard-kpi-top">
+                <span>Expenses</span>
+                <span class="dashboard-kpi-code">
+                    EXP
+                </span>
+            </div>
+
+            <strong class="dashboard-kpi-value money-negative">
+                TZS
+                {{ report.expense_total|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    {{ report.expense_count|intcomma }}
+                    posted expense{{ report.expense_count|pluralize }}
+                </span>
+
+                <a href="{% url 'expense-list' %}">
+                    View
+                </a>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card dashboard-kpi-card-compact">
+            <div class="dashboard-kpi-top">
+                <span>Customer debt</span>
+                <span class="dashboard-kpi-code">
+                    DEBT
+                </span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                TZS
+                {{ report.customer_debt_total|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    {{ report.debtor_count|intcomma }}
+                    debtor{{ report.debtor_count|pluralize }}
+                </span>
+
+                <a href="{% url 'customer-account-list' %}">
+                    Accounts
+                </a>
+            </div>
+        </article>
+
+        <article class="dashboard-kpi-card dashboard-kpi-card-compact">
+            <div class="dashboard-kpi-top">
+                <span>Expected stock profit</span>
+                <span class="dashboard-kpi-code">
+                    POT
+                </span>
+            </div>
+
+            <strong
+                class="dashboard-kpi-value {% if report.expected_stock_profit < 0 %}money-negative{% else %}money-positive{% endif %}"
+            >
+                TZS
+                {{ report.expected_stock_profit|floatformat:0|intcomma }}
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>
+                    Selling value:
+                    TZS
+                    {{ report.expected_selling_value|floatformat:0|intcomma }}
+                </span>
+            </div>
+        </article>
+    </div>
+
+    <div class="dashboard-chart-layout">
+        <section class="card dashboard-chart-card dashboard-chart-card-wide">
+            <div class="card-header">
+                <div>
+                    <h2>Financial trend</h2>
+                    <p>
+                        Sales, gross profit, expenses and net result.
+                    </p>
+                </div>
+
+                <div class="dashboard-chart-legend">
+                    <span>
+                        <i class="legend-dot legend-sales"></i>
+                        Sales
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-gross"></i>
+                        Gross profit
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-expense"></i>
+                        Expenses
+                    </span>
+
+                    <span>
+                        <i class="legend-dot legend-net"></i>
+                        Net result
+                    </span>
+                </div>
+            </div>
+
+            <div class="dashboard-canvas-wrap">
+                <canvas
+                    id="financialTrendChart"
+                    class="dashboard-chart-canvas"
+                    aria-label="Financial trend chart"
+                    role="img"
+                ></canvas>
+
+                <div
+                    class="dashboard-chart-empty"
+                    id="financialTrendEmpty"
+                    hidden
+                >
+                    No financial activity exists for this period.
+                </div>
+            </div>
+        </section>
+
+        <aside class="card dashboard-chart-card">
+            <div class="card-header">
+                <div>
+                    <h2>Income sources</h2>
+                    <p>
+                        Sales compared with cutting income.
+                    </p>
+                </div>
+            </div>
+
+            <div class="dashboard-doughnut-layout">
+                <div class="dashboard-doughnut-wrap">
+                    <canvas
+                        id="incomeMixChart"
+                        class="dashboard-doughnut-canvas"
+                        aria-label="Income sources chart"
+                        role="img"
+                    ></canvas>
+
+                    <div class="dashboard-doughnut-center">
+                        <span>Total income</span>
+
+                        <strong>
+                            TZS
+                            {{ report.income_total|floatformat:0|intcomma }}
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="dashboard-income-breakdown">
+                    <div>
+                        <span>
+                            <i class="legend-dot legend-sales"></i>
+                            Product sales
+                        </span>
+
+                        <strong>
+                            TZS
+                            {{ report.sales_revenue|floatformat:0|intcomma }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>
+                            <i class="legend-dot legend-cutting"></i>
+                            Cutting income
+                        </span>
+
+                        <strong>
+                            TZS
+                            {{ report.cutting_income|floatformat:0|intcomma }}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="dashboard-detail-grid">
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Business snapshot</h2>
+                    <p>
+                        Important financial and stock indicators.
+                    </p>
+                </div>
+            </div>
+
+            <div class="dashboard-snapshot-grid">
+                <div class="dashboard-snapshot-item">
+                    <span>Cost of goods sold</span>
+                    <strong>
+                        TZS
+                        {{ report.cost_of_goods|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Operating income</span>
+                    <strong>
+                        TZS
+                        {{ report.operating_income|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Payments collected</span>
+                    <strong>
+                        TZS
+                        {{ report.payments_collected|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Average sale</span>
+                    <strong>
+                        TZS
+                        {{ report.average_sale_value|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Purchases</span>
+                    <strong>
+                        TZS
+                        {{ report.purchase_total|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Supplier payable</span>
+                    <strong>
+                        TZS
+                        {{ report.purchase_payable|floatformat:0|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Low-stock products</span>
+                    <strong>
+                        {{ report.low_stock_count|intcomma }}
+                    </strong>
+                </div>
+
+                <div class="dashboard-snapshot-item">
+                    <span>Out-of-stock products</span>
+                    <strong>
+                        {{ report.out_of_stock_count|intcomma }}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Top products</h2>
+                    <p>
+                        Highest sales revenue in this period.
+                    </p>
+                </div>
+
+                <a
+                    href="{% url 'business-report' %}?date_from={{ date_from|date:'Y-m-d' }}&date_to={{ date_to|date:'Y-m-d' }}"
+                    class="table-link"
+                >
+                    See report
+                </a>
+            </div>
+
+            {% if report.top_products %}
+                <div class="dashboard-product-list">
+                    {% for product in report.top_products|slice:":6" %}
+                        <div class="dashboard-product-row">
+                            <div class="dashboard-product-heading">
+                                <div>
+                                    <strong>
+                                        {{ product.name }}
+                                    </strong>
+
+                                    <span>
+                                        {{ product.code }}
+                                        ·
+                                        {{ product.quantity|floatformat:3 }}
+                                        sold
+                                    </span>
+                                </div>
+
+                                <strong>
+                                    TZS
+                                    {{ product.revenue|floatformat:0|intcomma }}
+                                </strong>
+                            </div>
+
+                            <div class="dashboard-product-track">
+                                <span
+                                    class="dashboard-product-fill"
+                                    data-dashboard-bar="{{ product.percentage }}"
+                                ></span>
+                            </div>
+
+                            <div class="dashboard-product-meta">
+                                <span>
+                                    Cost:
+                                    TZS
+                                    {{ product.cost|floatformat:0|intcomma }}
+                                </span>
+
+                                <span
+                                    class="{% if product.profit < 0 %}money-negative{% else %}money-positive{% endif %}"
+                                >
+                                    Profit:
+                                    TZS
+                                    {{ product.profit|floatformat:0|intcomma }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state dashboard-small-empty">
+                    <div class="empty-state-icon">
+                        ◎
+                    </div>
+
+                    <h3>No product sales yet</h3>
+
+                    <p>
+                        Product performance will appear after completed sales.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% else %}
+    <div class="dashboard-access-note">
+        <div>
+            <strong>Operational dashboard</strong>
+
+            <p>
+                Profit, loss, stock worth and debt information are visible
+                only to administrators and managers.
+            </p>
+        </div>
+    </div>
+{% endif %}
+
+<div class="dashboard-bottom-grid">
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2>Recent activity</h2>
+                <p>
+                    Latest sales, cutting, expenses and purchases.
+                </p>
+            </div>
+
+            <span class="dashboard-date">
+                {{ today|date:"d M Y" }}
+            </span>
+        </div>
+
+        {% if recent_activities %}
+            <div class="activity-list dashboard-activity-list">
+                {% for activity in recent_activities %}
+                    {% if activity.url %}
+                        <a
+                            href="{{ activity.url }}"
+                            class="activity-item dashboard-activity-item"
+                        >
+                    {% else %}
+                        <div
+                            class="activity-item dashboard-activity-item"
+                        >
+                    {% endif %}
+
+                        <div
+                            class="activity-icon activity-icon-{{ activity.tone }}"
+                        >
+                            {{ activity.kind|slice:":1" }}
+                        </div>
+
+                        <div class="activity-details">
+                            <div class="activity-heading">
+                                <strong class="activity-reference">
+                                    {{ activity.reference }}
+                                </strong>
+
+                                <strong
+                                    class="activity-amount {% if activity.tone == 'expense' or activity.tone == 'purchase' %}money-negative{% else %}money-positive{% endif %}"
+                                >
+                                    {% if activity.tone == "expense" or activity.tone == "purchase" %}
+                                        −
+                                    {% else %}
+                                        +
+                                    {% endif %}
+                                    TZS
+                                    {{ activity.amount|floatformat:0|intcomma }}
+                                </strong>
+                            </div>
+
+                            <div class="activity-meta">
+                                <span class="activity-description">
+                                    {{ activity.kind }}
+                                    ·
+                                    {{ activity.description }}
+                                </span>
+
+                                <span class="activity-time">
+                                    {{ activity.occurred_at_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                    {% if activity.url %}
+                        </a>
+                    {% else %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    ◎
+                </div>
+
+                <h3>No activities yet</h3>
+
+                <p>
+                    Completed operations will appear here.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    <aside class="card">
+        <div class="card-header">
+            <div>
+                <h2>Quick actions</h2>
+                <p>
+                    Common CHIDO Wood operations.
+                </p>
+            </div>
+        </div>
+
+        <div class="quick-actions dashboard-quick-actions">
+            <a
+                href="{% url 'sale-create' %}"
+                class="quick-action"
+            >
+                <strong>New sale</strong>
+                <span>Open the POS and sell products</span>
+            </a>
+
+            {% if can_view_financials %}
+                <a
+                    href="{% url 'purchase-create' %}"
+                    class="quick-action"
+                >
+                    <strong>Record purchase</strong>
+                    <span>Add supplier stock batches</span>
+                </a>
+
+                <a
+                    href="{% url 'wood-conversion-create' %}"
+                    class="quick-action"
+                >
+                    <strong>Wood conversion</strong>
+                    <span>Convert timber into output sizes</span>
+                </a>
+
+                <a
+                    href="{% url 'stock-adjustment-create' %}"
+                    class="quick-action"
+                >
+                    <strong>Stock adjustment</strong>
+                    <span>Record opening, damage or corrections</span>
+                </a>
+
+                <a
+                    href="{% url 'expense-create' %}"
+                    class="quick-action"
+                >
+                    <strong>Record expense</strong>
+                    <span>Add a posted business expense</span>
+                </a>
+
+                <a
+                    href="{% url 'business-report' %}"
+                    class="quick-action"
+                >
+                    <strong>Business report</strong>
+                    <span>Open the complete financial report</span>
+                </a>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+
+{% if can_view_financials %}
+    {{ chart_data|json_script:"dashboard-chart-data" }}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    {% if can_view_financials %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    {% endif %}
+{% endblock %}

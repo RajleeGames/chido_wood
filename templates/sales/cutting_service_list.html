@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Customer Cutting | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Track Timber cutting activity and
+    separate service income.
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Completed services</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ completed_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ draft_count|intcomma }} drafts
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total machine cuts</span>
+            <span class="stat-icon">CUT</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ total_cuts|intcomma }}
+        </strong>
+
+        <small>Completed cutting services</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Cutting income</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_income|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Paid:
+            TZS {{ total_paid|floatformat:0|intcomma }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Outstanding fees</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_outstanding|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Unpaid cutting balances</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Customer cutting records</h2>
+
+        <p>
+            New cutting services are created
+            from completed sale details.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'sale-list' %}"
+        class="button button-primary"
+    >
+        Select completed sale
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="cutting-filter-form"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Cutting number, sale, customer or product"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">
+                    All statuses
+                </option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}selected{% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="completed"
+                    {% if status_filter == "completed" %}selected{% endif %}
+                >
+                    Completed
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <input
+                type="date"
+                name="date_from"
+                value="{{ date_from }}"
+                class="form-control"
+            >
+
+            <input
+                type="date"
+                name="date_to"
+                value="{{ date_to }}"
+                class="form-control"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Sale</th>
+                    <th>Customer</th>
+                    <th>Timber</th>
+                    <th>Cuts</th>
+                    <th>Total fee</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for service in services %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ service.cutting_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ service.service_date|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+                            {{ service.sale.sale_number }}
+                        </td>
+
+                        <td>
+                            {% if service.customer %}
+                                {{ service.customer.name }}
+                            {% else %}
+                                Walk-in
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ service.product.name }}
+                        </td>
+
+                        <td>
+                            {{ service.number_of_cuts|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ service.current_total_fee|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ service.amount_paid|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ service.balance_due|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if service.status == "completed" %}
+                                <span class="badge badge-success">
+                                    Completed
+                                </span>
+                            {% elif service.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'cutting-service-detail' service.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="11">
+                            <div class="table-empty">
+                                No cutting services found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

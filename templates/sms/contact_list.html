@@ -1,0 +1,49 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Customer phonebook, consent and contact groups</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head">
+    <div><span class="sms-eyebrow">Audience management</span><h2>SMS contacts</h2><p>Manage saved customers and their SMS permissions.</p></div>
+    <div class="sms-head-actions">
+        <a href="{% url 'sms-contact-import' %}" class="button button-secondary">Import</a>
+        <a href="{% url 'sms-contact-export' %}" class="button button-secondary">Export CSV</a>
+        <a href="{% url 'sms-contact-create' %}" class="button button-primary">New contact</a>
+    </div>
+</section>
+
+<section class="sms-card sms-filter-card">
+    <form method="get" class="sms-filter-grid">
+        <div class="form-group"><label for="contactSearch">Search</label><input id="contactSearch" class="form-control" type="search" name="q" value="{{ query }}" placeholder="Name, phone or email"></div>
+        <div class="form-group"><label for="sourceFilter">Source</label><select id="sourceFilter" class="form-select" name="source"><option value="">All sources</option>{% for value,label in source_choices %}<option value="{{ value }}" {% if source_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="statusFilter">Status</label><select id="statusFilter" class="form-select" name="status"><option value="">All contacts</option><option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option><option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option><option value="promotional" {% if status_filter == 'promotional' %}selected{% endif %}>Promotional opt-in</option><option value="opted_out" {% if status_filter == 'opted_out' %}selected{% endif %}>Opted out</option></select></div>
+        <div class="form-group"><label for="groupFilter">Group</label><select id="groupFilter" class="form-select" name="group"><option value="">All groups</option>{% for group in groups %}<option value="{{ group.pk }}" {% if group_filter == group.pk|stringformat:'s' %}selected{% endif %}>{{ group.name }} ({{ group.contact_count }})</option>{% endfor %}</select></div>
+        <div class="sms-filter-actions"><button class="button button-primary" type="submit">Apply</button><a href="{% url 'sms-contact-list' %}" class="button button-secondary">Reset</a></div>
+    </form>
+</section>
+
+<section class="sms-card">
+    <header class="sms-card-head">
+        <div><h3>Contact directory</h3><p>{{ page_obj.paginator.count }} matching contacts</p></div>
+        <form method="post" action="{% url 'sms-sync-customers' %}">{% csrf_token %}<button type="submit" class="button button-secondary" data-loading-message="Syncing customers">Sync customers &amp; sales</button></form>
+    </header>
+    <div class="sms-table-wrap">
+        <table class="sms-table">
+            <thead><tr><th>Contact</th><th>Groups</th><th>Source</th><th>Permissions</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td><a href="{% url 'sms-contact-detail' contact.pk %}"><strong>{{ contact.name|default:'Customer' }}</strong><small>{{ contact.phone }}{% if contact.email %} · {{ contact.email }}{% endif %}</small></a></td>
+                    <td><div class="sms-tag-list">{% for group in contact.groups.all %}<span class="sms-tag">{{ group.name }}</span>{% empty %}<span class="sms-muted">No group</span>{% endfor %}</div></td>
+                    <td>{{ contact.get_source_display }}</td>
+                    <td><small>Transaction: {% if contact.allow_transaction_sms %}Yes{% else %}No{% endif %}</small><small>Promotion: {% if contact.allow_promotional_sms %}Yes{% else %}No{% endif %}</small></td>
+                    <td>{% if contact.opted_out %}<span class="sms-status sms-status-failed">Opted out</span>{% elif contact.is_active %}<span class="sms-status sms-status-delivered">Active</span>{% else %}<span class="sms-status sms-status-cancelled">Inactive</span>{% endif %}</td>
+                    <td class="sms-actions-cell"><a href="{% url 'sms-contact-edit' contact.pk %}">Edit</a></td>
+                </tr>
+                {% empty %}<tr><td colspan="6" class="sms-empty-cell">No contacts match the selected filters.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'sms/_pagination.html' %}
+</section>
+{% endblock %}

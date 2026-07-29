@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}
+Users & Roles | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Create accounts, assign roles and control system access.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>Users & Roles</h2>
+        <p>Manage administrators, managers and cashiers.</p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'user-create' %}"
+            class="button button-primary"
+        >
+            Create user
+        </a>
+    </div>
+</div>
+
+<div class="account-summary-grid">
+    <article class="account-summary-card">
+        <span>Total users</span>
+        <strong>{{ summary.total }}</strong>
+    </article>
+
+    <article class="account-summary-card">
+        <span>Active users</span>
+        <strong>{{ summary.active }}</strong>
+    </article>
+
+    <article class="account-summary-card">
+        <span>Administrators</span>
+        <strong>{{ summary.administrators }}</strong>
+    </article>
+
+    <article class="account-summary-card">
+        <span>Managers</span>
+        <strong>{{ summary.managers }}</strong>
+    </article>
+
+    <article class="account-summary-card">
+        <span>Cashiers</span>
+        <strong>{{ summary.cashiers }}</strong>
+    </article>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar user-table-toolbar">
+        <form
+            method="get"
+            class="user-filter-form"
+            data-no-loader
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Search name, username, phone or email"
+            >
+
+            <select
+                name="role"
+                class="form-control"
+            >
+                <option value="">All roles</option>
+
+                {% for value, label in role_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if role_filter == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+                <option
+                    value="active"
+                    {% if status_filter == 'active' %}selected{% endif %}
+                >
+                    Active
+                </option>
+                <option
+                    value="inactive"
+                    {% if status_filter == 'inactive' %}selected{% endif %}
+                >
+                    Inactive
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or role_filter or status_filter %}
+                <a
+                    href="{% url 'user-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table user-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Contact</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last login</th>
+                    <th class="table-action-column">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for managed_user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-table-identity">
+                                <span class="user-table-avatar">
+                                    {% if managed_user.first_name %}
+                                        {{ managed_user.first_name|first|upper }}
+                                    {% else %}
+                                        {{ managed_user.username|first|upper }}
+                                    {% endif %}
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        {% if managed_user.get_full_name %}
+                                            {{ managed_user.get_full_name }}
+                                        {% else %}
+                                            {{ managed_user.username }}
+                                        {% endif %}
+                                    </strong>
+
+                                    <span class="table-subtitle">
+                                        @{{ managed_user.username }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span>
+                                {{ managed_user.phone|default:"No phone" }}
+                            </span>
+
+                            <span class="table-subtitle">
+                                {{ managed_user.email|default:"No email" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if managed_user.is_superuser %}
+                                <span class="badge badge-warning">
+                                    Superuser
+                                </span>
+                            {% elif managed_user.role == 'admin' %}
+                                <span class="badge badge-warning">
+                                    Administrator
+                                </span>
+                            {% elif managed_user.role == 'manager' %}
+                                <span class="badge badge-muted">
+                                    Manager
+                                </span>
+                            {% else %}
+                                <span class="badge badge-muted">
+                                    Cashier
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if managed_user.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if managed_user.last_login %}
+                                {{ managed_user.last_login|date:"d M Y, H:i" }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="table-action-links">
+                                <a
+                                    href="{% url 'user-detail' managed_user.pk %}"
+                                    class="table-link"
+                                >
+                                    View
+                                </a>
+
+                                <a
+                                    href="{% url 'user-edit' managed_user.pk %}"
+                                    class="table-link"
+                                >
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="table-empty">
+                            No users match the selected filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <span class="pagination-info">
+                Page {{ page_obj.number }} of
+                {{ page_obj.paginator.num_pages }}
+            </span>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&role={{ role_filter|urlencode }}&status={{ status_filter|urlencode }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&role={{ role_filter|urlencode }}&status={{ status_filter|urlencode }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

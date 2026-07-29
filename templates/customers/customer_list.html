@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Customers | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage customer contacts, credit limits and opening debts.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total customers</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ customer_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ active_customer_count|intcomma }} active customers
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Customers with phone</span>
+            <span class="stat-icon">TEL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ customers_with_phone_count|intcomma }}
+        </strong>
+
+        <small>Available for direct contact</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Opening customer debt</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_opening_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Debt entered before using the system</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Configured credit limits</span>
+            <span class="stat-icon">CRD</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_credit_limit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ inactive_customer_count|intcomma }} inactive customers
+        </small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Customer directory</h2>
+
+        <p>
+            Customers can later be selected during cash,
+            credit and cutting-service sales.
+        </p>
+    </div>
+
+    <button
+        type="button"
+        class="button button-primary"
+        onclick="openModal('customerModal')"
+    >
+        Add customer
+    </button>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar customer-toolbar">
+        <form
+            method="get"
+            class="customer-filter-form"
+            data-loading-message="Searching customers"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Name, phone, customer code or email"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">
+                    All statuses
+                </option>
+
+                <option
+                    value="active"
+                    {% if status_filter == "active" %}
+                        selected
+                    {% endif %}
+                >
+                    Active
+                </option>
+
+                <option
+                    value="inactive"
+                    {% if status_filter == "inactive" %}
+                        selected
+                    {% endif %}
+                >
+                    Inactive
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or status_filter %}
+                <a
+                    href="{% url 'customer-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table customer-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Opening debt</th>
+                    <th>Credit limit</th>
+                    <th>Status</th>
+                    <th class="table-action-column">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ customer.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ customer.customer_code }}
+
+                                {% if customer.email %}
+                                    · {{ customer.email }}
+                                {% endif %}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ customer.phone|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ customer.address|default:"—"|truncatechars:35 }}
+                        </td>
+
+                        <td>
+                            TZS {{ customer.opening_balance|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if customer.credit_limit > 0 %}
+                                TZS {{ customer.credit_limit|floatformat:0|intcomma }}
+                            {% else %}
+                                Not configured
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if customer.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="table-action-links">
+                                <a
+                                    href="{% url 'customer-detail' customer.pk %}"
+                                    class="table-link"
+                                >
+                                    View
+                                </a>
+
+                                <a
+                                    href="?edit={{ customer.pk }}"
+                                    class="table-link"
+                                >
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                {% if search_query or status_filter %}
+                                    No customers matched your filters.
+                                {% else %}
+                                    No customers have been added.
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Page {{ page_obj.number|intcomma }}
+                of {{ page_obj.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<div
+    class="app-modal modal-large {% if modal_open %}open{% endif %}"
+    id="customerModal"
+    aria-hidden="{% if modal_open %}false{% else %}true{% endif %}"
+>
+    <div
+        class="modal-backdrop"
+        data-modal-close
+    ></div>
+
+    <div class="modal-dialog">
+        <form
+            method="post"
+            data-loading-message="Saving customer"
+        >
+            {% csrf_token %}
+
+            {% if editing_customer %}
+                <input
+                    type="hidden"
+                    name="object_id"
+                    value="{{ editing_customer.id }}"
+                >
+            {% endif %}
+
+            <div class="modal-header">
+                <div>
+                    <h2>
+                        {% if editing_customer %}
+                            Edit customer
+                        {% else %}
+                            Add customer
+                        {% endif %}
+                    </h2>
+
+                    <p>
+                        Enter contact and optional credit information.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-modal-close
+                    aria-label="Close customer form"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                {% if form.non_field_errors %}
+                    <div class="form-error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-section">
+                    <h3>Customer information</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}">
+                                Customer name
+                            </label>
+
+                            {{ form.name }}
+                            {{ form.name.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">
+                                Phone number
+                            </label>
+
+                            {{ form.phone }}
+                            {{ form.phone.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">
+                                Email address
+                            </label>
+
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+
+                        <div class="form-group form-grid-full">
+                            <label for="{{ form.address.id_for_label }}">
+                                Address
+                            </label>
+
+                            {{ form.address }}
+                            {{ form.address.errors }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Credit information</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.opening_balance.id_for_label }}">
+                                Opening balance
+                            </label>
+
+                            {{ form.opening_balance }}
+                            {{ form.opening_balance.errors }}
+
+                            <small class="field-help">
+                                Amount this customer already owed
+                                before starting the system.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.credit_limit.id_for_label }}">
+                                Credit limit
+                            </label>
+
+                            {{ form.credit_limit }}
+                            {{ form.credit_limit.errors }}
+
+                            <small class="field-help">
+                                Enter zero when no credit limit
+                                has been configured.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Additional settings</h3>
+
+                    <div class="form-grid form-grid-two">
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}">
+                                Notes
+                            </label>
+
+                            {{ form.notes }}
+                            {{ form.notes.errors }}
+                        </div>
+
+                        <label class="checkbox-card">
+                            {{ form.is_active }}
+
+                            <span>
+                                <strong>Active customer</strong>
+
+                                <small>
+                                    Allow this customer to be selected
+                                    during sales and payments.
+                                </small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="{% url 'customer-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save customer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

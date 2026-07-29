@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Wood Conversions | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Convert Timber stock into other sellable Timber sizes.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total conversions</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ conversion_count|intcomma }}
+        </strong>
+
+        <small>{{ posted_count|intcomma }} posted conversions</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Draft conversions</span>
+            <span class="stat-icon">DRF</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ draft_count|intcomma }}
+        </strong>
+
+        <small>Not yet affecting stock</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Source stock cost</span>
+            <span class="stat-icon">FIFO</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_source_cost|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Cost consumed from original batches</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total conversion cost</span>
+            <span class="stat-icon">COST</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_conversion_cost|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Includes TZS {{ total_cutting_cost|floatformat:0|intcomma }}
+            processing cost
+        </small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Wood conversion records</h2>
+
+        <p>
+            Posted conversions remove source stock and create
+            new output stock batches.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'wood-conversion-create' %}"
+        class="button button-primary"
+    >
+        New conversion
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="conversion-filter-form"
+            data-loading-message="Filtering conversions"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Number, source product, code or notes"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}selected{% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="posted"
+                    {% if status_filter == "posted" %}selected{% endif %}
+                >
+                    Posted
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or status_filter %}
+                <a
+                    href="{% url 'wood-conversion-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Conversion</th>
+                    <th>Date</th>
+                    <th>Source product</th>
+                    <th>Source quantity</th>
+                    <th>Outputs</th>
+                    <th>Source cost</th>
+                    <th>Processing cost</th>
+                    <th>Total cost</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for conversion in conversions %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ conversion.conversion_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ conversion.conversion_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ conversion.source_product.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ conversion.source_product.code }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ conversion.source_quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            {{ conversion.outputs.all|length|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if conversion.status == "posted" %}
+                                TZS {{ conversion.source_cost|floatformat:0|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ conversion.additional_cutting_cost|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if conversion.status == "posted" %}
+                                TZS {{ conversion.total_conversion_cost|floatformat:0|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if conversion.status == "posted" %}
+                                <span class="badge badge-success">
+                                    Posted
+                                </span>
+                            {% elif conversion.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'wood-conversion-detail' conversion.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="table-empty">
+                                No wood conversions found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Page {{ page_obj.number|intcomma }}
+                of {{ page_obj.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

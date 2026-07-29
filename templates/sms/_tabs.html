@@ -1,0 +1,13 @@
+<nav class="sms-tabs" aria-label="SMS Center sections">
+    <a href="{% url 'sms-dashboard' %}" class="sms-tab {% if sms_active_page == 'dashboard' %}active{% endif %}">Overview</a>
+    <a href="{% url 'sms-compose' %}" class="sms-tab {% if sms_active_page == 'compose' %}active{% endif %}">Send SMS</a>
+    <a href="{% url 'sms-contact-list' %}" class="sms-tab {% if sms_active_page == 'contacts' %}active{% endif %}">Contacts</a>
+    <a href="{% url 'sms-group-list' %}" class="sms-tab {% if sms_active_page == 'groups' %}active{% endif %}">Groups</a>
+    <a href="{% url 'sms-template-list' %}" class="sms-tab {% if sms_active_page == 'templates' %}active{% endif %}">Templates</a>
+    <a href="{% url 'sms-campaign-list' %}" class="sms-tab {% if sms_active_page == 'campaigns' %}active{% endif %}">Campaigns</a>
+    <a href="{% url 'sms-message-list' %}" class="sms-tab {% if sms_active_page == 'messages' %}active{% endif %}">Message log</a>
+    {% if sms_can_manage %}
+        <a href="{% url 'sms-sender-list' %}" class="sms-tab {% if sms_active_page == 'senders' %}active{% endif %}">Sender IDs</a>
+        <a href="{% url 'sms-settings' %}" class="sms-tab {% if sms_active_page == 'settings' %}active{% endif %}">Settings</a>
+    {% endif %}
+</nav>

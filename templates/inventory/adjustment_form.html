@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Add opening stock, corrections, damage or waste.</p>
+{% endblock %}
+
+{% block content %}
+<form
+    method="post"
+    id="stockAdjustmentForm"
+    data-loading-message="Saving stock adjustment"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ adjustment.adjustment_number }}
+                {% else %}
+                    New stock adjustment
+                {% endif %}
+            </h2>
+
+            <p>
+                Save as draft or post immediately to update inventory.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'stock-adjustment-list' %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_post"
+                class="button button-primary"
+            >
+                Save and post
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="adjustment-form-grid">
+        <section class="card purchase-section">
+            <div class="card-header">
+                <div>
+                    <h2>Adjustment information</h2>
+
+                    <p>
+                        Select the product and adjustment reason.
+                    </p>
+                </div>
+            </div>
+
+            <div class="purchase-section-body">
+                <div class="form-grid form-grid-two">
+                    <div class="form-group">
+                        <label for="{{ form.product.id_for_label }}">
+                            Product
+                        </label>
+
+                        {{ form.product }}
+                        {{ form.product.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.adjustment_type.id_for_label }}">
+                            Adjustment type
+                        </label>
+
+                        {{ form.adjustment_type }}
+                        {{ form.adjustment_type.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.adjustment_date.id_for_label }}">
+                            Adjustment date
+                        </label>
+
+                        {{ form.adjustment_date }}
+                        {{ form.adjustment_date.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.quantity.id_for_label }}">
+                            Quantity
+                        </label>
+
+                        {{ form.quantity }}
+                        {{ form.quantity.errors }}
+                    </div>
+
+                    <div
+                        class="form-group"
+                        id="adjustmentUnitCostGroup"
+                    >
+                        <label for="{{ form.unit_cost.id_for_label }}">
+                            Unit cost
+                        </label>
+
+                        {{ form.unit_cost }}
+                        {{ form.unit_cost.errors }}
+
+                        <small class="field-help">
+                            Required only when stock is being added.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.reason.id_for_label }}">
+                            Reason
+                        </label>
+
+                        {{ form.reason }}
+                        {{ form.reason.errors }}
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.notes.id_for_label }}">
+                            Additional notes
+                        </label>
+
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="card adjustment-summary-card">
+            <div class="card-header">
+                <div>
+                    <h2>Adjustment summary</h2>
+                    <p>Review before posting.</p>
+                </div>
+            </div>
+
+            <div class="purchase-summary">
+                <div>
+                    <span>Stock direction</span>
+                    <strong id="adjustmentDirection">
+                        Select type
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Quantity</span>
+                    <strong id="adjustmentQuantity">
+                        0.000
+                    </strong>
+                </div>
+
+                <div class="purchase-summary-total">
+                    <span id="adjustmentValueLabel">
+                        Estimated value
+                    </span>
+
+                    <strong id="adjustmentValue">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <p
+                    class="adjustment-fifo-note"
+                    id="adjustmentFifoNote"
+                    hidden
+                >
+                    The exact stock cost will be calculated from
+                    the oldest available FIFO batches when posted.
+                </p>
+            </div>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const typeInput = document.getElementById(
+            "id_adjustment_type"
+        );
+
+        const quantityInput = document.getElementById(
+            "id_quantity"
+        );
+
+        const costInput = document.getElementById(
+            "id_unit_cost"
+        );
+
+        const costGroup = document.getElementById(
+            "adjustmentUnitCostGroup"
+        );
+
+        const directionOutput = document.getElementById(
+            "adjustmentDirection"
+        );
+
+        const quantityOutput = document.getElementById(
+            "adjustmentQuantity"
+        );
+
+        const valueOutput = document.getElementById(
+            "adjustmentValue"
+        );
+
+        const valueLabel = document.getElementById(
+            "adjustmentValueLabel"
+        );
+
+        const fifoNote = document.getElementById(
+            "adjustmentFifoNote"
+        );
+
+        const positiveTypes = [
+            "opening",
+            "increase",
+        ];
+
+        function numberValue(value) {
+            const parsed = Number.parseFloat(value);
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(value);
+        }
+
+        function updateAdjustmentSummary() {
+            const type = typeInput.value;
+            const quantity = numberValue(
+                quantityInput.value
+            );
+            const unitCost = numberValue(
+                costInput.value
+            );
+
+            const addsStock = positiveTypes.includes(
+                type
+            );
+
+            if (addsStock) {
+                costGroup.hidden = false;
+                costInput.readOnly = false;
+
+                directionOutput.textContent = (
+                    "Stock increase"
+                );
+
+                valueLabel.textContent = (
+                    "Estimated added value"
+                );
+
+                valueOutput.textContent = (
+                    `TZS ${money(quantity * unitCost)}`
+                );
+
+                fifoNote.hidden = true;
+            } else if (type) {
+                costGroup.hidden = true;
+                costInput.value = "0.0000";
+                costInput.readOnly = true;
+
+                directionOutput.textContent = (
+                    "Stock decrease"
+                );
+
+                valueLabel.textContent = (
+                    "FIFO removal cost"
+                );
+
+                valueOutput.textContent = (
+                    "Calculated when posted"
+                );
+
+                fifoNote.hidden = false;
+            } else {
+                costGroup.hidden = false;
+                costInput.readOnly = false;
+
+                directionOutput.textContent = (
+                    "Select type"
+                );
+
+                valueLabel.textContent = (
+                    "Estimated value"
+                );
+
+                valueOutput.textContent = "TZS 0";
+                fifoNote.hidden = true;
+            }
+
+            quantityOutput.textContent = (
+                quantity.toLocaleString(
+                    "en-US",
+                    {
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                    }
+                )
+            );
+        }
+
+        typeInput.addEventListener(
+            "change",
+            updateAdjustmentSummary
+        );
+
+        quantityInput.addEventListener(
+            "input",
+            updateAdjustmentSummary
+        );
+
+        costInput.addEventListener(
+            "input",
+            updateAdjustmentSummary
+        );
+
+        updateAdjustmentSummary();
+    });
+</script>
+{% endblock %}

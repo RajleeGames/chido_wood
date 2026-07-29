@@ -1,0 +1,13 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Provider-approved names shown as the SMS sender</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Provider identity</span><h2>Sender IDs</h2><p>Track sender approval and choose the active default.</p></div><a href="{% url 'sms-sender-create' %}" class="button button-primary">New Sender ID</a></section>
+<div class="sms-notice"><strong>Important</strong><span>The status here should match the real Beem approval status. An approved sender must also be active before it can send.</span></div>
+<section class="sms-card">
+    <div class="sms-table-wrap"><table class="sms-table"><thead><tr><th>Sender</th><th>Status</th><th>Usage</th><th>Requested</th><th>Flags</th><th></th></tr></thead><tbody>
+    {% for sender in senders %}<tr><td><strong>{{ sender.name }}</strong><small>{{ sender.provider_reference|default:'No provider reference' }}</small></td><td>{% include 'sms/_status.html' with value=sender.status label=sender.get_status_display %}</td><td>{{ sender.message_count }} messages</td><td>{{ sender.requested_at|date:"d M Y" }}</td><td><div class="sms-tag-list">{% if sender.is_default %}<span class="sms-tag">Default</span>{% endif %}{% if sender.is_active %}<span class="sms-tag">Active</span>{% endif %}</div></td><td class="sms-actions-cell"><a href="{% url 'sms-sender-edit' sender.pk %}">Edit</a><form method="post" action="{% url 'sms-sender-delete' sender.pk %}" data-confirm="Delete this Sender ID? Existing messages will keep their history.">{% csrf_token %}<button type="submit">Delete</button></form></td></tr>{% empty %}<tr><td colspan="6" class="sms-empty-cell">No Sender IDs have been added.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

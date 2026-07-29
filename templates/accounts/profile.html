@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Profile | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage your personal contact details and password.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>My profile</h2>
+        <p>Your role and username can only be changed by an administrator.</p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'change-password' %}"
+            class="button button-primary"
+        >
+            Change password
+        </a>
+    </div>
+</div>
+
+<div class="profile-layout">
+    <aside class="card profile-summary-card">
+        <div class="profile-summary-body">
+            <span class="profile-avatar-large">
+                {% if request.user.first_name %}
+                    {{ request.user.first_name|first|upper }}
+                {% else %}
+                    {{ request.user.username|first|upper }}
+                {% endif %}
+            </span>
+
+            <h2>{{ request.user }}</h2>
+            <p>@{{ request.user.username }}</p>
+
+            <div class="profile-role-badge">
+                {% if request.user.is_superuser %}
+                    Superuser
+                {% else %}
+                    {{ request.user.get_role_display }}
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+
+    <form
+        method="post"
+        class="card profile-form-card"
+        data-loading-message="Saving profile"
+    >
+        {% csrf_token %}
+
+        <div class="card-header">
+            <div>
+                <h2>Personal information</h2>
+                <p>Update the details shown on your account.</p>
+            </div>
+        </div>
+
+        <div class="account-form-body">
+            {% if form.non_field_errors %}
+                <div class="form-error-box">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-grid form-grid-two">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">
+                        First name
+                    </label>
+                    {{ form.first_name }}
+                    {{ form.first_name.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">
+                        Last name
+                    </label>
+                    {{ form.last_name }}
+                    {{ form.last_name.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}">
+                        Phone number
+                    </label>
+                    {{ form.phone }}
+                    {{ form.phone.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">
+                        Email address
+                    </label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+            </div>
+        </div>
+
+        <div class="account-form-actions account-form-actions-contained">
+            <button
+                type="submit"
+                class="button button-primary"
+            >
+                Save profile
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

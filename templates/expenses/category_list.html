@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Expense Categories | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage categories used when recording business expenses.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total categories</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ category_count|intcomma }}
+        </strong>
+
+        <small>All expense categories</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Active categories</span>
+            <span class="stat-icon">ACT</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ active_category_count|intcomma }}
+        </strong>
+
+        <small>Available for new expenses</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Inactive categories</span>
+            <span class="stat-icon">OFF</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ inactive_category_count|intcomma }}
+        </strong>
+
+        <small>Hidden from new expenses</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Expense categories</h2>
+
+        <p>
+            Examples include rent, electricity,
+            salaries and repairs.
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'expense-list' %}"
+            class="button button-secondary"
+        >
+            Expenses
+        </a>
+
+        <button
+            type="button"
+            class="button button-primary"
+            onclick="openModal('expenseCategoryModal')"
+        >
+            Add category
+        </button>
+    </div>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="expense-category-filter"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Category name, code or description"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Search
+            </button>
+
+            {% if search_query %}
+                <a
+                    href="{% url 'expense-category-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for category in categories %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ category.name }}
+                            </strong>
+                        </td>
+
+                        <td>{{ category.code }}</td>
+
+                        <td>
+                            {{ category.description|default:"—"|truncatechars:60 }}
+                        </td>
+
+                        <td>
+                            {% if category.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="?edit={{ category.pk }}"
+                                class="table-link"
+                            >
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="table-empty">
+                                No expense categories found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    id="expenseCategoryModal"
+    class="app-modal modal-large {% if modal_open %}open{% endif %}"
+    aria-hidden="{% if modal_open %}false{% else %}true{% endif %}"
+>
+    <div
+        class="modal-backdrop"
+        data-modal-close
+    ></div>
+
+    <div class="modal-dialog">
+        <form
+            method="post"
+            data-loading-message="Saving expense category"
+        >
+            {% csrf_token %}
+
+            {% if editing_category %}
+                <input
+                    type="hidden"
+                    name="object_id"
+                    value="{{ editing_category.pk }}"
+                >
+            {% endif %}
+
+            <div class="modal-header">
+                <div>
+                    <h2>
+                        {% if editing_category %}
+                            Edit expense category
+                        {% else %}
+                            Add expense category
+                        {% endif %}
+                    </h2>
+
+                    <p>
+                        Create a category for grouping expenses.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-modal-close
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                {% if form.non_field_errors %}
+                    <div class="form-error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid form-grid-two">
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">
+                            Category name
+                        </label>
+
+                        {{ form.name }}
+                        {{ form.name.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.code.id_for_label }}">
+                            Category code
+                        </label>
+
+                        {{ form.code }}
+                        {{ form.code.errors }}
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.description.id_for_label }}">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+                    <label class="checkbox-card form-grid-full">
+                        {{ form.is_active }}
+
+                        <span>
+                            <strong>Active category</strong>
+
+                            <small>
+                                Allow this category on new expenses.
+                            </small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="{% url 'expense-category-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

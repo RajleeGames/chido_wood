@@ -1,0 +1,150 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
+    <title>Login | CHIDO Wood ERP</title>
+
+    <script>
+        document.documentElement.classList.add("js");
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app.css' %}"
+    >
+</head>
+
+<body class="auth-body">
+    <div
+        class="page-loader is-visible"
+        id="pageLoader"
+        aria-hidden="true"
+    >
+        <div class="page-loader-content">
+            <div class="loader-spinner" aria-hidden="true">
+                <span>C</span>
+            </div>
+
+            <p data-loader-text>Loading</p>
+        </div>
+    </div>
+
+    <main class="auth-layout">
+        <section class="auth-panel">
+            <div class="auth-brand auth-brand-centered">
+                <div class="brand-mark brand-mark-large">
+                    C
+                </div>
+
+                <div class="auth-brand-copy">
+                    <strong>CHIDO Wood ERP</strong>
+                    <span>Wood inventory and point of sale</span>
+                </div>
+            </div>
+
+            <div class="auth-heading auth-heading-centered">
+                <h1>Welcome back</h1>
+                <p>Sign in to continue to your workspace.</p>
+            </div>
+
+            {% if form.errors %}
+                <div
+                    class="form-error-box"
+                    role="alert"
+                >
+                    Incorrect username or password.
+                </div>
+            {% endif %}
+
+            <form
+                method="post"
+                class="auth-form"
+                data-loading-message="Signing in"
+            >
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        name="{{ form.username.html_name }}"
+                        id="{{ form.username.id_for_label }}"
+                        class="form-control"
+                        autocomplete="username"
+                        placeholder="Enter your username"
+                        autofocus
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}">
+                        Password
+                    </label>
+
+                    <div class="password-control">
+                        <input
+                            type="password"
+                            name="{{ form.password.html_name }}"
+                            id="{{ form.password.id_for_label }}"
+                            class="form-control"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-password-toggle
+                        >
+                            Show
+                        </button>
+                    </div>
+                </div>
+
+                {% if next %}
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{{ next }}"
+                    >
+                {% endif %}
+
+                <button
+                    type="submit"
+                    class="button button-primary button-full auth-submit"
+                >
+                    Sign in
+                </button>
+            </form>
+
+            <div class="auth-security-note">
+                <span class="auth-security-dot"></span>
+                Secure business access
+            </div>
+
+            <p class="auth-footer">
+                CHIDO Wood Company LTD
+            </p>
+        </section>
+    </main>
+
+    <script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Record and manage a Beem Africa Sender ID</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Sender identity</span><h2>{{ page_title }}</h2><p>Use 3 to 11 letters or numbers without spaces.</p></div></section>
+<section class="sms-card sms-form-card sms-form-narrow"><form method="post">{% csrf_token %}{% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}<div class="sms-form-grid two-columns">{% for field in form %}{% include 'sms/_field.html' with field=field %}{% endfor %}</div><div class="sms-form-actions"><a href="{% url 'sms-sender-list' %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save Sender ID</button></div></form></section>
+{% endblock %}

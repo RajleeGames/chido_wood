@@ -1,0 +1,25 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Import contacts from CSV or pasted phone numbers</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Bulk contact entry</span><h2>Import SMS contacts</h2><p>Upload a CSV or paste one contact per line.</p></div><a href="{% url 'sms-contact-list' %}" class="button button-secondary">Back to contacts</a></section>
+<section class="sms-two-column sms-align-start">
+    <article class="sms-card sms-form-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}
+            {% include 'sms/_field.html' with field=form.csv_file %}
+            <div class="sms-divider-text"><span>or</span></div>
+            {% include 'sms/_field.html' with field=form.pasted_contacts %}
+            {% include 'sms/_field.html' with field=form.group %}
+            <div class="sms-form-actions"><a href="{% url 'sms-contact-list' %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary" data-loading-message="Importing contacts">Import contacts</button></div>
+        </form>
+    </article>
+    <article class="sms-card">
+        <header class="sms-card-head"><div><h3>Recent imports</h3><p>Latest import results.</p></div></header>
+        <div class="sms-campaign-stack">{% for batch in recent_imports %}<div class="sms-campaign-row"><div><strong>{{ batch.source_name }}</strong><span>{{ batch.created_at|date:"d M Y, H:i" }} · {{ batch.total_rows }} rows</span></div><span class="sms-import-result">{{ batch.created_count }} new / {{ batch.skipped_count }} skipped</span></div>{% empty %}<div class="sms-empty-state"><strong>No imports yet</strong><span>CSV import results will appear here.</span></div>{% endfor %}</div>
+        <div class="sms-notice"><strong>CSV format</strong><span>Use headings: name, phone, email. Phone is required.</span></div>
+    </article>
+</section>
+{% endblock %}

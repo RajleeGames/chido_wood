@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Expenses | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Track operating costs and business spending.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Posted expenses</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ posted_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ draft_count|intcomma }} draft expenses
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Today expenses</span>
+            <span class="stat-icon">DAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ today_total|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Posted today</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>This month</span>
+            <span class="stat-icon">MON</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ month_total|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Posted during the current month</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total expenses</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_posted|floatformat:0|intcomma }}
+        </strong>
+
+        <small>All posted operating expenses</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Expense records</h2>
+
+        <p>
+            Posted expenses will be included in
+            profit and loss reports.
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'expense-category-list' %}"
+            class="button button-secondary"
+        >
+            Categories
+        </a>
+
+        <a
+            href="{% url 'expense-create' %}"
+            class="button button-primary"
+        >
+            New expense
+        </a>
+    </div>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="expense-filter-form"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Number, description, payee or reference"
+            >
+
+            <select
+                name="category"
+                class="form-control"
+            >
+                <option value="">All categories</option>
+
+                {% for category in categories %}
+                    <option
+                        value="{{ category.pk }}"
+                        {% if category_filter == category.pk|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}selected{% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="posted"
+                    {% if status_filter == "posted" %}selected{% endif %}
+                >
+                    Posted
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <select
+                name="payment"
+                class="form-control"
+            >
+                <option value="">
+                    All payment methods
+                </option>
+
+                {% for value, label in payment_methods %}
+                    <option
+                        value="{{ value }}"
+                        {% if payment_filter == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input
+                type="date"
+                name="date_from"
+                value="{{ date_from }}"
+                class="form-control"
+            >
+
+            <input
+                type="date"
+                name="date_to"
+                value="{{ date_to }}"
+                class="form-control"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            <a
+                href="{% url 'expense-list' %}"
+                class="button button-secondary"
+            >
+                Clear
+            </a>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Expense</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Payee</th>
+                    <th>Payment</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for expense in expenses %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ expense.expense_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ expense.expense_date|date:"d M Y" }}
+                        </td>
+
+                        <td>{{ expense.category.name }}</td>
+
+                        <td>
+                            {{ expense.description|truncatechars:45 }}
+                        </td>
+
+                        <td>
+                            {{ expense.payee|default:"—" }}
+                        </td>
+
+                        <td>
+                            {{ expense.get_payment_method_display }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                TZS {{ expense.amount|floatformat:0|intcomma }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {% if expense.status == "posted" %}
+                                <span class="badge badge-success">
+                                    Posted
+                                </span>
+                            {% elif expense.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'expense-detail' expense.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="table-empty">
+                                No expenses matched the filters.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Contact permissions and message history</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head">
+    <div><span class="sms-eyebrow">Contact profile</span><h2>{{ contact.name|default:'Customer' }}</h2><p>{{ contact.phone }}{% if contact.email %} · {{ contact.email }}{% endif %}</p></div>
+    <div class="sms-head-actions"><a href="{% url 'sms-compose' %}?contact={{ contact.pk }}" class="button button-primary">Send SMS</a><a href="{% url 'sms-contact-edit' contact.pk %}" class="button button-secondary">Edit</a></div>
+</section>
+
+<section class="sms-detail-grid">
+    <article class="sms-card">
+        <header class="sms-card-head"><div><h3>Contact details</h3><p>Identity, source and consent.</p></div></header>
+        <dl class="sms-detail-list">
+            <div><dt>Phone</dt><dd>{{ contact.phone }}</dd></div>
+            <div><dt>Source</dt><dd>{{ contact.get_source_display }}</dd></div>
+            <div><dt>Linked customer</dt><dd>{{ contact.customer|default:'—' }}</dd></div>
+            <div><dt>Transaction SMS</dt><dd>{% if contact.allow_transaction_sms %}Allowed{% else %}Not allowed{% endif %}</dd></div>
+            <div><dt>Promotional SMS</dt><dd>{% if contact.allow_promotional_sms %}Allowed{% else %}Not allowed{% endif %}</dd></div>
+            <div><dt>Opted out</dt><dd>{% if contact.opted_out %}Yes{% else %}No{% endif %}</dd></div>
+            <div><dt>Last purchase</dt><dd>{{ contact.last_purchase_at|date:"d M Y, H:i"|default:'—' }}</dd></div>
+            <div><dt>Groups</dt><dd>{% for group in contact.groups.all %}<span class="sms-tag">{{ group.name }}</span>{% empty %}—{% endfor %}</dd></div>
+        </dl>
+        {% if contact.notes %}<div class="sms-note"><strong>Notes</strong><p>{{ contact.notes|linebreaksbr }}</p></div>{% endif %}
+        <div class="sms-form-actions">
+            <form method="post" action="{% url 'sms-contact-toggle' contact.pk %}">{% csrf_token %}<button type="submit" class="button button-secondary">{% if contact.is_active %}Deactivate{% else %}Activate{% endif %}</button></form>
+            {% if sms_can_manage %}<form method="post" action="{% url 'sms-contact-delete' contact.pk %}" data-confirm="Delete this SMS contact? Message history will remain but lose the contact link.">{% csrf_token %}<button type="submit" class="button button-danger">Delete</button></form>{% endif %}
+        </div>
+    </article>
+
+    <article class="sms-card">
+        <header class="sms-card-head"><div><h3>Message history</h3><p>{{ page_obj.paginator.count }} messages</p></div></header>
+        <div class="sms-table-wrap"><table class="sms-table"><thead><tr><th>Message</th><th>Status</th><th>Date</th></tr></thead><tbody>{% for row in contact_messages %}<tr><td><a href="{% url 'sms-message-detail' row.pk %}"><strong>{{ row.message|truncatechars:55 }}</strong><small>{{ row.sms_parts }} SMS part{{ row.sms_parts|pluralize }}</small></a></td><td>{% include 'sms/_status.html' with value=row.status label=row.get_status_display %}</td><td>{{ row.created_at|date:"d M Y, H:i" }}</td></tr>{% empty %}<tr><td colspan="3" class="sms-empty-cell">No SMS has been sent to this contact.</td></tr>{% endfor %}</tbody></table></div>
+        {% include 'sms/_pagination.html' %}
+    </article>
+</section>
+{% endblock %}

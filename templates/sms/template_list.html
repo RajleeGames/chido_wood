@@ -1,0 +1,17 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Reusable messages with customer personalization</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Reusable content</span><h2>SMS templates</h2><p>Prepare consistent Swahili and English messages.</p></div>{% if sms_can_manage %}<a href="{% url 'sms-template-create' %}" class="button button-primary">New template</a>{% endif %}</section>
+<section class="sms-card sms-filter-card"><form method="get" class="sms-filter-grid compact"><div class="form-group"><label for="templateSearch">Search</label><input id="templateSearch" class="form-control" name="q" value="{{ query }}" placeholder="Title or message"></div><div class="form-group"><label for="categoryFilter">Category</label><select id="categoryFilter" class="form-select" name="category"><option value="">All categories</option>{% for value,label in category_choices %}<option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="form-group"><label for="languageFilter">Language</label><select id="languageFilter" class="form-select" name="language"><option value="">All languages</option>{% for value,label in language_choices %}<option value="{{ value }}" {% if language_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="sms-filter-actions"><button class="button button-primary" type="submit">Apply</button><a class="button button-secondary" href="{% url 'sms-template-list' %}">Reset</a></div></form></section>
+<section class="sms-template-grid">
+    {% for template in templates %}
+    <article class="sms-card sms-template-card">
+        <header><div><span class="sms-tag">{{ template.get_category_display }}</span><span class="sms-tag">{{ template.get_language_display }}</span></div>{% if template.is_active %}<span class="sms-status sms-status-delivered">Active</span>{% else %}<span class="sms-status sms-status-cancelled">Inactive</span>{% endif %}</header>
+        <h3>{{ template.title }}</h3><p>{{ template.message|linebreaksbr }}</p>
+        <footer><a href="{% url 'sms-compose' %}?template={{ template.pk }}">Use template</a>{% if sms_can_manage %}<a href="{% url 'sms-template-edit' template.pk %}">Edit</a><form method="post" action="{% url 'sms-template-delete' template.pk %}" data-confirm="Delete this SMS template? Existing message history remains unchanged.">{% csrf_token %}<button type="submit">Delete</button></form>{% endif %}</footer>
+    </article>
+    {% empty %}<div class="sms-card sms-empty-state"><strong>No templates found</strong><span>Create a template or clear the filters.</span></div>{% endfor %}
+</section>
+{% endblock %}

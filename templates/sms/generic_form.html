@@ -1,0 +1,13 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">SMS Center</span><h2>{{ page_title }}</h2><p>Complete the details below and save the record.</p></div></section>
+<section class="sms-card sms-form-card sms-form-narrow">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}{% include 'sms/_field.html' with field=field %}{% endfor %}
+        <div class="sms-form-actions"><a href="{% url cancel_url %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">{{ submit_label|default:'Save' }}</button></div>
+    </form>
+</section>
+{% endblock %}

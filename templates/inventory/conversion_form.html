@@ -1,0 +1,567 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Consume one Timber product and create new sellable outputs.</p>
+{% endblock %}
+
+{% block content %}
+<form
+    method="post"
+    id="woodConversionForm"
+    data-loading-message="Saving wood conversion"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ conversion.conversion_number }}
+                {% else %}
+                    New wood conversion
+                {% endif %}
+            </h2>
+
+            <p>
+                Quantities are entered manually according to the
+                actual cutting output.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'wood-conversion-list' %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_post"
+                class="button button-primary"
+            >
+                Save and post
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+        <div class="form-error-box">
+            {{ formset.non_form_errors }}
+        </div>
+    {% endif %}
+
+    <section class="card purchase-section">
+        <div class="card-header">
+            <div>
+                <h2>Source Timber</h2>
+
+                <p>
+                    Select the original Timber stock being consumed.
+                </p>
+            </div>
+        </div>
+
+        <div class="purchase-section-body">
+            <div class="form-grid form-grid-three">
+                <div class="form-group">
+                    <label for="{{ form.source_product.id_for_label }}">
+                        Source product
+                    </label>
+
+                    {{ form.source_product }}
+                    {{ form.source_product.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.source_quantity.id_for_label }}">
+                        Source quantity
+                    </label>
+
+                    {{ form.source_quantity }}
+                    {{ form.source_quantity.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.conversion_date.id_for_label }}">
+                        Conversion date
+                    </label>
+
+                    {{ form.conversion_date }}
+                    {{ form.conversion_date.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.additional_cutting_cost.id_for_label }}">
+                        Additional processing cost
+                    </label>
+
+                    {{ form.additional_cutting_cost }}
+                    {{ form.additional_cutting_cost.errors }}
+
+                    <small class="field-help">
+                        Labour, machine or internal cutting cost.
+                    </small>
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label for="{{ form.notes.id_for_label }}">
+                        Notes
+                    </label>
+
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card purchase-section">
+        <div class="card-header">
+            <div>
+                <h2>Output products</h2>
+
+                <p>
+                    Add every Timber product produced from the source.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="button button-secondary"
+                id="addConversionOutput"
+            >
+                Add output
+            </button>
+        </div>
+
+        <div class="purchase-items-wrap">
+            {{ formset.management_form }}
+
+            <div class="table-responsive">
+                <table class="data-table conversion-output-table">
+                    <thead>
+                        <tr>
+                            <th>Output Timber product</th>
+                            <th>Produced quantity</th>
+                            <th>Selling price</th>
+                            <th>Estimated selling value</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="conversionOutputsBody">
+                        {% for output_form in formset %}
+                            <tr class="conversion-output-row">
+                                <td>
+                                    {{ output_form.id }}
+                                    {{ output_form.product }}
+                                    {{ output_form.product.errors }}
+                                </td>
+
+                                <td>
+                                    {{ output_form.quantity }}
+                                    {{ output_form.quantity.errors }}
+                                </td>
+
+                                <td>
+                                    <span
+                                        class="conversion-selling-price"
+                                        data-selling-price
+                                    >
+                                        TZS 0
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong
+                                        class="conversion-selling-value"
+                                    >
+                                        TZS 0
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    <div class="hidden-delete-field">
+                                        {{ output_form.DELETE }}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="item-remove-button"
+                                        data-remove-conversion-output
+                                    >
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <template id="conversionOutputTemplate">
+                <tr class="conversion-output-row">
+                    <td>
+                        {{ formset.empty_form.id }}
+                        {{ formset.empty_form.product }}
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.quantity }}
+                    </td>
+
+                    <td>
+                        <span
+                            class="conversion-selling-price"
+                            data-selling-price
+                        >
+                            TZS 0
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong class="conversion-selling-value">
+                            TZS 0
+                        </strong>
+                    </td>
+
+                    <td>
+                        <div class="hidden-delete-field">
+                            {{ formset.empty_form.DELETE }}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="item-remove-button"
+                            data-remove-conversion-output
+                        >
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            </template>
+        </div>
+    </section>
+
+    <aside class="card conversion-summary-card">
+        <div class="card-header">
+            <div>
+                <h2>Conversion summary</h2>
+
+                <p>Live quantity and value preview.</p>
+            </div>
+        </div>
+
+        <div class="conversion-summary-grid">
+            <div>
+                <span>Source quantity</span>
+                <strong id="conversionSourceQuantity">
+                    0.000
+                </strong>
+            </div>
+
+            <div>
+                <span>Total output pieces</span>
+                <strong id="conversionOutputQuantity">
+                    0.000
+                </strong>
+            </div>
+
+            <div>
+                <span>Additional processing cost</span>
+                <strong id="conversionProcessingCost">
+                    TZS 0
+                </strong>
+            </div>
+
+            <div>
+                <span>Estimated output selling value</span>
+                <strong id="conversionSellingValue">
+                    TZS 0
+                </strong>
+            </div>
+        </div>
+    </aside>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const body = document.getElementById(
+            "conversionOutputsBody"
+        );
+
+        const template = document.getElementById(
+            "conversionOutputTemplate"
+        );
+
+        const addButton = document.getElementById(
+            "addConversionOutput"
+        );
+
+        const totalFormsInput = document.getElementById(
+            "id_outputs-TOTAL_FORMS"
+        );
+
+        const sourceQuantityInput = document.getElementById(
+            "id_source_quantity"
+        );
+
+        const processingCostInput = document.getElementById(
+            "id_additional_cutting_cost"
+        );
+
+        function numberValue(value) {
+            const parsed = Number.parseFloat(value);
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(value);
+        }
+
+        function productSellingPrice(select) {
+            if (!select) {
+                return 0;
+            }
+
+            const option = select.options[
+                select.selectedIndex
+            ];
+
+            if (!option) {
+                return 0;
+            }
+
+            const text = option.textContent || "";
+
+            const match = text.match(
+                /TZS\s*([\d,]+(?:\.\d+)?)/i
+            );
+
+            if (!match) {
+                return 0;
+            }
+
+            return numberValue(
+                match[1].replaceAll(",", "")
+            );
+        }
+
+        function calculateConversion() {
+            let totalOutputQuantity = 0;
+            let totalSellingValue = 0;
+
+            document.querySelectorAll(
+                ".conversion-output-row"
+            ).forEach((row) => {
+                const deleteInput = row.querySelector(
+                    'input[name$="-DELETE"]'
+                );
+
+                if (
+                    deleteInput
+                    && deleteInput.checked
+                ) {
+                    return;
+                }
+
+                const productInput = row.querySelector(
+                    'select[name$="-product"]'
+                );
+
+                const quantityInput = row.querySelector(
+                    'input[name$="-quantity"]'
+                );
+
+                const quantity = numberValue(
+                    quantityInput?.value
+                );
+
+                const sellingPrice = productSellingPrice(
+                    productInput
+                );
+
+                const sellingValue = (
+                    quantity * sellingPrice
+                );
+
+                totalOutputQuantity += quantity;
+                totalSellingValue += sellingValue;
+
+                const priceElement = row.querySelector(
+                    ".conversion-selling-price"
+                );
+
+                const valueElement = row.querySelector(
+                    ".conversion-selling-value"
+                );
+
+                if (priceElement) {
+                    priceElement.textContent = (
+                        `TZS ${money(sellingPrice)}`
+                    );
+                }
+
+                if (valueElement) {
+                    valueElement.textContent = (
+                        `TZS ${money(sellingValue)}`
+                    );
+                }
+            });
+
+            const sourceQuantity = numberValue(
+                sourceQuantityInput?.value
+            );
+
+            const processingCost = numberValue(
+                processingCostInput?.value
+            );
+
+            document.getElementById(
+                "conversionSourceQuantity"
+            ).textContent = sourceQuantity.toLocaleString(
+                    "en-US",
+                    {
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                    }
+                );
+
+            document.getElementById(
+                "conversionOutputQuantity"
+            ).textContent = totalOutputQuantity.toLocaleString(
+                    "en-US",
+                    {
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                    }
+                );
+
+            document.getElementById(
+                "conversionProcessingCost"
+            ).textContent = (
+                `TZS ${money(processingCost)}`
+            );
+
+            document.getElementById(
+                "conversionSellingValue"
+            ).textContent = (
+                `TZS ${money(totalSellingValue)}`
+            );
+        }
+
+        function bindOutputRow(row) {
+            row.querySelectorAll(
+                "input, select"
+            ).forEach((input) => {
+                input.addEventListener(
+                    "input",
+                    calculateConversion
+                );
+
+                input.addEventListener(
+                    "change",
+                    calculateConversion
+                );
+            });
+
+            const removeButton = row.querySelector(
+                "[data-remove-conversion-output]"
+            );
+
+            if (removeButton) {
+                removeButton.addEventListener(
+                    "click",
+                    () => {
+                        const deleteInput = row.querySelector(
+                            'input[name$="-DELETE"]'
+                        );
+
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                        }
+
+                        row.style.display = "none";
+
+                        calculateConversion();
+                    }
+                );
+            }
+        }
+
+        addButton.addEventListener("click", () => {
+            const formIndex = Number.parseInt(
+                totalFormsInput.value,
+                10
+            );
+
+            const html = template.innerHTML.replaceAll(
+                "__prefix__",
+                String(formIndex)
+            );
+
+            body.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+
+            totalFormsInput.value = (
+                formIndex + 1
+            );
+
+            bindOutputRow(
+                body.lastElementChild
+            );
+
+            calculateConversion();
+        });
+
+        document.querySelectorAll(
+            ".conversion-output-row"
+        ).forEach(bindOutputRow);
+
+        sourceQuantityInput?.addEventListener(
+            "input",
+            calculateConversion
+        );
+
+        processingCostInput?.addEventListener(
+            "input",
+            calculateConversion
+        );
+
+        calculateConversion();
+    });
+</script>
+{% endblock %}

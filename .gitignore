@@ -1,0 +1,198 @@
+# =========================================================
+# PYTHON
+# =========================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+*.dll
+
+
+# =========================================================
+# VIRTUAL ENVIRONMENTS
+# =========================================================
+
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+
+
+# =========================================================
+# ENVIRONMENT VARIABLES AND SECRETS
+# =========================================================
+
+.env
+.env.*
+!.env.example
+
+secrets/
+private/
+
+*.key
+*.pem
+*.p12
+*.pfx
+
+
+# =========================================================
+# DJANGO DATABASE
+# =========================================================
+
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-shm
+db.sqlite3-wal
+
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+
+# =========================================================
+# DJANGO GENERATED FILES
+# =========================================================
+
+staticfiles/
+media/
+logs/
+
+*.log
+
+
+# =========================================================
+# DATABASE BACKUPS
+# =========================================================
+
+backups/
+backup/
+*.backup
+*.bak
+*.dump
+*.sql.gz
+
+
+# =========================================================
+# TESTING AND COVERAGE
+# =========================================================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+.tox/
+.nox/
+
+.mypy_cache/
+.pyright/
+.ruff_cache/
+.hypothesis/
+
+
+# =========================================================
+# PYTHON PACKAGING
+# =========================================================
+
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+
+# =========================================================
+# IDE AND EDITOR FILES
+# =========================================================
+
+.vscode/
+.idea/
+
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+
+# =========================================================
+# OPERATING SYSTEM FILES
+# =========================================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+$RECYCLE.BIN/
+
+
+# =========================================================
+# TEMPORARY FILES
+# =========================================================
+
+tmp/
+temp/
+*.tmp
+*.temp
+*.cache
+
+
+# =========================================================
+# CELERY
+# =========================================================
+
+celerybeat-schedule
+celerybeat.pid
+
+
+# =========================================================
+# LOCAL CERTIFICATES
+# =========================================================
+
+certificates/private/
+ssl/private/
+
+
+# =========================================================
+# FRONTEND DEPENDENCIES, WHEN PRESENT
+# =========================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================================================
+# DO NOT IGNORE SOURCE STATIC FILES
+# =========================================================
+
+# Keep your project static/ directory committed.
+# Only collected staticfiles/ is ignored.

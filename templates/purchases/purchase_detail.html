@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ purchase.purchase_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Purchase details, stock batches and supplier balance.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ purchase.purchase_number }}</h2>
+
+        <p>
+            {{ purchase.supplier.name }}
+            ·
+            {{ purchase.purchase_date|date:"d M Y" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'purchase-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        {% if purchase.status == "draft" %}
+            <a
+                href="{% url 'purchase-edit' purchase.pk %}"
+                class="button button-secondary"
+            >
+                Edit
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'purchase-post' purchase.pk %}"
+                data-loading-message="Posting purchase"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Post into stock
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Purchase total</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ purchase.current_total|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Products and additional costs</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Amount paid</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ purchase.amount_paid|floatformat:0|intcomma }}
+        </strong>
+
+        <small>{{ purchase.payment_status }}</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Supplier balance</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ purchase.balance_due|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Outstanding purchase amount</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ purchase.get_status_display }}
+        </strong>
+
+        <small>
+            {% if purchase.posted_at %}
+                Posted {{ purchase.posted_at|date:"d M Y H:i" }}
+            {% else %}
+                Stock not updated
+            {% endif %}
+        </small>
+    </article>
+</div>
+
+<section class="table-card">
+    <div class="card-header">
+        <div>
+            <h2>Purchase products</h2>
+            <p>Products and their allocated stock costs.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Supplier cost</th>
+                    <th>Original total</th>
+                    <th>Effective cost</th>
+                    <th>Allocated total</th>
+                    <th>Batch</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in purchase.items.all %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ item.product.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ item.product.code }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ item.quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ item.unit_cost|floatformat:2|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ item.line_total|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if purchase.status == "posted" %}
+                                TZS {{ item.effective_unit_cost|floatformat:2|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if purchase.status == "posted" %}
+                                TZS {{ item.allocated_cost|floatformat:0|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.stock_batch %}
+                                <span class="code-text">
+                                    #{{ item.stock_batch.id }}
+                                </span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

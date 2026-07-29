@@ -1,0 +1,258 @@
+{% load humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {{ sale.sale_number }}
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+            color: #111827;
+            font-family:
+                "Courier New",
+                monospace;
+            font-size: 12px;
+        }
+
+        .receipt {
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            padding: 18px;
+            background: #ffffff;
+        }
+
+        .receipt-header {
+            text-align: center;
+        }
+
+        .receipt-header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .receipt-header p {
+            margin: 4px 0;
+        }
+
+        .receipt-line {
+            margin: 10px 0;
+            border-top: 1px dashed #111827;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 5px 0;
+        }
+
+        .receipt-item {
+            margin: 8px 0;
+        }
+
+        .receipt-item-name {
+            font-weight: 700;
+        }
+
+        .receipt-total {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .receipt-footer {
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .receipt-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .receipt-actions button,
+        .receipt-actions a {
+            padding: 8px 12px;
+            color: #ffffff;
+            background: #81532b;
+            border: 0;
+            border-radius: 5px;
+            text-decoration: none;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: #ffffff;
+            }
+
+            .receipt {
+                width: 80mm;
+                max-width: none;
+                padding: 4mm;
+            }
+
+            .receipt-actions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="receipt-actions">
+        <button
+            type="button"
+            onclick="window.print()"
+        >
+            Print receipt
+        </button>
+
+        <a href="{% url 'sale-detail' sale.pk %}">
+            Back
+        </a>
+    </div>
+
+    <main class="receipt">
+        <header class="receipt-header">
+            <h1>CHIDO Wood ERP</h1>
+            <p>Sales Receipt</p>
+        </header>
+
+        <div class="receipt-line"></div>
+
+        <div class="receipt-row">
+            <span>Receipt:</span>
+            <strong>{{ sale.sale_number }}</strong>
+        </div>
+
+        <div class="receipt-row">
+            <span>Date:</span>
+            <span>
+                {{ sale.sale_date|date:"d/m/Y H:i" }}
+            </span>
+        </div>
+
+        <div class="receipt-row">
+            <span>Customer:</span>
+            <span>
+                {% if sale.customer %}
+                    {{ sale.customer.name }}
+                {% else %}
+                    Walk-in
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="receipt-row">
+            <span>Cashier:</span>
+            <span>
+                {{ sale.completed_by.get_full_name|default:sale.completed_by.username }}
+            </span>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        {% for item in sale.items.all %}
+            <div class="receipt-item">
+                <div class="receipt-item-name">
+                    {{ item.product.name }}
+                </div>
+
+                <div class="receipt-row">
+                    <span>
+                        {{ item.quantity|floatformat:3|intcomma }}
+                        ×
+                        {{ item.unit_price|floatformat:0|intcomma }}
+                    </span>
+
+                    <span>
+                        {{ item.line_total|floatformat:0|intcomma }}
+                    </span>
+                </div>
+
+                {% if item.line_discount > 0 %}
+                    <div class="receipt-row">
+                        <span>Line discount</span>
+                        <span>
+                            -{{ item.line_discount|floatformat:0|intcomma }}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="receipt-line"></div>
+
+        <div class="receipt-row">
+            <span>Subtotal</span>
+            <span>
+                TZS {{ sale.subtotal|floatformat:0|intcomma }}
+            </span>
+        </div>
+
+        <div class="receipt-row">
+            <span>Discount</span>
+            <span>
+                TZS {{ sale.discount|floatformat:0|intcomma }}
+            </span>
+        </div>
+
+        <div class="receipt-row receipt-total">
+            <span>Total</span>
+            <span>
+                TZS {{ sale.total_amount|floatformat:0|intcomma }}
+            </span>
+        </div>
+
+        <div class="receipt-row">
+            <span>Paid</span>
+            <span>
+                TZS {{ sale.amount_paid|floatformat:0|intcomma }}
+            </span>
+        </div>
+
+        <div class="receipt-row">
+            <span>Change</span>
+            <span>
+                TZS {{ sale.change_due|floatformat:0|intcomma }}
+            </span>
+        </div>
+
+        {% if sale.balance_due > 0 %}
+            <div class="receipt-row">
+                <span>Balance</span>
+                <strong>
+                    TZS {{ sale.balance_due|floatformat:0|intcomma }}
+                </strong>
+            </div>
+        {% endif %}
+
+        <div class="receipt-line"></div>
+
+        <footer class="receipt-footer">
+            <p>Thank you for your business.</p>
+            <p>Karibu tena.</p>
+        </footer>
+    </main>
+</body>
+</html>

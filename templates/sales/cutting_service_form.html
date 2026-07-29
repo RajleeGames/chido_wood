@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Record customer cutting without creating
+    new inventory stock.
+</p>
+{% endblock %}
+
+{% block content %}
+{{ cutting_item_data|json_script:"cuttingItemData" }}
+
+<form
+    method="post"
+    id="cuttingServiceForm"
+    data-loading-message="Saving cutting service"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ cutting_service.cutting_number }}
+                {% else %}
+                    New customer cutting service
+                {% endif %}
+            </h2>
+
+            <p>
+                Sale {{ sale.sale_number }}
+                ·
+                {% if sale.customer %}
+                    {{ sale.customer.name }}
+                {% else %}
+                    Walk-in customer
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'sale-detail' sale.pk %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_complete"
+                id="completeCuttingButton"
+                class="button button-primary"
+            >
+                Complete service
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="cutting-layout">
+        <section class="card cutting-form-card">
+            <div class="card-header">
+                <div>
+                    <h2>Cutting information</h2>
+
+                    <p>
+                        Select a Timber product from
+                        the completed sale.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cutting-form-body">
+                <div class="form-grid form-grid-two">
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.sale_item.id_for_label }}">
+                            Sold Timber product
+                        </label>
+
+                        {{ form.sale_item }}
+                        {{ form.sale_item.errors }}
+
+                        <small
+                            class="field-help"
+                            id="cuttingSoldInformation"
+                        >
+                            Select the Timber sale line.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.quantity_cut.id_for_label }}">
+                            Timber pieces receiving cutting
+                        </label>
+
+                        {{ form.quantity_cut }}
+                        {{ form.quantity_cut.errors }}
+
+                        <small class="field-help">
+                            This does not deduct stock again.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.number_of_cuts.id_for_label }}">
+                            Number of machine cuts
+                        </label>
+
+                        {{ form.number_of_cuts }}
+                        {{ form.number_of_cuts.errors }}
+
+                        <small class="field-help">
+                            One board divided into four
+                            sections normally requires
+                            three cuts.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.fee_per_cut.id_for_label }}">
+                            Fee per cut
+                        </label>
+
+                        {{ form.fee_per_cut }}
+                        {{ form.fee_per_cut.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.service_date.id_for_label }}">
+                            Service date
+                        </label>
+
+                        {{ form.service_date }}
+                        {{ form.service_date.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.payment_method.id_for_label }}">
+                            Payment method
+                        </label>
+
+                        {{ form.payment_method }}
+                        {{ form.payment_method.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.amount_tendered.id_for_label }}">
+                            Amount received
+                        </label>
+
+                        {{ form.amount_tendered }}
+                        {{ form.amount_tendered.errors }}
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.notes.id_for_label }}">
+                            Cutting instructions
+                        </label>
+
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="card cutting-summary-card">
+            <div class="card-header">
+                <div>
+                    <h2>Service summary</h2>
+
+                    <p>
+                        Cutting income and payment.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cutting-summary">
+                <div>
+                    <span>Timber pieces</span>
+                    <strong id="cuttingQuantity">
+                        0.000
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Machine cuts</span>
+                    <strong id="cuttingCuts">
+                        0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Fee per cut</span>
+                    <strong id="cuttingFeePerCut">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div class="cutting-summary-total">
+                    <span>Total cutting fee</span>
+                    <strong id="cuttingTotalFee">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Amount received</span>
+                    <strong id="cuttingAmountReceived">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Customer change</span>
+                    <strong id="cuttingChange">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Outstanding balance</span>
+                    <strong id="cuttingBalance">
+                        TZS 0
+                    </strong>
+                </div>
+            </div>
+
+            <div
+                class="sale-validation-warning"
+                id="cuttingValidationWarning"
+                hidden
+            ></div>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const dataElement = document.getElementById(
+            "cuttingItemData"
+        );
+
+        const itemList = JSON.parse(
+            dataElement.textContent
+        );
+
+        const items = new Map(
+            itemList.map((item) => [
+                String(item.id),
+                item,
+            ])
+        );
+
+        const itemInput = document.getElementById(
+            "id_sale_item"
+        );
+
+        const quantityInput = document.getElementById(
+            "id_quantity_cut"
+        );
+
+        const cutsInput = document.getElementById(
+            "id_number_of_cuts"
+        );
+
+        const feeInput = document.getElementById(
+            "id_fee_per_cut"
+        );
+
+        const paymentInput = document.getElementById(
+            "id_payment_method"
+        );
+
+        const amountInput = document.getElementById(
+            "id_amount_tendered"
+        );
+
+        const completeButton = document.getElementById(
+            "completeCuttingButton"
+        );
+
+        const warningElement = document.getElementById(
+            "cuttingValidationWarning"
+        );
+
+        const soldInformation = document.getElementById(
+            "cuttingSoldInformation"
+        );
+
+        const hasCustomer = (
+            {% if sale.customer %}
+                true
+            {% else %}
+                false
+            {% endif %}
+        );
+
+        function numberValue(value) {
+            const parsed = Number.parseFloat(value);
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(value);
+        }
+
+        function formattedNumber(
+            value,
+            minimumFractionDigits = 0,
+            maximumFractionDigits = 3
+        ) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    minimumFractionDigits,
+                    maximumFractionDigits,
+                }
+            ).format(value);
+        }
+
+        function selectedItem() {
+            if (!itemInput.value) {
+                return null;
+            }
+
+            return items.get(
+                String(itemInput.value)
+            ) || null;
+        }
+
+        function updateSelectedItem(
+            useDefaultFee = false
+        ) {
+            const item = selectedItem();
+
+            if (!item) {
+                soldInformation.textContent = (
+                    "Select the Timber sale line."
+                );
+
+                return;
+            }
+
+            soldInformation.textContent = (
+                `${item.product_name} `
+                + `(${item.product_code}) · `
+                + `${formattedNumber(
+                    numberValue(item.quantity_sold),
+                    3,
+                    3
+                )} sold`
+            );
+
+            if (
+                useDefaultFee
+                && numberValue(feeInput.value) <= 0
+            ) {
+                feeInput.value = item.default_fee;
+            }
+        }
+
+        function calculateCutting() {
+            const item = selectedItem();
+
+            const quantity = numberValue(
+                quantityInput.value
+            );
+
+            const cuts = Math.floor(
+                numberValue(cutsInput.value)
+            );
+
+            const feePerCut = numberValue(
+                feeInput.value
+            );
+
+            const totalFee = Math.max(
+                0,
+                cuts * feePerCut
+            );
+
+            const amountReceived = numberValue(
+                amountInput.value
+            );
+
+            const paymentMethod = (
+                paymentInput.value || "cash"
+            );
+
+            const amountPaid = Math.min(
+                totalFee,
+                amountReceived
+            );
+
+            const change = (
+                paymentMethod === "cash"
+                    ? Math.max(
+                        0,
+                        amountReceived - totalFee
+                    )
+                    : 0
+            );
+
+            const balance = Math.max(
+                0,
+                totalFee - amountPaid
+            );
+
+            document.getElementById(
+                "cuttingQuantity"
+            ).textContent = formattedNumber(
+                quantity,
+                3,
+                3
+            );
+
+            document.getElementById(
+                "cuttingCuts"
+            ).textContent = formattedNumber(
+                cuts,
+                0,
+                0
+            );
+
+            document.getElementById(
+                "cuttingFeePerCut"
+            ).textContent = (
+                `TZS ${money(feePerCut)}`
+            );
+
+            document.getElementById(
+                "cuttingTotalFee"
+            ).textContent = (
+                `TZS ${money(totalFee)}`
+            );
+
+            document.getElementById(
+                "cuttingAmountReceived"
+            ).textContent = (
+                `TZS ${money(amountReceived)}`
+            );
+
+            document.getElementById(
+                "cuttingChange"
+            ).textContent = (
+                `TZS ${money(change)}`
+            );
+
+            document.getElementById(
+                "cuttingBalance"
+            ).textContent = (
+                `TZS ${money(balance)}`
+            );
+
+            const problems = [];
+
+            if (!item) {
+                problems.push(
+                    "Select a sold Timber product."
+                );
+            }
+
+            if (quantity <= 0) {
+                problems.push(
+                    (
+                        "Enter the number of Timber "
+                        + "pieces receiving cutting."
+                    )
+                );
+            }
+
+            if (
+                item
+                && quantity
+                > numberValue(item.quantity_sold)
+            ) {
+                problems.push(
+                    (
+                        `Only ${formattedNumber(
+                            numberValue(item.quantity_sold),
+                            3,
+                            3
+                        )} pieces were sold.`
+                    )
+                );
+            }
+
+            if (cuts <= 0) {
+                problems.push(
+                    "Number of cuts must exceed zero."
+                );
+            }
+
+            if (feePerCut < 0) {
+                problems.push(
+                    "Cutting fee cannot be negative."
+                );
+            }
+
+            if (
+                paymentMethod !== "cash"
+                && amountReceived > totalFee
+            ) {
+                problems.push(
+                    (
+                        "Amount received cannot exceed "
+                        + "the cutting fee for this "
+                        + "payment method."
+                    )
+                );
+            }
+
+            if (
+                paymentMethod === "credit"
+                && !hasCustomer
+            ) {
+                problems.push(
+                    (
+                        "The original sale must have "
+                        + "a registered customer for "
+                        + "credit cutting."
+                    )
+                );
+            }
+
+            if (
+                balance > 0
+                && !hasCustomer
+            ) {
+                problems.push(
+                    (
+                        "The original sale must have "
+                        + "a customer because the fee "
+                        + "is not fully paid."
+                    )
+                );
+            }
+
+            if (problems.length) {
+                warningElement.hidden = false;
+
+                warningElement.innerHTML = problems
+                    .map(
+                        (problem) => (
+                            `<div>${problem}</div>`
+                        )
+                    )
+                    .join("");
+
+                completeButton.disabled = true;
+            } else {
+                warningElement.hidden = true;
+                warningElement.innerHTML = "";
+
+                completeButton.disabled = false;
+            }
+        }
+
+        itemInput.addEventListener(
+            "change",
+            () => {
+                updateSelectedItem(true);
+                calculateCutting();
+            }
+        );
+
+        [
+            quantityInput,
+            cutsInput,
+            feeInput,
+            paymentInput,
+            amountInput,
+        ].forEach((input) => {
+            input.addEventListener(
+                "input",
+                calculateCutting
+            );
+
+            input.addEventListener(
+                "change",
+                calculateCutting
+            );
+        });
+
+        updateSelectedItem(false);
+        calculateCutting();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Customer Accounts | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Track customer debts, balances and payments.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total customers</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ customer_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ debtor_count|intcomma }} customers owe money
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Customers with debt</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ debtor_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ clear_count|intcomma }} accounts are clear
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total customer debt</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_debt|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Opening, sales and cutting balances
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Payments collected</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ payments_collected|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Posted customer account payments</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Customer accounts</h2>
+
+        <p>
+            Review balances and receive full or partial payments.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'customer-list' %}"
+        class="button button-secondary"
+    >
+        Customer directory
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="customer-account-filter"
+            data-loading-message="Filtering customer accounts"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Customer name, phone or code"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option
+                    value="debtors"
+                    {% if status_filter == "debtors" %}selected{% endif %}
+                >
+                    Customers with debt
+                </option>
+
+                <option
+                    value="clear"
+                    {% if status_filter == "clear" %}selected{% endif %}
+                >
+                    Clear accounts
+                </option>
+
+                <option
+                    value="active"
+                    {% if status_filter == "active" %}selected{% endif %}
+                >
+                    Active customers
+                </option>
+
+                <option
+                    value="inactive"
+                    {% if status_filter == "inactive" %}selected{% endif %}
+                >
+                    Inactive customers
+                </option>
+
+                <option
+                    value="all"
+                    {% if status_filter == "all" %}selected{% endif %}
+                >
+                    All customers
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            <a
+                href="{% url 'customer-account-list' %}"
+                class="button button-secondary"
+            >
+                Clear
+            </a>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Opening debt</th>
+                    <th>Sales debt</th>
+                    <th>Cutting debt</th>
+                    <th>Current balance</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <strong>{{ customer.name }}</strong>
+
+                            <small class="table-subtitle">
+                                {{ customer.customer_code }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ customer.phone|default:"—" }}
+                        </td>
+
+                        <td>
+                            TZS {{ customer.remaining_opening_debt|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ customer.sale_debt|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ customer.cutting_debt|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                TZS {{ customer.account_balance|floatformat:0|intcomma }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {% if customer.account_balance > 0 %}
+                                <span class="badge badge-danger">
+                                    Owes money
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success">
+                                    Clear
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="table-action-links">
+                                <a
+                                    href="{% url 'customer-account-detail' customer.pk %}"
+                                    class="table-link"
+                                >
+                                    Statement
+                                </a>
+
+                                {% if customer.account_balance > 0 %}
+                                    <a
+                                        href="{% url 'customer-payment-create' customer.pk %}"
+                                        class="table-link"
+                                    >
+                                        Receive payment
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="table-empty">
+                                No customer accounts matched the filters.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

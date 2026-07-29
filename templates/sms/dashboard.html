@@ -1,0 +1,80 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Contacts, campaigns, delivery tracking and Beem balance</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head">
+    <div>
+        <span class="sms-eyebrow">Communication center</span>
+        <h2>SMS overview</h2>
+        <p>Send personalized messages and monitor delivery from one place.</p>
+    </div>
+    <div class="sms-head-actions">
+        <a href="{% url 'sms-compose' %}" class="button button-primary">Send SMS</a>
+        <form method="post" action="{% url 'sms-check-balance' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'sms-dashboard' %}">
+            <button type="submit" class="button button-secondary">Refresh balance</button>
+        </form>
+    </div>
+</section>
+
+{% if not credentials_ready %}
+<div class="sms-notice sms-notice-warning">
+    <strong>Beem credentials are not configured.</strong>
+    <span>Add BEEM_API_KEY and BEEM_SECRET_KEY to your environment before sending.</span>
+</div>
+{% endif %}
+
+<section class="sms-kpi-grid">
+    <article class="sms-kpi"><span>Total contacts</span><strong>{{ summary.contacts }}</strong><small>{{ summary.active_contacts }} active</small></article>
+    <article class="sms-kpi"><span>Messages today</span><strong>{{ summary.messages_today }}</strong><small>{{ summary.sent }} sent overall</small></article>
+    <article class="sms-kpi"><span>Delivered</span><strong>{{ summary.delivered }}</strong><small>{{ summary.failed }} failed or undelivered</small></article>
+    <article class="sms-kpi"><span>Campaigns</span><strong>{{ summary.campaigns }}</strong><small>{{ summary.senders_ready }} sender IDs ready</small></article>
+    <article class="sms-kpi"><span>Promotional audience</span><strong>{{ summary.promotional_contacts }}</strong><small>Contacts who opted in</small></article>
+    <article class="sms-kpi">
+        <span>SMS balance</span>
+        <strong>{% if setting.cached_balance != None %}{{ setting.cached_balance }}{% else %}—{% endif %}</strong>
+        <small>{% if setting.balance_checked_at %}Checked {{ setting.balance_checked_at|date:"d M Y, H:i" }}{% else %}Not checked yet{% endif %}</small>
+    </article>
+</section>
+
+<section class="sms-two-column">
+    <article class="sms-card">
+        <header class="sms-card-head">
+            <div><h3>Recent messages</h3><p>Latest outgoing messages and current status.</p></div>
+            <a href="{% url 'sms-message-list' %}">View log</a>
+        </header>
+        <div class="sms-table-wrap">
+            <table class="sms-table">
+                <thead><tr><th>Recipient</th><th>Status</th><th>Parts</th><th>Time</th></tr></thead>
+                <tbody>
+                    {% for row in recent_messages %}
+                    <tr>
+                        <td><a href="{% url 'sms-message-detail' row.pk %}"><strong>{{ row.contact.name|default:row.dest_addr }}</strong><small>{{ row.dest_addr }}</small></a></td>
+                        <td>{% include 'sms/_status.html' with value=row.status label=row.get_status_display %}</td>
+                        <td>{{ row.sms_parts }}</td>
+                        <td>{{ row.created_at|date:"d M, H:i" }}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="4" class="sms-empty-cell">No messages have been sent yet.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="sms-card">
+        <header class="sms-card-head">
+            <div><h3>Recent campaigns</h3><p>Multi-recipient and tracked sends.</p></div>
+            <a href="{% url 'sms-campaign-list' %}">View campaigns</a>
+        </header>
+        <div class="sms-campaign-stack">
+            {% for campaign in recent_campaigns %}
+            <a href="{% url 'sms-campaign-detail' campaign.pk %}" class="sms-campaign-row">
+                <div><strong>{{ campaign.title }}</strong><span>{{ campaign.total_recipients }} recipients · {{ campaign.get_message_type_display }}</span></div>
+                {% include 'sms/_status.html' with value=campaign.status label=campaign.get_status_display %}
+            </a>
+            {% empty %}<div class="sms-empty-state"><strong>No campaigns yet</strong><span>Your first sent campaign will appear here.</span></div>{% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

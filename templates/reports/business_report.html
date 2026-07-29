@@ -1,0 +1,697 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Business Reports | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Sales, FIFO costs, cutting income,
+    expenses and business profit.
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>Business performance report</h2>
+
+        <p>
+            {{ start_date|date:"d M Y" }}
+            to
+            {{ end_date|date:"d M Y" }}
+            ·
+            {{ report_days|intcomma }} days
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'business-report-csv' %}?date_from={{ date_from }}&date_to={{ date_to }}"
+            class="button button-secondary"
+        >
+            Export CSV
+        </a>
+    </div>
+</div>
+
+<section class="card report-filter-card">
+    <form
+        method="get"
+        class="report-filter-form"
+        data-loading-message="Generating business report"
+    >
+        <div class="form-group">
+            <label for="reportDateFrom">
+                Date from
+            </label>
+
+            <input
+                id="reportDateFrom"
+                type="date"
+                name="date_from"
+                value="{{ date_from }}"
+                class="form-control"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="reportDateTo">
+                Date to
+            </label>
+
+            <input
+                id="reportDateTo"
+                type="date"
+                name="date_to"
+                value="{{ date_to }}"
+                class="form-control"
+                required
+            >
+        </div>
+
+        <button
+            type="submit"
+            class="button button-primary"
+        >
+            Generate report
+        </button>
+    </form>
+</section>
+
+<div class="stats-grid report-main-stats">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Sales revenue</span>
+            <span class="stat-icon">SAL</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ sales_revenue|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ sales_count|intcomma }} completed sales
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Gross profit</span>
+            <span class="stat-icon">GP</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ gross_profit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ gross_profit_margin|floatformat:1 }}%
+            gross margin
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Cutting income</span>
+            <span class="stat-icon">CUT</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ cutting_income|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ cutting_service_count|intcomma }}
+            completed services
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Operating expenses</span>
+            <span class="stat-icon">EXP</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ expense_total|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ expense_count|intcomma }} posted expenses
+        </small>
+    </article>
+
+    <article class="stat-card report-net-profit-card">
+        <div class="stat-card-header">
+            <span>Net profit</span>
+            <span class="stat-icon">NET</span>
+        </div>
+
+        <strong
+            class="stat-value {% if net_profit < 0 %}report-negative{% else %}report-positive{% endif %}"
+        >
+            TZS {{ net_profit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ net_profit_margin|floatformat:1 }}%
+            net margin
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Payments collected</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ payments_collected|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Initial and later customer payments
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Inventory value</span>
+            <span class="stat-icon">STK</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ stock_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Current FIFO stock cost
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Customer debt</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ customer_debt_total|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ debtor_count|intcomma }}
+            customer accounts
+        </small>
+    </article>
+</div>
+
+<div class="report-two-column">
+    <section class="card report-profit-card">
+        <div class="card-header">
+            <div>
+                <h2>Profit and loss</h2>
+
+                <p>
+                    Purchase stock is charged only when sold
+                    through FIFO cost of goods.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-financial-lines">
+            <div>
+                <span>Sales revenue</span>
+
+                <strong>
+                    TZS {{ sales_revenue|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Less: FIFO cost of goods sold</span>
+
+                <strong>
+                    TZS {{ cost_of_goods|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div class="report-financial-subtotal">
+                <span>Gross profit</span>
+
+                <strong>
+                    TZS {{ gross_profit|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Add: Customer cutting income</span>
+
+                <strong>
+                    TZS {{ cutting_income|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div class="report-financial-subtotal">
+                <span>Operating income</span>
+
+                <strong>
+                    TZS {{ operating_income|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Less: Operating expenses</span>
+
+                <strong>
+                    TZS {{ expense_total|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div class="report-financial-total">
+                <span>Net profit</span>
+
+                <strong class="{% if net_profit < 0 %}report-negative{% else %}report-positive{% endif %}">
+                    TZS {{ net_profit|floatformat:0|intcomma }}
+                </strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="card report-position-card">
+        <div class="card-header">
+            <div>
+                <h2>Business position</h2>
+
+                <p>
+                    Purchases, stock and outstanding balances.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-position-grid">
+            <div>
+                <span>Posted purchases</span>
+
+                <strong>
+                    TZS {{ purchase_total|floatformat:0|intcomma }}
+                </strong>
+
+                <small>
+                    {{ purchase_count|intcomma }}
+                    purchases
+                </small>
+            </div>
+
+            <div>
+                <span>Purchase amount paid</span>
+
+                <strong>
+                    TZS {{ purchase_paid|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Supplier payable</span>
+
+                <strong>
+                    TZS {{ purchase_payable|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Current inventory value</span>
+
+                <strong>
+                    TZS {{ stock_value|floatformat:0|intcomma }}
+                </strong>
+
+                <small>
+                    {{ stock_quantity|floatformat:3|intcomma }}
+                    total stock quantity
+                </small>
+            </div>
+
+            <div>
+                <span>Low-stock products</span>
+
+                <strong>
+                    {{ low_stock_count|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Out-of-stock products</span>
+
+                <strong>
+                    {{ out_of_stock_count|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Customer debt</span>
+
+                <strong>
+                    TZS {{ customer_debt_total|floatformat:0|intcomma }}
+                </strong>
+
+                <small>
+                    {{ debtor_count|intcomma }} debtors
+                </small>
+            </div>
+
+            <div>
+                <span>Average completed sale</span>
+
+                <strong>
+                    TZS {{ average_sale_value|floatformat:0|intcomma }}
+                </strong>
+            </div>
+        </div>
+    </section>
+</div>
+
+<section class="table-card report-section">
+    <div class="card-header">
+        <div>
+            <h2>Daily performance</h2>
+
+            <p>
+                Revenue, cost, service income,
+                expenses and daily profit.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sales revenue</th>
+                    <th>FIFO cost</th>
+                    <th>Gross profit</th>
+                    <th>Cutting income</th>
+                    <th>Expenses</th>
+                    <th>Net profit</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in daily_rows %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ row.date|date:"d M Y" }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            TZS {{ row.sales_revenue|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ row.cost_of_goods|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ row.gross_profit|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ row.cutting_income|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ row.expenses|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            <strong class="{% if row.net_profit < 0 %}report-negative{% else %}report-positive{% endif %}">
+                                TZS {{ row.net_profit|floatformat:0|intcomma }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                No business activity exists
+                                within this date range.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="report-two-column">
+    <section class="card report-ranking-card">
+        <div class="card-header">
+            <div>
+                <h2>Top-selling products</h2>
+
+                <p>
+                    Overall sale discounts are allocated
+                    proportionally across products.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-ranking-list">
+            {% for product in top_products %}
+                <div class="report-ranking-row">
+                    <div class="report-ranking-heading">
+                        <div>
+                            <strong>
+                                {{ product.name }}
+                            </strong>
+
+                            <small>
+                                {{ product.code }}
+                                ·
+                                {{ product.category }}
+                            </small>
+                        </div>
+
+                        <span>
+                            TZS {{ product.revenue|floatformat:0|intcomma }}
+                        </span>
+                    </div>
+
+                    <div class="report-progress">
+                        <span
+                            style="width: {{ product.percentage }}%;"
+                        ></span>
+                    </div>
+
+                    <div class="report-ranking-footer">
+                        <span>
+                            Qty:
+                            {{ product.quantity|floatformat:3|intcomma }}
+                        </span>
+
+                        <span>
+                            Cost:
+                            TZS {{ product.cost|floatformat:0|intcomma }}
+                        </span>
+
+                        <span>
+                            Profit:
+                            TZS {{ product.profit|floatformat:0|intcomma }}
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="table-empty">
+                    No completed product sales found.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card report-ranking-card">
+        <div class="card-header">
+            <div>
+                <h2>Expense categories</h2>
+
+                <p>
+                    Posted operating expense distribution.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-ranking-list">
+            {% for category in expense_categories %}
+                <div class="report-ranking-row">
+                    <div class="report-ranking-heading">
+                        <div>
+                            <strong>
+                                {{ category.name }}
+                            </strong>
+
+                            <small>
+                                {{ category.count|intcomma }}
+                                expense records
+                            </small>
+                        </div>
+
+                        <span>
+                            TZS {{ category.amount|floatformat:0|intcomma }}
+                        </span>
+                    </div>
+
+                    <div class="report-progress">
+                        <span
+                            style="width: {{ category.percentage }}%;"
+                        ></span>
+                    </div>
+
+                    <div class="report-ranking-footer">
+                        <span>
+                            {{ category.percentage|floatformat:1 }}%
+                            of expenses
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="table-empty">
+                    No posted expenses found.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<div class="report-two-column">
+    <section class="card report-ranking-card">
+        <div class="card-header">
+            <div>
+                <h2>Sales payment methods</h2>
+
+                <p>
+                    Completed sales grouped by their
+                    original payment method.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-ranking-list">
+            {% for method in payment_methods %}
+                <div class="report-ranking-row">
+                    <div class="report-ranking-heading">
+                        <div>
+                            <strong>
+                                {{ method.label }}
+                            </strong>
+
+                            <small>
+                                {{ method.sale_count|intcomma }}
+                                sales
+                            </small>
+                        </div>
+
+                        <span>
+                            TZS {{ method.revenue|floatformat:0|intcomma }}
+                        </span>
+                    </div>
+
+                    <div class="report-progress">
+                        <span
+                            style="width: {{ method.percentage }}%;"
+                        ></span>
+                    </div>
+
+                    <div class="report-ranking-footer">
+                        <span>
+                            {{ method.percentage|floatformat:1 }}%
+                            of sales revenue
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="table-empty">
+                    No completed sales found.
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card report-collections-card">
+        <div class="card-header">
+            <div>
+                <h2>Payment collections</h2>
+
+                <p>
+                    Actual amounts received during
+                    the selected period.
+                </p>
+            </div>
+        </div>
+
+        <div class="report-financial-lines">
+            <div>
+                <span>Initial sale payments</span>
+
+                <strong>
+                    TZS {{ initial_sale_payments|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Initial cutting payments</span>
+
+                <strong>
+                    TZS {{ initial_cutting_payments|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Later customer debt payments</span>
+
+                <strong>
+                    TZS {{ account_payments_total|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div class="report-financial-total">
+                <span>Total payments collected</span>
+
+                <strong>
+                    TZS {{ payments_collected|floatformat:0|intcomma }}
+                </strong>
+            </div>
+        </div>
+    </section>
+</div>
+
+<section class="card report-note-card">
+    <div class="card-header">
+        <div>
+            <h2>How the report calculates profit</h2>
+
+            <p>
+                Purchases do not immediately become an expense.
+            </p>
+        </div>
+    </div>
+
+    <div class="report-note-body">
+        <p>
+            Stock purchases create inventory assets.
+            Their cost enters the profit report only when
+            products are sold through FIFO cost of goods sold.
+        </p>
+
+        <p>
+            Customer cutting is separate service income.
+            Posted operating expenses reduce the final net profit.
+        </p>
+    </div>
+</section>
+{% endblock %}

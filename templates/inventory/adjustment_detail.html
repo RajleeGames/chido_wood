@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ adjustment.adjustment_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Stock adjustment details and FIFO cost allocation.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ adjustment.adjustment_number }}</h2>
+
+        <p>
+            {{ adjustment.product.name }}
+            ·
+            {{ adjustment.adjustment_date|date:"d M Y" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'stock-adjustment-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        {% if adjustment.status == "draft" %}
+            <a
+                href="{% url 'stock-adjustment-edit' adjustment.pk %}"
+                class="button button-secondary"
+            >
+                Edit
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'stock-adjustment-cancel' adjustment.pk %}"
+                data-loading-message="Cancelling adjustment"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-danger"
+                >
+                    Cancel adjustment
+                </button>
+            </form>
+
+            <form
+                method="post"
+                action="{% url 'stock-adjustment-post' adjustment.pk %}"
+                data-loading-message="Posting adjustment"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Post adjustment
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Adjustment type</span>
+            <span class="stat-icon">TYPE</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ adjustment.get_adjustment_type_display }}
+        </strong>
+
+        <small>{{ adjustment.reason }}</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Quantity</span>
+            <span class="stat-icon">QTY</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if adjustment.removes_stock %}
+                -{{ adjustment.quantity|floatformat:3|intcomma }}
+            {% else %}
+                +{{ adjustment.quantity|floatformat:3|intcomma }}
+            {% endif %}
+        </strong>
+
+        <small>
+            {{ adjustment.product.get_measurement_unit_display }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Stock cost</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            {% if adjustment.status == "posted" %}
+                TZS {{ adjustment.total_cost|floatformat:0|intcomma }}
+            {% else %}
+                Not calculated
+            {% endif %}
+        </strong>
+
+        <small>
+            {% if adjustment.adds_stock %}
+                Unit cost:
+                TZS {{ adjustment.unit_cost|floatformat:2|intcomma }}
+            {% else %}
+                Calculated using FIFO
+            {% endif %}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ adjustment.get_status_display }}
+        </strong>
+
+        <small>
+            {% if adjustment.posted_at %}
+                {{ adjustment.posted_at|date:"d M Y H:i" }}
+            {% else %}
+                Stock not yet changed
+            {% endif %}
+        </small>
+    </article>
+</div>
+
+<section class="card adjustment-information-card">
+    <div class="card-header">
+        <div>
+            <h2>Adjustment information</h2>
+            <p>Reason, notes and audit details.</p>
+        </div>
+    </div>
+
+    <div class="adjustment-detail-grid">
+        <div>
+            <span>Product</span>
+            <strong>{{ adjustment.product.name }}</strong>
+        </div>
+
+        <div>
+            <span>Product code</span>
+            <strong>{{ adjustment.product.code }}</strong>
+        </div>
+
+        <div>
+            <span>Category</span>
+            <strong>{{ adjustment.product.category.name }}</strong>
+        </div>
+
+        <div>
+            <span>Created by</span>
+            <strong>
+                {{ adjustment.created_by.get_full_name|default:adjustment.created_by.username }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Reason</span>
+            <strong>{{ adjustment.reason }}</strong>
+        </div>
+
+        <div>
+            <span>Notes</span>
+            <strong>{{ adjustment.notes|default:"—" }}</strong>
+        </div>
+    </div>
+</section>
+
+{% if adjustment.created_batch %}
+    <section class="table-card inventory-detail-section">
+        <div class="card-header">
+            <div>
+                <h2>Created stock batch</h2>
+                <p>This adjustment added a new stock batch.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Received</th>
+                        <th>Remaining</th>
+                        <th>Unit cost</th>
+                        <th>Total value</th>
+                        <th>Received date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>
+                            #{{ adjustment.created_batch.id }}
+                        </td>
+
+                        <td>
+                            {{ adjustment.created_batch.received_quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            {{ adjustment.created_batch.remaining_quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ adjustment.created_batch.unit_cost|floatformat:2|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ adjustment.created_batch.received_value|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {{ adjustment.created_batch.received_at|date:"d M Y H:i" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+
+{% if adjustment.batch_usages.exists %}
+    <section class="table-card inventory-detail-section">
+        <div class="card-header">
+            <div>
+                <h2>FIFO batch usage</h2>
+                <p>Stock removed from the oldest batches first.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Batch</th>
+                        <th>Source</th>
+                        <th>Reference</th>
+                        <th>Quantity used</th>
+                        <th>Unit cost</th>
+                        <th>Total cost</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for usage in adjustment.batch_usages.all %}
+                        <tr>
+                            <td>#{{ usage.batch.id }}</td>
+
+                            <td>
+                                {{ usage.batch.get_source_type_display }}
+                            </td>
+
+                            <td>
+                                {{ usage.batch.source_reference|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ usage.quantity_used|floatformat:3|intcomma }}
+                            </td>
+
+                            <td>
+                                TZS {{ usage.unit_cost|floatformat:2|intcomma }}
+                            </td>
+
+                            <td>
+                                TZS {{ usage.total_cost|floatformat:0|intcomma }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

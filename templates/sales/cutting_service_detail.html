@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ cutting_service.cutting_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Customer cutting income linked to
+    a completed Timber sale.
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>
+            {{ cutting_service.cutting_number }}
+        </h2>
+
+        <p>
+            Sale {{ cutting_service.sale.sale_number }}
+            ·
+            {{ cutting_service.service_date|date:"d M Y H:i" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'cutting-service-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        <a
+            href="{% url 'sale-detail' cutting_service.sale.pk %}"
+            class="button button-secondary"
+        >
+            View sale
+        </a>
+
+        {% if cutting_service.status == "draft" %}
+            <a
+                href="{% url 'cutting-service-edit' cutting_service.pk %}"
+                class="button button-secondary"
+            >
+                Edit
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'cutting-service-cancel' cutting_service.pk %}"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-danger"
+                >
+                    Cancel
+                </button>
+            </form>
+
+            <form
+                method="post"
+                action="{% url 'cutting-service-complete' cutting_service.pk %}"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Complete service
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total fee</span>
+            <span class="stat-icon">CUT</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ cutting_service.current_total_fee|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ cutting_service.number_of_cuts|intcomma }}
+            machine cuts
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Amount paid</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ cutting_service.amount_paid|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ cutting_service.payment_status }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Balance</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ cutting_service.balance_due|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Change:
+            TZS {{ cutting_service.change_due|floatformat:0|intcomma }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ cutting_service.get_status_display }}
+        </strong>
+
+        <small>
+            Separate service income
+        </small>
+    </article>
+</div>
+
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2>Cutting details</h2>
+
+            <p>
+                No inventory movement is created
+                by this service.
+            </p>
+        </div>
+    </div>
+
+    <div class="sale-detail-grid">
+        <div>
+            <span>Customer</span>
+
+            <strong>
+                {% if cutting_service.customer %}
+                    {{ cutting_service.customer.name }}
+                {% else %}
+                    Walk-in customer
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Timber product</span>
+            <strong>
+                {{ cutting_service.product.name }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Pieces receiving cutting</span>
+            <strong>
+                {{ cutting_service.quantity_cut|floatformat:3|intcomma }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Machine cuts</span>
+            <strong>
+                {{ cutting_service.number_of_cuts|intcomma }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Fee per cut</span>
+            <strong>
+                TZS {{ cutting_service.fee_per_cut|floatformat:0|intcomma }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Payment method</span>
+            <strong>
+                {{ cutting_service.get_payment_method_display }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Created by</span>
+            <strong>
+                {{ cutting_service.created_by.get_full_name|default:cutting_service.created_by.username }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Completed by</span>
+
+            <strong>
+                {% if cutting_service.completed_by %}
+                    {{ cutting_service.completed_by.get_full_name|default:cutting_service.completed_by.username }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Instructions</span>
+            <strong>
+                {{ cutting_service.notes|default:"—" }}
+            </strong>
+        </div>
+    </div>
+</section>
+{% endblock %}

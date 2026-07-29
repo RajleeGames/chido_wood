@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ product.name }} Inventory | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Product stock batches and complete movement history.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ product.name }}</h2>
+
+        <p>
+            {{ product.code }}
+            ·
+            {{ product.category.name }}
+
+            {% if product.dimension_note %}
+                · {{ product.dimension_note }}
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'inventory-list' %}"
+            class="button button-secondary"
+        >
+            Back to inventory
+        </a>
+
+        <a
+            href="{% url 'product-list' %}?edit={{ product.pk }}"
+            class="button button-secondary"
+        >
+            Edit product
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current stock</span>
+            <span class="stat-icon">QTY</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ current_stock|floatformat:3|intcomma }}
+        </strong>
+
+        <small>
+            {{ product.get_measurement_unit_display }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Average FIFO cost</span>
+            <span class="stat-icon">AVG</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ average_unit_cost|floatformat:2|intcomma }}
+        </strong>
+
+        <small>
+            Weighted remaining-batch cost
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current stock value</span>
+            <span class="stat-icon">COST</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ stock_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Value of remaining stock
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Expected profit</span>
+            <span class="stat-icon">GP</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ expected_profit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Expected sales:
+            TZS {{ expected_selling_value|floatformat:0|intcomma }}
+        </small>
+    </article>
+</div>
+
+<div class="inventory-product-summary">
+    <div>
+        <span>Stock status</span>
+
+        {% if stock_status == "available" %}
+            <strong class="badge badge-success">
+                {{ stock_status_label }}
+            </strong>
+
+        {% elif stock_status == "low" %}
+            <strong class="badge badge-warning">
+                {{ stock_status_label }}
+            </strong>
+
+        {% else %}
+            <strong class="badge badge-danger">
+                {{ stock_status_label }}
+            </strong>
+        {% endif %}
+    </div>
+
+    <div>
+        <span>Low-stock level</span>
+        <strong>
+            {{ product.low_stock_level|floatformat:3|intcomma }}
+        </strong>
+    </div>
+
+    <div>
+        <span>Selling price</span>
+        <strong>
+            TZS {{ product.selling_price|floatformat:0|intcomma }}
+        </strong>
+    </div>
+
+    <div>
+        <span>Active FIFO batches</span>
+        <strong>
+            {{ active_batch_count|intcomma }}
+        </strong>
+    </div>
+</div>
+
+<section class="table-card inventory-detail-section">
+    <div class="card-header">
+        <div>
+            <h2>Stock batches</h2>
+
+            <p>
+                Older remaining batches will be consumed first.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Batch</th>
+                    <th>Source</th>
+                    <th>Reference</th>
+                    <th>Supplier</th>
+                    <th>Received</th>
+                    <th>Remaining</th>
+                    <th>Used</th>
+                    <th>Unit cost</th>
+                    <th>Remaining value</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for batch in batches %}
+                    <tr>
+                        <td>
+                            <span class="code-text">
+                                #{{ batch.id }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ batch.get_source_type_display }}
+                        </td>
+
+                        <td>
+                            {{ batch.source_reference|default:"—" }}
+                        </td>
+
+                        <td>
+                            {% if batch.supplier %}
+                                {{ batch.supplier.name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ batch.received_quantity|floatformat:3|intcomma }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ batch.remaining_quantity|floatformat:3|intcomma }}
+                            </strong>
+                        </td>
+
+                        <td>
+    {{ batch.used_quantity|floatformat:3|intcomma }}
+</td>
+
+                        <td>
+                            TZS {{ batch.unit_cost|floatformat:2|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ batch.remaining_value|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {{ batch.received_at|date:"d M Y H:i" }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="table-empty">
+                                No stock batches exist for this product.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="table-card inventory-detail-section">
+    <div class="card-header">
+        <div>
+            <h2>Stock movement history</h2>
+
+            <p>
+                Complete increases and decreases for this product.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date and time</th>
+                    <th>Movement</th>
+                    <th>Quantity</th>
+                    <th>Unit cost</th>
+                    <th>Total cost</th>
+                    <th>Batch</th>
+                    <th>Reference</th>
+                    <th>Recorded by</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for movement in movement_page %}
+                    <tr>
+                        <td>
+                            {{ movement.created_at|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+                            {{ movement.get_movement_type_display }}
+                        </td>
+
+                        <td>
+                            {% if movement.quantity_delta > 0 %}
+                                <span class="stock-quantity-in">
+                                    +{{ movement.quantity_delta|floatformat:3|intcomma }}
+                                </span>
+                            {% else %}
+                                <span class="stock-quantity-out">
+                                    {{ movement.quantity_delta|floatformat:3|intcomma }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ movement.unit_cost|floatformat:2|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ movement.total_cost|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if movement.batch %}
+                                <span class="code-text">
+                                    #{{ movement.batch.id }}
+                                </span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ movement.reference|default:"—" }}
+                        </td>
+
+                        <td>
+                            {% if movement.created_by %}
+                                {{ movement.created_by.get_full_name|default:movement.created_by.username }}
+                            {% else %}
+                                System
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="table-empty">
+                                No stock movements exist for this product.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if movement_page.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Movement page
+                {{ movement_page.number|intcomma }}
+                of
+                {{ movement_page.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if movement_page.has_previous %}
+                    <a
+                        href="?movement_page={{ movement_page.previous_page_number }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if movement_page.has_next %}
+                    <a
+                        href="?movement_page={{ movement_page.next_page_number }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Add products, supplier costs and purchase expenses.</p>
+{% endblock %}
+
+{% block content %}
+<form
+    method="post"
+    id="purchaseForm"
+    data-loading-message="Saving purchase"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ purchase.purchase_number }}
+                {% else %}
+                    New supplier purchase
+                {% endif %}
+            </h2>
+
+            <p>
+                Save as draft first or post directly into stock.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'purchase-list' %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_post"
+                class="button button-primary"
+                data-confirm-post
+            >
+                Save and post
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+        <div class="form-error-box">
+            {{ formset.non_form_errors }}
+        </div>
+    {% endif %}
+
+    <section class="card purchase-section">
+        <div class="card-header">
+            <div>
+                <h2>Purchase information</h2>
+                <p>Supplier, date and payment details.</p>
+            </div>
+        </div>
+
+        <div class="purchase-section-body">
+            <div class="form-grid form-grid-three">
+                <div class="form-group">
+                    <label for="{{ form.supplier.id_for_label }}">
+                        Supplier
+                    </label>
+
+                    {{ form.supplier }}
+                    {{ form.supplier.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.purchase_date.id_for_label }}">
+                        Purchase date
+                    </label>
+
+                    {{ form.purchase_date }}
+                    {{ form.purchase_date.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.supplier_invoice_number.id_for_label }}">
+                        Supplier invoice
+                    </label>
+
+                    {{ form.supplier_invoice_number }}
+                    {{ form.supplier_invoice_number.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_method.id_for_label }}">
+                        Payment method
+                    </label>
+
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.amount_paid.id_for_label }}">
+                        Amount paid
+                    </label>
+
+                    {{ form.amount_paid }}
+                    {{ form.amount_paid.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.discount.id_for_label }}">
+                        Purchase discount
+                    </label>
+
+                    {{ form.discount }}
+                    {{ form.discount.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card purchase-section">
+        <div class="card-header">
+            <div>
+                <h2>Purchase products</h2>
+                <p>Add every product included in this purchase.</p>
+            </div>
+
+            <button
+                type="button"
+                class="button button-secondary"
+                id="addPurchaseItem"
+            >
+                Add product
+            </button>
+        </div>
+
+        <div class="purchase-items-wrap">
+            {{ formset.management_form }}
+
+            <div class="table-responsive">
+                <table class="data-table purchase-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Supplier unit cost</th>
+                            <th>Line total</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="purchaseItemsBody">
+                        {% for item_form in formset %}
+                            <tr class="purchase-item-row">
+                                <td>
+                                    {{ item_form.id }}
+                                    {{ item_form.product }}
+                                    {{ item_form.product.errors }}
+                                </td>
+
+                                <td>
+                                    {{ item_form.quantity }}
+                                    {{ item_form.quantity.errors }}
+                                </td>
+
+                                <td>
+                                    {{ item_form.unit_cost }}
+                                    {{ item_form.unit_cost.errors }}
+                                </td>
+
+                                <td>
+                                    <strong
+                                        class="purchase-line-total"
+                                    >
+                                        TZS 0
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ item_form.notes }}
+                                    {{ item_form.notes.errors }}
+                                </td>
+
+                                <td>
+                                    <div class="hidden-delete-field">
+                                        {{ item_form.DELETE }}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="item-remove-button"
+                                        data-remove-purchase-item
+                                    >
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <template id="purchaseItemTemplate">
+                <tr class="purchase-item-row">
+                    <td>
+                        {{ formset.empty_form.id }}
+                        {{ formset.empty_form.product }}
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.quantity }}
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.unit_cost }}
+                    </td>
+
+                    <td>
+                        <strong class="purchase-line-total">
+                            TZS 0
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.notes }}
+                    </td>
+
+                    <td>
+                        <div class="hidden-delete-field">
+                            {{ formset.empty_form.DELETE }}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="item-remove-button"
+                            data-remove-purchase-item
+                        >
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            </template>
+        </div>
+    </section>
+
+    <div class="purchase-bottom-grid">
+        <section class="card purchase-section">
+            <div class="card-header">
+                <div>
+                    <h2>Additional purchase costs</h2>
+                    <p>These costs increase the real stock cost.</p>
+                </div>
+            </div>
+
+            <div class="purchase-section-body">
+                <div class="form-grid form-grid-three">
+                    <div class="form-group">
+                        <label for="{{ form.transport_cost.id_for_label }}">
+                            Transport
+                        </label>
+
+                        {{ form.transport_cost }}
+                        {{ form.transport_cost.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.loading_cost.id_for_label }}">
+                            Loading
+                        </label>
+
+                        {{ form.loading_cost }}
+                        {{ form.loading_cost.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.other_cost.id_for_label }}">
+                            Other cost
+                        </label>
+
+                        {{ form.other_cost }}
+                        {{ form.other_cost.errors }}
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.notes.id_for_label }}">
+                            Purchase notes
+                        </label>
+
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="card purchase-summary-card">
+            <div class="card-header">
+                <div>
+                    <h2>Purchase summary</h2>
+                    <p>Live purchase calculation.</p>
+                </div>
+            </div>
+
+            <div class="purchase-summary">
+                <div>
+                    <span>Products subtotal</span>
+                    <strong id="purchaseSubtotal">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Additional costs</span>
+                    <strong id="purchaseAdditionalCosts">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Discount</span>
+                    <strong id="purchaseDiscount">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div class="purchase-summary-total">
+                    <span>Total purchase</span>
+                    <strong id="purchaseGrandTotal">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Amount paid</span>
+                    <strong id="purchaseAmountPaid">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Supplier balance</span>
+                    <strong id="purchaseBalance">
+                        TZS 0
+                    </strong>
+                </div>
+            </div>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const body = document.getElementById(
+            "purchaseItemsBody"
+        );
+
+        const template = document.getElementById(
+            "purchaseItemTemplate"
+        );
+
+        const addButton = document.getElementById(
+            "addPurchaseItem"
+        );
+
+        const totalFormsInput = document.getElementById(
+            "id_items-TOTAL_FORMS"
+        );
+
+        function numberValue(value) {
+            const parsed = Number.parseFloat(value);
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(value);
+        }
+
+        function getInput(name) {
+            return document.querySelector(
+                `[name="${name}"]`
+            );
+        }
+
+        function calculatePurchase() {
+            let subtotal = 0;
+
+            document.querySelectorAll(
+                ".purchase-item-row"
+            ).forEach((row) => {
+                const deleteInput = row.querySelector(
+                    'input[name$="-DELETE"]'
+                );
+
+                if (
+                    deleteInput
+                    && deleteInput.checked
+                ) {
+                    return;
+                }
+
+                const quantityInput = row.querySelector(
+                    'input[name$="-quantity"]'
+                );
+
+                const costInput = row.querySelector(
+                    'input[name$="-unit_cost"]'
+                );
+
+                const quantity = numberValue(
+                    quantityInput?.value
+                );
+
+                const unitCost = numberValue(
+                    costInput?.value
+                );
+
+                const lineTotal = quantity * unitCost;
+
+                subtotal += lineTotal;
+
+                const lineTotalElement = row.querySelector(
+                    ".purchase-line-total"
+                );
+
+                if (lineTotalElement) {
+                    lineTotalElement.textContent = (
+                        `TZS ${money(lineTotal)}`
+                    );
+                }
+            });
+
+            const transport = numberValue(
+                getInput("transport_cost")?.value
+            );
+
+            const loading = numberValue(
+                getInput("loading_cost")?.value
+            );
+
+            const other = numberValue(
+                getInput("other_cost")?.value
+            );
+
+            const discount = numberValue(
+                getInput("discount")?.value
+            );
+
+            const amountPaid = numberValue(
+                getInput("amount_paid")?.value
+            );
+
+            const additionalCosts = (
+                transport
+                + loading
+                + other
+            );
+
+            const grandTotal = Math.max(
+                0,
+                subtotal
+                + additionalCosts
+                - discount
+            );
+
+            const balance = Math.max(
+                0,
+                grandTotal - amountPaid
+            );
+
+            document.getElementById(
+                "purchaseSubtotal"
+            ).textContent = `TZS ${money(subtotal)}`;
+
+            document.getElementById(
+                "purchaseAdditionalCosts"
+            ).textContent = `TZS ${money(additionalCosts)}`;
+
+            document.getElementById(
+                "purchaseDiscount"
+            ).textContent = `TZS ${money(discount)}`;
+
+            document.getElementById(
+                "purchaseGrandTotal"
+            ).textContent = `TZS ${money(grandTotal)}`;
+
+            document.getElementById(
+                "purchaseAmountPaid"
+            ).textContent = `TZS ${money(amountPaid)}`;
+
+            document.getElementById(
+                "purchaseBalance"
+            ).textContent = `TZS ${money(balance)}`;
+        }
+
+        function bindRow(row) {
+            row.querySelectorAll(
+                "input, select"
+            ).forEach((input) => {
+                input.addEventListener(
+                    "input",
+                    calculatePurchase
+                );
+
+                input.addEventListener(
+                    "change",
+                    calculatePurchase
+                );
+            });
+
+            const removeButton = row.querySelector(
+                "[data-remove-purchase-item]"
+            );
+
+            if (removeButton) {
+                removeButton.addEventListener(
+                    "click",
+                    () => {
+                        const deleteInput = row.querySelector(
+                            'input[name$="-DELETE"]'
+                        );
+
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                        }
+
+                        row.style.display = "none";
+
+                        calculatePurchase();
+                    }
+                );
+            }
+        }
+
+        addButton.addEventListener("click", () => {
+            const formIndex = Number.parseInt(
+                totalFormsInput.value,
+                10
+            );
+
+            const html = template.innerHTML.replaceAll(
+                "__prefix__",
+                String(formIndex)
+            );
+
+            body.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+
+            totalFormsInput.value = (
+                formIndex + 1
+            );
+
+            const newRow = body.lastElementChild;
+
+            bindRow(newRow);
+            calculatePurchase();
+        });
+
+        document.querySelectorAll(
+            ".purchase-item-row"
+        ).forEach(bindRow);
+
+        document.querySelectorAll(
+            "#purchaseForm input, #purchaseForm select"
+        ).forEach((input) => {
+            input.addEventListener(
+                "input",
+                calculatePurchase
+            );
+
+            input.addEventListener(
+                "change",
+                calculatePurchase
+            );
+        });
+
+        calculatePurchase();
+    });
+</script>
+{% endblock %}

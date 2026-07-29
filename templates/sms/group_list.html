@@ -1,0 +1,15 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Organize SMS contacts into reusable audiences</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Audience organization</span><h2>Contact groups</h2><p>Create groups for customers, debt reminders, promotions and more.</p></div>{% if sms_can_manage %}<a href="{% url 'sms-group-create' %}" class="button button-primary">New group</a>{% endif %}</section>
+<section class="sms-card-grid">
+    {% for group in groups %}
+    <article class="sms-card sms-mini-card">
+        <div class="sms-mini-card-top"><span class="sms-count-badge">{{ group.contact_count }}</span><div><h3>{{ group.name }}</h3><p>{{ group.description|default:'No description' }}</p></div></div>
+        <div class="sms-mini-card-actions"><a href="{% url 'sms-contact-list' %}?group={{ group.pk }}">View contacts</a>{% if sms_can_manage %}<a href="{% url 'sms-group-edit' group.pk %}">Edit</a><form method="post" action="{% url 'sms-group-delete' group.pk %}" data-confirm="Delete this group? Contacts will not be deleted.">{% csrf_token %}<button type="submit">Delete</button></form>{% endif %}</div>
+    </article>
+    {% empty %}<div class="sms-card sms-empty-state"><strong>No contact groups</strong><span>Create a group to organize recipients.</span></div>{% endfor %}
+</section>
+{% endblock %}

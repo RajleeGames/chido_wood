@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}
+Product Categories | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage timber, plywood, boards and service categories.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>Product categories</h2>
+        <p>
+            Cutting defaults can be configured for each category.
+        </p>
+    </div>
+
+    <button
+        type="button"
+        class="button button-primary"
+        onclick="openModal('categoryModal')"
+    >
+        Add category
+    </button>
+</div>
+
+<section class="table-card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Code</th>
+                    <th>Cutting</th>
+                    <th>Default fee</th>
+                    <th>Status</th>
+                    <th class="table-action-column">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for category in categories %}
+                    <tr>
+                        <td>
+                            <strong>{{ category.name }}</strong>
+
+                            {% if category.description %}
+                                <small class="table-subtitle">
+                                    {{ category.description|truncatechars:60 }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="code-text">
+                                {{ category.code }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if category.allow_cutting %}
+                                <span class="badge badge-success">
+                                    Allowed
+                                </span>
+                            {% else %}
+                                <span class="badge badge-muted">
+                                    Not allowed
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ category.default_cutting_fee|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {% if category.is_active %}
+                                <span class="badge badge-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="?edit={{ category.id }}"
+                                class="table-link"
+                            >
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="table-empty">
+                                No product categories have been added.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    class="app-modal {% if modal_open %}open{% endif %}"
+    id="categoryModal"
+    aria-hidden="{% if modal_open %}false{% else %}true{% endif %}"
+>
+    <div
+        class="modal-backdrop"
+        data-modal-close
+    ></div>
+
+    <div class="modal-dialog">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if editing_category %}
+                <input
+                    type="hidden"
+                    name="object_id"
+                    value="{{ editing_category.id }}"
+                >
+            {% endif %}
+
+            <div class="modal-header">
+                <div>
+                    <h2>
+                        {% if editing_category %}
+                            Edit category
+                        {% else %}
+                            Add category
+                        {% endif %}
+                    </h2>
+
+                    <p>
+                        Configure the category and its cutting defaults.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="icon-button"
+                    data-modal-close
+                >
+                    ×
+                </button>
+            </div>
+
+            <div class="modal-body">
+                {% if form.non_field_errors %}
+                    <div class="form-error-box">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid form-grid-two">
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">
+                            Category name
+                        </label>
+
+                        {{ form.name }}
+                        {{ form.name.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.code.id_for_label }}">
+                            Category code
+                        </label>
+
+                        {{ form.code }}
+                        {{ form.code.errors }}
+                    </div>
+
+                    <div class="form-group form-grid-full">
+                        <label for="{{ form.description.id_for_label }}">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+                    <label class="checkbox-card">
+                        {{ form.allow_cutting }}
+
+                        <span>
+                            <strong>Allow cutting</strong>
+                            <small>
+                                Products in this category can use cutting.
+                            </small>
+                        </span>
+                    </label>
+
+                    <div class="form-group">
+                        <label for="{{ form.default_cutting_fee.id_for_label }}">
+                            Default cutting fee
+                        </label>
+
+                        {{ form.default_cutting_fee }}
+                        {{ form.default_cutting_fee.errors }}
+                    </div>
+
+                    <label class="checkbox-card">
+                        {{ form.is_active }}
+
+                        <span>
+                            <strong>Active category</strong>
+                            <small>
+                                Show this category in the system.
+                            </small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="{% url 'category-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Sales | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Manage cash, mobile, bank and credit sales.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Completed sales</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ completed_count|intcomma }}
+        </strong>
+
+        <small>
+            {{ draft_count|intcomma }} draft sales
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total sales value</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_sales|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Completed sale revenue
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Outstanding balance</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_outstanding|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Unpaid customer balances
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Gross profit</span>
+            <span class="stat-icon">GP</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_profit|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Sales less FIFO stock costs
+        </small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Sales records</h2>
+
+        <p>
+            Completed sales deduct stock and calculate
+            profit using FIFO.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'sale-create' %}"
+        class="button button-primary"
+    >
+        New sale
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="sale-filter-form"
+            data-loading-message="Filtering sales"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Sale number, customer or product"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}
+                        selected
+                    {% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="completed"
+                    {% if status_filter == "completed" %}
+                        selected
+                    {% endif %}
+                >
+                    Completed
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}
+                        selected
+                    {% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <select
+                name="payment"
+                class="form-control"
+            >
+                <option value="">
+                    All payment methods
+                </option>
+
+                {% for value, label in payment_methods %}
+                    <option
+                        value="{{ value }}"
+                        {% if payment_filter == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input
+                type="date"
+                name="date_from"
+                value="{{ date_from }}"
+                class="form-control"
+            >
+
+            <input
+                type="date"
+                name="date_to"
+                value="{{ date_to }}"
+                class="form-control"
+            >
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or status_filter or payment_filter or date_from or date_to %}
+                <a
+                    href="{% url 'sale-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Sale</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sale in sales %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ sale.sale_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ sale.sale_date|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+                            {% if sale.customer %}
+                                {{ sale.customer.name }}
+                            {% else %}
+                                Walk-in customer
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ sale.items.all|length|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ sale.current_total|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ sale.amount_paid|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ sale.balance_due|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {{ sale.get_payment_method_display }}
+                        </td>
+
+                        <td>
+                            {% if sale.status == "completed" %}
+                                <span class="badge badge-success">
+                                    Completed
+                                </span>
+                            {% elif sale.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'sale-detail' sale.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="table-empty">
+                                No sales matched your filters.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Page {{ page_obj.number|intcomma }}
+                of {{ page_obj.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}&payment={{ payment_filter }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter }}&payment={{ payment_filter }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

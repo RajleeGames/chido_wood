@@ -1,0 +1,29 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Create or update a customer SMS contact</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Contact record</span><h2>{{ page_title }}</h2><p>Store a valid Tanzanian mobile number and consent preferences.</p></div></section>
+<section class="sms-card sms-form-card sms-form-narrow">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="sms-form-grid two-columns">
+            {% include 'sms/_field.html' with field=form.customer %}
+            {% include 'sms/_field.html' with field=form.name %}
+            {% include 'sms/_field.html' with field=form.phone %}
+            {% include 'sms/_field.html' with field=form.email %}
+            {% include 'sms/_field.html' with field=form.source %}
+            {% include 'sms/_field.html' with field=form.groups %}
+        </div>
+        <div class="sms-checkbox-grid">
+            {% include 'sms/_field.html' with field=form.is_active %}
+            {% include 'sms/_field.html' with field=form.allow_transaction_sms %}
+            {% include 'sms/_field.html' with field=form.allow_promotional_sms %}
+            {% include 'sms/_field.html' with field=form.opted_out %}
+        </div>
+        {% include 'sms/_field.html' with field=form.notes %}
+        <div class="sms-form-actions"><a href="{% if contact %}{% url 'sms-contact-detail' contact.pk %}{% else %}{% url 'sms-contact-list' %}{% endif %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save contact</button></div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ expense.expense_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Expense payment, category and audit information.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ expense.expense_number }}</h2>
+
+        <p>
+            {{ expense.category.name }}
+            ·
+            {{ expense.expense_date|date:"d M Y" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'expense-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        {% if expense.status == "draft" %}
+            <a
+                href="{% url 'expense-edit' expense.pk %}"
+                class="button button-secondary"
+            >
+                Edit
+            </a>
+
+            <form
+                method="post"
+                action="{% url 'expense-post' expense.pk %}"
+                data-loading-message="Posting expense"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Post expense
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Expense amount</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ expense.amount|floatformat:0|intcomma }}
+        </strong>
+
+        <small>{{ expense.category.name }}</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Payment method</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ expense.get_payment_method_display }}
+        </strong>
+
+        <small>
+            {{ expense.reference|default:"No reference" }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ expense.get_status_display }}
+        </strong>
+
+        <small>
+            Expense reporting status
+        </small>
+    </article>
+</div>
+
+<section class="card expense-detail-card">
+    <div class="card-header">
+        <div>
+            <h2>Expense details</h2>
+
+            <p>Payment and audit information.</p>
+        </div>
+    </div>
+
+    <div class="expense-detail-grid">
+        <div>
+            <span>Description</span>
+            <strong>{{ expense.description }}</strong>
+        </div>
+
+        <div>
+            <span>Category</span>
+            <strong>{{ expense.category.name }}</strong>
+        </div>
+
+        <div>
+            <span>Expense date</span>
+            <strong>
+                {{ expense.expense_date|date:"d M Y" }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Paid to</span>
+            <strong>{{ expense.payee|default:"—" }}</strong>
+        </div>
+
+        <div>
+            <span>Reference</span>
+            <strong>
+                {{ expense.reference|default:"—" }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Created by</span>
+            <strong>
+                {{ expense.created_by.get_full_name|default:expense.created_by.username }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Posted by</span>
+
+            <strong>
+                {% if expense.posted_by %}
+                    {{ expense.posted_by.get_full_name|default:expense.posted_by.username }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Posted at</span>
+
+            <strong>
+                {% if expense.posted_at %}
+                    {{ expense.posted_at|date:"d M Y H:i" }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Notes</span>
+            <strong>{{ expense.notes|default:"—" }}</strong>
+        </div>
+    </div>
+</section>
+
+{% if expense.status != "cancelled" %}
+    <section class="card expense-cancel-card">
+        <div class="card-header">
+            <div>
+                <h2>Cancel expense</h2>
+
+                <p>
+                    Cancelled expenses are excluded
+                    from reports.
+                </p>
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'expense-cancel' expense.pk %}"
+            class="expense-cancel-form"
+            data-loading-message="Cancelling expense"
+        >
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="expenseCancellationReason">
+                    Cancellation reason
+                </label>
+
+                <textarea
+                    id="expenseCancellationReason"
+                    name="reason"
+                    class="form-control"
+                    rows="3"
+                    required
+                    placeholder="Explain why this expense is being cancelled"
+                ></textarea>
+            </div>
+
+            <button
+                type="submit"
+                class="button button-danger"
+            >
+                Cancel expense
+            </button>
+        </form>
+    </section>
+{% else %}
+    <section class="card expense-cancel-card">
+        <div class="card-header">
+            <div>
+                <h2>Cancellation information</h2>
+
+                <p>
+                    This expense is excluded from reports.
+                </p>
+            </div>
+        </div>
+
+        <div class="expense-detail-grid">
+            <div>
+                <span>Cancelled by</span>
+
+                <strong>
+                    {{ expense.cancelled_by.get_full_name|default:expense.cancelled_by.username }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Cancelled at</span>
+
+                <strong>
+                    {{ expense.cancelled_at|date:"d M Y H:i" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Reason</span>
+
+                <strong>
+                    {{ expense.cancellation_reason }}
+                </strong>
+            </div>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

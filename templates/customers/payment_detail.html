@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ payment.payment_number }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Customer payment and debt allocation details.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ payment.payment_number }}</h2>
+
+        <p>
+            {{ payment.customer.name }}
+            ·
+            {{ payment.payment_date|date:"d M Y H:i" }}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'customer-account-detail' payment.customer.pk %}"
+            class="button button-secondary"
+        >
+            Customer account
+        </a>
+
+        {% if payment.status == "posted" %}
+            <a
+                href="{% url 'customer-payment-receipt' payment.pk %}"
+                target="_blank"
+                class="button button-primary"
+            >
+                Print receipt
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Payment amount</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ payment.amount|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            {{ payment.get_payment_method_display }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Remaining customer debt</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ remaining_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Current outstanding account balance</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Status</span>
+            <span class="stat-icon">STS</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ payment.get_status_display }}
+        </strong>
+
+        <small>{{ payment.payment_number }}</small>
+    </article>
+</div>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Payment allocations</h2>
+
+            <p>
+                The payment was applied to the oldest debt first.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Allocation</th>
+                    <th>Reference</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for allocation in payment.allocations.all %}
+                    <tr>
+                        <td>
+                            {{ allocation.get_allocation_type_display }}
+                        </td>
+
+                        <td>
+                            {% if allocation.sale %}
+                                {{ allocation.sale.sale_number }}
+                            {% elif allocation.cutting_service %}
+                                {{ allocation.cutting_service.cutting_number }}
+                            {% else %}
+                                Customer opening balance
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            TZS {{ allocation.amount|floatformat:0|intcomma }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            <div class="table-empty">
+                                No allocations found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if payment.status == "posted" %}
+    <section class="card payment-cancel-card">
+        <div class="card-header">
+            <div>
+                <h2>Cancel payment</h2>
+
+                <p>
+                    Cancelling restores the allocated customer debt.
+                </p>
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'customer-payment-cancel' payment.pk %}"
+            class="payment-cancel-form"
+            data-loading-message="Cancelling customer payment"
+        >
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="paymentCancellationReason">
+                    Cancellation reason
+                </label>
+
+                <textarea
+                    id="paymentCancellationReason"
+                    name="reason"
+                    class="form-control"
+                    rows="3"
+                    required
+                    placeholder="Explain why this payment is being cancelled"
+                ></textarea>
+            </div>
+
+            <button
+                type="submit"
+                class="button button-danger"
+            >
+                Cancel payment
+            </button>
+        </form>
+    </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ managed_user }} | Users | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Account details, permissions and recent completed sales.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="account-detail-heading">
+        <span class="account-detail-avatar">
+            {% if managed_user.first_name %}
+                {{ managed_user.first_name|first|upper }}
+            {% else %}
+                {{ managed_user.username|first|upper }}
+            {% endif %}
+        </span>
+
+        <div>
+            <h2>{{ managed_user }}</h2>
+            <p>@{{ managed_user.username }}</p>
+        </div>
+    </div>
+
+    {% if can_manage_target %}
+        <div class="page-header-actions">
+            <a
+                href="{% url 'user-password-reset' managed_user.pk %}"
+                class="button button-secondary"
+            >
+                Reset password
+            </a>
+
+            <a
+                href="{% url 'user-edit' managed_user.pk %}"
+                class="button button-primary"
+            >
+                Edit user
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="account-detail-grid">
+    <section class="card account-information-card">
+        <div class="card-header">
+            <div>
+                <h2>Account information</h2>
+                <p>Identity, contact and access details.</p>
+            </div>
+        </div>
+
+        <div class="account-information-grid">
+            <div>
+                <span>Full name</span>
+                <strong>{{ managed_user|default:"—" }}</strong>
+            </div>
+
+            <div>
+                <span>Username</span>
+                <strong>{{ managed_user.username }}</strong>
+            </div>
+
+            <div>
+                <span>Role</span>
+                <strong>
+                    {% if managed_user.is_superuser %}
+                        Superuser
+                    {% else %}
+                        {{ managed_user.get_role_display }}
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div>
+                <span>Status</span>
+                <strong>
+                    {% if managed_user.is_active %}
+                        Active
+                    {% else %}
+                        Inactive
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div>
+                <span>Phone</span>
+                <strong>{{ managed_user.phone|default:"Not provided" }}</strong>
+            </div>
+
+            <div>
+                <span>Email</span>
+                <strong>{{ managed_user.email|default:"Not provided" }}</strong>
+            </div>
+
+            <div>
+                <span>Account created</span>
+                <strong>{{ managed_user.date_joined|date:"d M Y, H:i" }}</strong>
+            </div>
+
+            <div>
+                <span>Last login</span>
+                <strong>
+                    {% if managed_user.last_login %}
+                        {{ managed_user.last_login|date:"d M Y, H:i" }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+
+        {% if can_manage_target and managed_user.pk != request.user.pk %}
+            <div class="account-status-action">
+                <form
+                    method="post"
+                    action="{% url 'user-toggle-active' managed_user.pk %}"
+                    data-loading-message="Updating account"
+                >
+                    {% csrf_token %}
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{% url 'user-detail' managed_user.pk %}"
+                    >
+
+                    <button
+                        type="submit"
+                        class="button {% if managed_user.is_active %}button-danger{% else %}button-primary{% endif %}"
+                    >
+                        {% if managed_user.is_active %}
+                            Deactivate account
+                        {% else %}
+                            Activate account
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </section>
+
+    <aside class="card account-performance-card">
+        <div class="card-header">
+            <div>
+                <h2>Sales activity</h2>
+                <p>Completed transactions by this user.</p>
+            </div>
+        </div>
+
+        <div class="account-performance-summary">
+            <div>
+                <span>Completed sales</span>
+                <strong>{{ sales_summary.sale_count }}</strong>
+            </div>
+
+            <div>
+                <span>Sales value</span>
+                <strong>
+                    TZS
+                    {{ sales_summary.sales_revenue|floatformat:0|intcomma }}
+                </strong>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<section class="table-card account-sales-table-card">
+    <div class="card-header">
+        <div>
+            <h2>Recent completed sales</h2>
+            <p>The latest ten sales completed by this user.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Sale</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Payment</th>
+                    <th>Total</th>
+                    <th class="table-action-column">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sale in recent_sales %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ sale.sale_number|default:sale.pk }}
+                            </strong>
+                        </td>
+
+                        <td>{{ sale.sale_date|date:"d M Y, H:i" }}</td>
+
+                        <td>
+                            {% if sale.customer %}
+                                {{ sale.customer }}
+                            {% else %}
+                                Walk-in customer
+                            {% endif %}
+                        </td>
+
+                        <td>{{ sale.get_payment_method_display }}</td>
+
+                        <td>
+                            TZS {{ sale.total_amount|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'sale-detail' sale.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="table-empty">
+                            This user has no completed sales yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

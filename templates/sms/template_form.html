@@ -1,0 +1,11 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Create a reusable personalized message</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head"><div><span class="sms-eyebrow">Message template</span><h2>{{ page_title }}</h2><p>Use placeholders to insert customer and sale information automatically.</p></div></section>
+<section class="sms-two-column sms-align-start">
+    <article class="sms-card sms-form-card"><form method="post">{% csrf_token %}{% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}<div class="sms-form-grid two-columns">{% include 'sms/_field.html' with field=form.title %}{% include 'sms/_field.html' with field=form.category %}{% include 'sms/_field.html' with field=form.language %}{% include 'sms/_field.html' with field=form.is_active %}</div>{% include 'sms/_field.html' with field=form.message %}<div class="sms-form-actions"><a href="{% url 'sms-template-list' %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save template</button></div></form></article>
+    <aside class="sms-card sms-preview-card"><header class="sms-card-head"><div><h3>Live preview</h3><p>Example for Asha.</p></div></header><div class="sms-phone-preview"><div class="sms-bubble" data-sms-preview>Write your template to see a preview.</div></div><dl class="sms-analysis"><div><dt>Characters</dt><dd data-sms-characters>0</dd></div><div><dt>Encoding</dt><dd data-sms-encoding>GSM7</dd></div><div><dt>SMS parts</dt><dd data-sms-parts>1</dd></div></dl><div class="sms-placeholder-help"><strong>Placeholders</strong><code>{name}</code><code>{first_name}</code><code>{phone}</code><code>{company}</code><code>{amount}</code><code>{balance}</code><code>{receipt}</code><code>{date}</code></div></aside>
+</section>
+{% endblock %}

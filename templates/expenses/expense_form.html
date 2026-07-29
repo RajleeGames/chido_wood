@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Record business operating costs and payments.</p>
+{% endblock %}
+
+{% block content %}
+<form
+    method="post"
+    data-loading-message="Saving expense"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ expense.expense_number }}
+                {% else %}
+                    New expense
+                {% endif %}
+            </h2>
+
+            <p>
+                Save as draft or post immediately
+                for reporting.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'expense-list' %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_post"
+                class="button button-primary"
+            >
+                Save and post
+            </button>
+        </div>
+    </div>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2>Expense information</h2>
+
+                <p>
+                    Enter the amount, category and
+                    payment information.
+                </p>
+            </div>
+        </div>
+
+        <div class="expense-form-body">
+            {% if form.non_field_errors %}
+                <div class="form-error-box">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-grid form-grid-two">
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}">
+                        Expense category
+                    </label>
+
+                    {{ form.category }}
+                    {{ form.category.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.expense_date.id_for_label }}">
+                        Expense date
+                    </label>
+
+                    {{ form.expense_date }}
+                    {{ form.expense_date.errors }}
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label for="{{ form.description.id_for_label }}">
+                        Description
+                    </label>
+
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.amount.id_for_label }}">
+                        Expense amount
+                    </label>
+
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_method.id_for_label }}">
+                        Payment method
+                    </label>
+
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payee.id_for_label }}">
+                        Paid to
+                    </label>
+
+                    {{ form.payee }}
+                    {{ form.payee.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.reference.id_for_label }}">
+                        Payment reference
+                    </label>
+
+                    {{ form.reference }}
+                    {{ form.reference.errors }}
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label for="{{ form.notes.id_for_label }}">
+                        Notes
+                    </label>
+
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="expense-warning-card">
+        Purchase transport, loading or other costs already
+        included in a purchase must not be recorded again here.
+    </div>
+</form>
+{% endblock %}

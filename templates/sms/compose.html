@@ -1,0 +1,48 @@
+{% extends 'sms/base_sms.html' %}
+
+{% block page_subtitle %}<p>Compose a personalized transaction or promotional message</p>{% endblock %}
+
+{% block sms_content %}
+<section class="sms-page-head">
+    <div><span class="sms-eyebrow">New outgoing message</span><h2>Send SMS</h2><p>Select recipients, personalize the message and send through Beem Africa.</p></div>
+    <a href="{% url 'sms-campaign-list' %}" class="button button-secondary">Campaign history</a>
+</section>
+
+<form method="post" class="sms-compose-grid" data-sms-compose-form>
+    {% csrf_token %}
+    <section class="sms-card sms-form-card">
+        {% if form.non_field_errors %}<div class="form-error-block">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="sms-form-grid two-columns">
+            {% include 'sms/_field.html' with field=form.campaign_title %}
+            {% include 'sms/_field.html' with field=form.sender %}
+            {% include 'sms/_field.html' with field=form.message_type %}
+            {% include 'sms/_field.html' with field=form.language %}
+            {% include 'sms/_field.html' with field=form.template %}
+            {% include 'sms/_field.html' with field=form.audience %}
+        </div>
+
+        <div data-audience-panel="selected">{% include 'sms/_field.html' with field=form.contacts %}</div>
+        <div data-audience-panel="groups">{% include 'sms/_field.html' with field=form.groups %}</div>
+        <div data-audience-panel="manual">{% include 'sms/_field.html' with field=form.manual_numbers %}</div>
+        {% include 'sms/_field.html' with field=form.message %}
+
+        <div class="sms-form-actions">
+            <a href="{% url 'sms-dashboard' %}" class="button button-secondary">Cancel</a>
+            <button type="submit" class="button button-primary" data-loading-message="Sending SMS">Send message</button>
+        </div>
+    </section>
+
+    <aside class="sms-card sms-preview-card">
+        <header class="sms-card-head"><div><h3>Message preview</h3><p>Personalized example for one recipient.</p></div></header>
+        <div class="sms-phone-preview"><div class="sms-bubble" data-sms-preview>Write your message to see a preview.</div></div>
+        <dl class="sms-analysis">
+            <div><dt>Characters</dt><dd data-sms-characters>{{ sms_analysis.characters }}</dd></div>
+            <div><dt>Encoding</dt><dd data-sms-encoding>{{ sms_analysis.encoding|upper }}</dd></div>
+            <div><dt>SMS parts</dt><dd data-sms-parts>{{ sms_analysis.parts }}</dd></div>
+        </dl>
+        <div class="sms-placeholder-help"><strong>Available placeholders</strong><code>{name}</code><code>{first_name}</code><code>{phone}</code><code>{company}</code><code>{amount}</code><code>{balance}</code><code>{receipt}</code><code>{date}</code></div>
+        <div class="sms-notice"><strong>Sending limit</strong><span>Up to {{ setting.send_limit }} recipients per action.</span></div>
+    </aside>
+</form>
+{{ template_data|json_script:"sms-template-data" }}
+{% endblock %}

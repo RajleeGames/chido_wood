@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if editing_user %}Edit User{% else %}Create User{% endif %} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    {% if editing_user %}
+        Update account details, role and access status.
+    {% else %}
+        Create a secure account and assign system permissions.
+    {% endif %}
+</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>
+            {% if editing_user %}
+                Edit {{ editing_user.username }}
+            {% else %}
+                Create user
+            {% endif %}
+        </h2>
+
+        <p>
+            Administrators have full access, managers access business
+            operations, and cashiers handle normal sales work.
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% if editing_user %}{% url 'user-detail' editing_user.pk %}{% else %}{% url 'user-list' %}{% endif %}"
+            class="button button-secondary"
+        >
+            Cancel
+        </a>
+    </div>
+</div>
+
+<form
+    method="post"
+    class="account-form-layout"
+    data-loading-message="Saving user"
+    autocomplete="off"
+>
+    {% csrf_token %}
+
+    <section class="card account-form-card">
+        <div class="card-header">
+            <div>
+                <h2>Account information</h2>
+                <p>Login name and personal contact details.</p>
+            </div>
+        </div>
+
+        <div class="account-form-body">
+            {% if form.non_field_errors %}
+                <div class="form-error-box">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-grid form-grid-two">
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                    <small class="field-help">
+                        Used when signing into CHIDO Wood ERP.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.role.id_for_label }}">
+                        Role
+                    </label>
+                    {{ form.role }}
+                    {{ form.role.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">
+                        First name
+                    </label>
+                    {{ form.first_name }}
+                    {{ form.first_name.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">
+                        Last name
+                    </label>
+                    {{ form.last_name }}
+                    {{ form.last_name.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}">
+                        Phone number
+                    </label>
+                    {{ form.phone }}
+                    {{ form.phone.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">
+                        Email address
+                    </label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if not editing_user %}
+        <section class="card account-form-card">
+            <div class="card-header">
+                <div>
+                    <h2>Initial password</h2>
+                    <p>Create a password for the new account.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="button button-secondary"
+                    data-generate-password
+                >
+                    Generate password
+                </button>
+            </div>
+
+            <div class="account-form-body">
+                <div
+                    class="generated-password-box"
+                    data-generated-password-box
+                    hidden
+                >
+                    <div>
+                        <span>Generated password</span>
+                        <strong data-generated-password-value></strong>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="button button-secondary"
+                        data-copy-generated-password
+                    >
+                        Copy
+                    </button>
+                </div>
+
+                <div class="form-grid form-grid-two">
+                    <div class="form-group">
+                        <label for="{{ form.password1.id_for_label }}">
+                            Password
+                        </label>
+
+                        <div class="password-control">
+                            {{ form.password1 }}
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                data-password-toggle
+                            >
+                                Show
+                            </button>
+                        </div>
+
+                        {{ form.password1.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}">
+                            Confirm password
+                        </label>
+
+                        <div class="password-control">
+                            {{ form.password2 }}
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                data-password-toggle
+                            >
+                                Show
+                            </button>
+                        </div>
+
+                        {{ form.password2.errors }}
+                    </div>
+                </div>
+
+                {% if form.password1.help_text %}
+                    <div class="password-guidance">
+                        {{ form.password1.help_text|safe }}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="card account-form-card">
+        <div class="card-header">
+            <div>
+                <h2>Account access</h2>
+                <p>Control whether this user may sign in.</p>
+            </div>
+        </div>
+
+        <div class="account-form-body">
+            <label class="checkbox-card">
+                {{ form.is_active }}
+
+                <span>
+                    <strong>Active account</strong>
+                    <small>
+                        Inactive users cannot sign into the system.
+                    </small>
+                </span>
+            </label>
+
+            {{ form.is_active.errors }}
+        </div>
+    </section>
+
+    <div class="account-form-actions">
+        <a
+            href="{% if editing_user %}{% url 'user-detail' editing_user.pk %}{% else %}{% url 'user-list' %}{% endif %}"
+            class="button button-secondary"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="submit"
+            class="button button-primary"
+        >
+            {% if editing_user %}
+                Save changes
+            {% else %}
+                Create user
+            {% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}

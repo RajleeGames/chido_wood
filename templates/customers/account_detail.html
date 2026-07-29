@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ customer.name }} Account | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Customer statement, debts and account payments.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ customer.name }}</h2>
+
+        <p>
+            {{ customer.customer_code }}
+            {% if customer.phone %}
+                · {{ customer.phone }}
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a
+            href="{% url 'customer-account-list' %}"
+            class="button button-secondary"
+        >
+            Back
+        </a>
+
+        {% if current_debt > 0 %}
+            <a
+                href="{% url 'customer-payment-create' customer.pk %}"
+                class="button button-primary"
+            >
+                Receive payment
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current debt</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ current_debt|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Outstanding customer balance</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Opening debt remaining</span>
+            <span class="stat-icon">OPN</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ remaining_opening_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>
+            Original:
+            TZS {{ customer.opening_balance|floatformat:0|intcomma }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Completed sales</span>
+            <span class="stat-icon">SAL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ completed_sales|length|intcomma }}
+        </strong>
+
+        <small>Sales linked to this customer</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Account payments</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ payments|length|intcomma }}
+        </strong>
+
+        <small>Posted and cancelled payments</small>
+    </article>
+</div>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Customer statement</h2>
+
+            <p>
+                Debits increase debt and credits reduce debt.
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Reference</th>
+                    <th>Description</th>
+                    <th>Debit</th>
+                    <th>Credit</th>
+                    <th>Running balance</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for entry in statement_entries %}
+                    <tr>
+                        <td>
+                            {{ entry.date|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>{{ entry.entry_type }}</td>
+
+                        <td>
+                            <strong>{{ entry.reference }}</strong>
+                        </td>
+
+                        <td>{{ entry.description }}</td>
+
+                        <td>
+                            TZS {{ entry.debit|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ entry.credit|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                TZS {{ entry.balance|floatformat:0|intcomma }}
+                            </strong>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                No customer account activity exists.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Customer payments</h2>
+
+            <p>Payments received after credit transactions.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Payment</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for payment in payments %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ payment.payment_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ payment.payment_date|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+                            {{ payment.get_payment_method_display }}
+                        </td>
+
+                        <td>
+                            {{ payment.reference|default:"—" }}
+                        </td>
+
+                        <td>
+                            TZS {{ payment.amount|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if payment.status == "posted" %}
+                                <span class="badge badge-success">
+                                    Posted
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'customer-payment-detail' payment.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                No account payments recorded.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

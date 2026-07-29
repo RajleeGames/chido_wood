@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Stock Adjustments | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Opening stock, corrections, damage and waste records.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total adjustments</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ adjustment_count|intcomma }}
+        </strong>
+
+        <small>{{ posted_count|intcomma }} posted records</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Draft adjustments</span>
+            <span class="stat-icon">DRF</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ draft_count|intcomma }}
+        </strong>
+
+        <small>Not yet affecting stock</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Stock added value</span>
+            <span class="stat-icon">IN</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ added_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Opening and manual increases</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Stock removed cost</span>
+            <span class="stat-icon">OUT</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ removed_value|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Decrease, damage and waste</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Stock adjustment records</h2>
+
+        <p>
+            Draft adjustments do not change inventory until posted.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'stock-adjustment-create' %}"
+        class="button button-primary"
+    >
+        New adjustment
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="adjustment-filter-form"
+            data-loading-message="Filtering adjustments"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Number, product, code or reason"
+            >
+
+            <select
+                name="type"
+                class="form-control"
+            >
+                <option value="">All adjustment types</option>
+
+                {% for value, label in adjustment_types %}
+                    <option
+                        value="{{ value }}"
+                        {% if type_filter == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}selected{% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="posted"
+                    {% if status_filter == "posted" %}selected{% endif %}
+                >
+                    Posted
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or type_filter or status_filter %}
+                <a
+                    href="{% url 'stock-adjustment-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Adjustment</th>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Cost</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for adjustment in adjustments %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ adjustment.adjustment_number }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ adjustment.adjustment_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ adjustment.product.name }}
+                            </strong>
+
+                            <small class="table-subtitle">
+                                {{ adjustment.product.code }}
+                            </small>
+                        </td>
+
+                        <td>
+                            {{ adjustment.get_adjustment_type_display }}
+                        </td>
+
+                        <td>
+                            {% if adjustment.removes_stock %}
+                                <span class="stock-quantity-out">
+                                    -{{ adjustment.quantity|floatformat:3|intcomma }}
+                                </span>
+                            {% else %}
+                                <span class="stock-quantity-in">
+                                    +{{ adjustment.quantity|floatformat:3|intcomma }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if adjustment.status == "posted" %}
+                                TZS {{ adjustment.total_cost|floatformat:0|intcomma }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ adjustment.reason|truncatechars:35 }}
+                        </td>
+
+                        <td>
+                            {% if adjustment.status == "posted" %}
+                                <span class="badge badge-success">
+                                    Posted
+                                </span>
+                            {% elif adjustment.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'stock-adjustment-detail' adjustment.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="table-empty">
+                                No stock adjustments found.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-wrap">
+            <div class="pagination-info">
+                Page {{ page_obj.number|intcomma }}
+                of {{ page_obj.paginator.num_pages|intcomma }}
+            </div>
+
+            <div class="pagination-actions">
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&type={{ type_filter }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Previous
+                    </a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&type={{ type_filter }}&status={{ status_filter }}"
+                        class="button button-secondary"
+                    >
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

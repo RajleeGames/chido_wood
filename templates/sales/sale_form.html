@@ -1,0 +1,926 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Sell timber, converted wood, plywood and other stock.</p>
+{% endblock %}
+
+{% block content %}
+{{ product_data|json_script:"saleProductData" }}
+
+<form
+    method="post"
+    id="saleForm"
+    data-loading-message="Saving sale"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>
+                {% if is_editing %}
+                    Edit {{ sale.sale_number }}
+                {% else %}
+                    New sale
+                {% endif %}
+            </h2>
+
+            <p>
+                Save as draft or complete immediately
+                to deduct stock.
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'sale-list' %}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                name="save_draft"
+                class="button button-secondary"
+            >
+                Save draft
+            </button>
+
+            <button
+                type="submit"
+                name="save_and_complete"
+                id="saveAndCompleteButton"
+                class="button button-primary"
+            >
+                Complete sale
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+        <div class="form-error-box">
+            {{ formset.non_form_errors }}
+        </div>
+    {% endif %}
+
+    <section class="card sale-section">
+        <div class="card-header">
+            <div>
+                <h2>Sale information</h2>
+
+                <p>
+                    Customer, payment and sale date.
+                </p>
+            </div>
+        </div>
+
+        <div class="sale-section-body">
+            <div class="form-grid form-grid-three">
+                <div class="form-group">
+                    <label for="{{ form.customer.id_for_label }}">
+                        Customer
+                    </label>
+
+                    {{ form.customer }}
+                    {{ form.customer.errors }}
+
+                    <small class="field-help">
+                        Required for credit or partially paid sales.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.sale_date.id_for_label }}">
+                        Sale date
+                    </label>
+
+                    {{ form.sale_date }}
+                    {{ form.sale_date.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_method.id_for_label }}">
+                        Payment method
+                    </label>
+
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.amount_tendered.id_for_label }}">
+                        Amount received
+                    </label>
+
+                    {{ form.amount_tendered }}
+                    {{ form.amount_tendered.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.discount.id_for_label }}">
+                        Overall discount
+                    </label>
+
+                    {{ form.discount }}
+                    {{ form.discount.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">
+                        Sale notes
+                    </label>
+
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card sale-section">
+        <div class="card-header">
+            <div>
+                <h2>Sale products</h2>
+
+                <p>
+                    Add products and quantities purchased
+                    by the customer.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="button button-secondary"
+                id="addSaleItem"
+            >
+                Add product
+            </button>
+        </div>
+
+        <div class="sale-items-wrap">
+            {{ formset.management_form }}
+
+            <div class="table-responsive">
+                <table class="data-table sale-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Available</th>
+                            <th>Quantity</th>
+                            <th>Unit price</th>
+                            <th>Line discount</th>
+                            <th>Line total</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="saleItemsBody">
+                        {% for item_form in formset %}
+                            <tr class="sale-item-row">
+                                <td>
+                                    {{ item_form.id }}
+                                    {{ item_form.product }}
+                                    {{ item_form.product.errors }}
+                                </td>
+
+                                <td>
+                                    <span class="sale-stock-display">
+                                        0.000
+                                    </span>
+
+                                    <small class="table-subtitle sale-unit-display">
+                                        Unit
+                                    </small>
+                                </td>
+
+                                <td>
+                                    {{ item_form.quantity }}
+                                    {{ item_form.quantity.errors }}
+                                </td>
+
+                                <td>
+                                    {{ item_form.unit_price }}
+                                    {{ item_form.unit_price.errors }}
+                                </td>
+
+                                <td>
+                                    {{ item_form.line_discount }}
+                                    {{ item_form.line_discount.errors }}
+                                </td>
+
+                                <td>
+                                    <strong class="sale-line-total">
+                                        TZS 0
+                                    </strong>
+
+                                    <small
+                                        class="sale-row-warning"
+                                        hidden
+                                    ></small>
+                                </td>
+
+                                <td>
+                                    {{ item_form.notes }}
+                                    {{ item_form.notes.errors }}
+                                </td>
+
+                                <td>
+                                    <div class="hidden-delete-field">
+                                        {{ item_form.DELETE }}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="item-remove-button"
+                                        data-remove-sale-item
+                                    >
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <template id="saleItemTemplate">
+                <tr class="sale-item-row">
+                    <td>
+                        {{ formset.empty_form.id }}
+                        {{ formset.empty_form.product }}
+                    </td>
+
+                    <td>
+                        <span class="sale-stock-display">
+                            0.000
+                        </span>
+
+                        <small class="table-subtitle sale-unit-display">
+                            Unit
+                        </small>
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.quantity }}
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.unit_price }}
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.line_discount }}
+                    </td>
+
+                    <td>
+                        <strong class="sale-line-total">
+                            TZS 0
+                        </strong>
+
+                        <small
+                            class="sale-row-warning"
+                            hidden
+                        ></small>
+                    </td>
+
+                    <td>
+                        {{ formset.empty_form.notes }}
+                    </td>
+
+                    <td>
+                        <div class="hidden-delete-field">
+                            {{ formset.empty_form.DELETE }}
+                        </div>
+
+                        <button
+                            type="button"
+                            class="item-remove-button"
+                            data-remove-sale-item
+                        >
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            </template>
+        </div>
+    </section>
+
+    <div class="sale-bottom-grid">
+        <section class="card sale-payment-card">
+            <div class="card-header">
+                <div>
+                    <h2>Payment guidance</h2>
+
+                    <p>
+                        Review payment requirements before completing.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sale-payment-guidance">
+                <p>
+                    <strong>Cash:</strong>
+                    Amount received may be higher than the total.
+                    The difference becomes customer change.
+                </p>
+
+                <p>
+                    <strong>Credit or partial:</strong>
+                    A registered customer must be selected.
+                </p>
+
+                <div
+                    class="sale-validation-warning"
+                    id="saleValidationWarning"
+                    hidden
+                ></div>
+            </div>
+        </section>
+
+        <aside class="card sale-summary-card">
+            <div class="card-header">
+                <div>
+                    <h2>Sale summary</h2>
+                    <p>Live totals and payment balance.</p>
+                </div>
+            </div>
+
+            <div class="sale-summary">
+                <div>
+                    <span>Products subtotal</span>
+                    <strong id="saleSubtotal">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Overall discount</span>
+                    <strong id="saleDiscount">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div class="sale-summary-total">
+                    <span>Total sale</span>
+                    <strong id="saleGrandTotal">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Amount received</span>
+                    <strong id="saleAmountReceived">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Customer change</span>
+                    <strong id="saleChange">
+                        TZS 0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Customer balance</span>
+                    <strong id="saleBalance">
+                        TZS 0
+                    </strong>
+                </div>
+            </div>
+        </aside>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const productDataElement = document.getElementById(
+            "saleProductData"
+        );
+
+        const productList = JSON.parse(
+            productDataElement.textContent
+        );
+
+        const products = new Map(
+            productList.map((product) => [
+                String(product.id),
+                product,
+            ])
+        );
+
+        const body = document.getElementById(
+            "saleItemsBody"
+        );
+
+        const template = document.getElementById(
+            "saleItemTemplate"
+        );
+
+        const addButton = document.getElementById(
+            "addSaleItem"
+        );
+
+        const totalFormsInput = document.getElementById(
+            "id_items-TOTAL_FORMS"
+        );
+
+        const paymentMethodInput = document.getElementById(
+            "id_payment_method"
+        );
+
+        const customerInput = document.getElementById(
+            "id_customer"
+        );
+
+        const amountReceivedInput = document.getElementById(
+            "id_amount_tendered"
+        );
+
+        const discountInput = document.getElementById(
+            "id_discount"
+        );
+
+        const completeButton = document.getElementById(
+            "saveAndCompleteButton"
+        );
+
+        const validationWarning = document.getElementById(
+            "saleValidationWarning"
+        );
+
+        function numberValue(value) {
+            const parsed = Number.parseFloat(value);
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function money(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(value);
+        }
+
+        function formattedNumber(
+            value,
+            minimumFractionDigits = 0,
+            maximumFractionDigits = 3
+        ) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    minimumFractionDigits,
+                    maximumFractionDigits,
+                }
+            ).format(value);
+        }
+
+        function rowProduct(row) {
+            const select = row.querySelector(
+                'select[name$="-product"]'
+            );
+
+            if (!select || !select.value) {
+                return null;
+            }
+
+            return products.get(
+                String(select.value)
+            ) || null;
+        }
+
+        function updateProductInformation(
+            row,
+            setDefaultPrice = false
+        ) {
+            const product = rowProduct(row);
+
+            const stockDisplay = row.querySelector(
+                ".sale-stock-display"
+            );
+
+            const unitDisplay = row.querySelector(
+                ".sale-unit-display"
+            );
+
+            const priceInput = row.querySelector(
+                'input[name$="-unit_price"]'
+            );
+
+            if (!product) {
+                stockDisplay.textContent = "0.000";
+                unitDisplay.textContent = "Unit";
+
+                return;
+            }
+
+            stockDisplay.textContent = formattedNumber(
+                numberValue(product.available_stock),
+                3,
+                3
+            );
+
+            unitDisplay.textContent = product.unit;
+
+            if (
+                setDefaultPrice
+                || !priceInput.value
+            ) {
+                priceInput.value = product.selling_price;
+            }
+        }
+
+        function calculateSale() {
+            let subtotal = 0;
+            let stockError = false;
+            let activeProductCount = 0;
+
+            document.querySelectorAll(
+                ".sale-item-row"
+            ).forEach((row) => {
+                const deleteInput = row.querySelector(
+                    'input[name$="-DELETE"]'
+                );
+
+                if (
+                    deleteInput
+                    && deleteInput.checked
+                ) {
+                    return;
+                }
+
+                const product = rowProduct(row);
+
+                const quantityInput = row.querySelector(
+                    'input[name$="-quantity"]'
+                );
+
+                const priceInput = row.querySelector(
+                    'input[name$="-unit_price"]'
+                );
+
+                const lineDiscountInput = row.querySelector(
+                    'input[name$="-line_discount"]'
+                );
+
+                const quantity = numberValue(
+                    quantityInput?.value
+                );
+
+                const unitPrice = numberValue(
+                    priceInput?.value
+                );
+
+                const lineDiscount = numberValue(
+                    lineDiscountInput?.value
+                );
+
+                const grossTotal = quantity * unitPrice;
+
+                const lineTotal = Math.max(
+                    0,
+                    grossTotal - lineDiscount
+                );
+
+                subtotal += lineTotal;
+
+                const totalElement = row.querySelector(
+                    ".sale-line-total"
+                );
+
+                totalElement.textContent = (
+                    `TZS ${money(lineTotal)}`
+                );
+
+                const warningElement = row.querySelector(
+                    ".sale-row-warning"
+                );
+
+                warningElement.hidden = true;
+                warningElement.textContent = "";
+
+                if (product) {
+                    activeProductCount += 1;
+
+                    const availableStock = numberValue(
+                        product.available_stock
+                    );
+
+                    const minimumPrice = numberValue(
+                        product.minimum_price
+                    );
+
+                    if (quantity > availableStock) {
+                        stockError = true;
+
+                        warningElement.hidden = false;
+
+                        warningElement.textContent = (
+                            `Only ${formattedNumber(
+                                availableStock,
+                                3,
+                                3
+                            )} ${product.unit} available.`
+                        );
+                    } else if (
+                        minimumPrice > 0
+                        && unitPrice < minimumPrice
+                    ) {
+                        stockError = true;
+
+                        warningElement.hidden = false;
+
+                        warningElement.textContent = (
+                            `Minimum price is TZS `
+                            + `${money(minimumPrice)}.`
+                        );
+                    } else if (
+                        lineDiscount > grossTotal
+                    ) {
+                        stockError = true;
+
+                        warningElement.hidden = false;
+
+                        warningElement.textContent = (
+                            "Line discount exceeds line value."
+                        );
+                    }
+                }
+            });
+
+            const overallDiscount = numberValue(
+                discountInput?.value
+            );
+
+            const total = Math.max(
+                0,
+                subtotal - overallDiscount
+            );
+
+            const amountReceived = numberValue(
+                amountReceivedInput?.value
+            );
+
+            const paymentMethod = (
+                paymentMethodInput?.value || "cash"
+            );
+
+            const customerSelected = Boolean(
+                customerInput?.value
+            );
+
+            const change = (
+                paymentMethod === "cash"
+                    ? Math.max(
+                        0,
+                        amountReceived - total
+                    )
+                    : 0
+            );
+
+            const amountPaid = Math.min(
+                amountReceived,
+                total
+            );
+
+            const balance = Math.max(
+                0,
+                total - amountPaid
+            );
+
+            document.getElementById(
+                "saleSubtotal"
+            ).textContent = `TZS ${money(subtotal)}`;
+
+            document.getElementById(
+                "saleDiscount"
+            ).textContent = (
+                `TZS ${money(overallDiscount)}`
+            );
+
+            document.getElementById(
+                "saleGrandTotal"
+            ).textContent = `TZS ${money(total)}`;
+
+            document.getElementById(
+                "saleAmountReceived"
+            ).textContent = (
+                `TZS ${money(amountReceived)}`
+            );
+
+            document.getElementById(
+                "saleChange"
+            ).textContent = `TZS ${money(change)}`;
+
+            document.getElementById(
+                "saleBalance"
+            ).textContent = `TZS ${money(balance)}`;
+
+            const problems = [];
+
+            if (activeProductCount === 0) {
+                problems.push(
+                    "Add at least one product."
+                );
+            }
+
+            if (overallDiscount > subtotal) {
+                problems.push(
+                    "Overall discount exceeds the subtotal."
+                );
+            }
+
+            if (
+                paymentMethod !== "cash"
+                && amountReceived > total
+            ) {
+                problems.push(
+                    (
+                        "Amount received cannot exceed the "
+                        + "sale total for this payment method."
+                    )
+                );
+            }
+
+            if (
+                paymentMethod === "credit"
+                && !customerSelected
+            ) {
+                problems.push(
+                    "Select a customer for a credit sale."
+                );
+            }
+
+            if (
+                balance > 0
+                && !customerSelected
+            ) {
+                problems.push(
+                    (
+                        "Select a customer because the sale "
+                        + "has an unpaid balance."
+                    )
+                );
+            }
+
+            if (stockError) {
+                problems.push(
+                    "Correct the highlighted product issue."
+                );
+            }
+
+            if (total <= 0) {
+                problems.push(
+                    "Sale total must be greater than zero."
+                );
+            }
+
+            if (problems.length > 0) {
+                validationWarning.hidden = false;
+
+                validationWarning.innerHTML = problems
+                    .map(
+                        (problem) => (
+                            `<div>${problem}</div>`
+                        )
+                    )
+                    .join("");
+
+                completeButton.disabled = true;
+            } else {
+                validationWarning.hidden = true;
+                validationWarning.innerHTML = "";
+
+                completeButton.disabled = false;
+            }
+        }
+
+        function bindSaleRow(row) {
+            const productInput = row.querySelector(
+                'select[name$="-product"]'
+            );
+
+            productInput?.addEventListener(
+                "change",
+                () => {
+                    updateProductInformation(
+                        row,
+                        true
+                    );
+
+                    calculateSale();
+                }
+            );
+
+            row.querySelectorAll(
+                "input"
+            ).forEach((input) => {
+                input.addEventListener(
+                    "input",
+                    calculateSale
+                );
+
+                input.addEventListener(
+                    "change",
+                    calculateSale
+                );
+            });
+
+            const removeButton = row.querySelector(
+                "[data-remove-sale-item]"
+            );
+
+            removeButton?.addEventListener(
+                "click",
+                () => {
+                    const deleteInput = row.querySelector(
+                        'input[name$="-DELETE"]'
+                    );
+
+                    if (deleteInput) {
+                        deleteInput.checked = true;
+                    }
+
+                    row.style.display = "none";
+
+                    calculateSale();
+                }
+            );
+
+            updateProductInformation(
+                row,
+                false
+            );
+        }
+
+        addButton.addEventListener("click", () => {
+            const formIndex = Number.parseInt(
+                totalFormsInput.value,
+                10
+            );
+
+            const html = template.innerHTML.replaceAll(
+                "__prefix__",
+                String(formIndex)
+            );
+
+            body.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+
+            totalFormsInput.value = (
+                formIndex + 1
+            );
+
+            bindSaleRow(
+                body.lastElementChild
+            );
+
+            calculateSale();
+        });
+
+        document.querySelectorAll(
+            ".sale-item-row"
+        ).forEach(bindSaleRow);
+
+        [
+            paymentMethodInput,
+            customerInput,
+            amountReceivedInput,
+            discountInput,
+        ].forEach((input) => {
+            input?.addEventListener(
+                "input",
+                calculateSale
+            );
+
+            input?.addEventListener(
+                "change",
+                calculateSale
+            );
+        });
+
+        calculateSale();
+    });
+</script>
+{% endblock %}

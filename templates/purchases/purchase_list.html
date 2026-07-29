@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Purchases | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Record supplier purchases and add stock batches.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total purchases</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ purchase_count|intcomma }}
+        </strong>
+
+        <small>All purchase records</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Posted purchases</span>
+            <span class="stat-icon">POST</span>
+        </div>
+
+        <strong class="stat-value">
+            {{ posted_count|intcomma }}
+        </strong>
+
+        <small>Added into stock</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Purchase value</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_posted_amount|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Total posted purchases</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Supplier balance</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+
+        <strong class="stat-value">
+            TZS {{ total_supplier_balance|floatformat:0|intcomma }}
+        </strong>
+
+        <small>Outstanding purchase balance</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Purchase records</h2>
+
+        <p>
+            Draft purchases do not affect stock until posted.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'purchase-create' %}"
+        class="button button-primary"
+    >
+        New purchase
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar purchase-toolbar">
+        <form
+            method="get"
+            class="purchase-filter-form"
+            data-loading-message="Searching"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Purchase number, supplier or invoice"
+            >
+
+            <select
+                name="status"
+                class="form-control"
+            >
+                <option value="">All statuses</option>
+
+                <option
+                    value="draft"
+                    {% if status_filter == "draft" %}selected{% endif %}
+                >
+                    Draft
+                </option>
+
+                <option
+                    value="posted"
+                    {% if status_filter == "posted" %}selected{% endif %}
+                >
+                    Posted
+                </option>
+
+                <option
+                    value="cancelled"
+                    {% if status_filter == "cancelled" %}selected{% endif %}
+                >
+                    Cancelled
+                </option>
+            </select>
+
+            <button
+                type="submit"
+                class="button button-secondary"
+            >
+                Filter
+            </button>
+
+            {% if search_query or status_filter %}
+                <a
+                    href="{% url 'purchase-list' %}"
+                    class="button button-secondary"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Purchase</th>
+                    <th>Date</th>
+                    <th>Supplier</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th class="table-action-column">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for purchase in purchases %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ purchase.purchase_number }}
+                            </strong>
+
+                            {% if purchase.supplier_invoice_number %}
+                                <small class="table-subtitle">
+                                    Invoice:
+                                    {{ purchase.supplier_invoice_number }}
+                                </small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ purchase.purchase_date|date:"d M Y" }}
+                        </td>
+
+                        <td>
+                            {{ purchase.supplier.name }}
+                        </td>
+
+                        <td>
+                            {{ purchase.items.all|length|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ purchase.current_total|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ purchase.amount_paid|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            TZS {{ purchase.balance_due|floatformat:0|intcomma }}
+                        </td>
+
+                        <td>
+                            {% if purchase.status == "posted" %}
+                                <span class="badge badge-success">
+                                    Posted
+                                </span>
+                            {% elif purchase.status == "draft" %}
+                                <span class="badge badge-warning">
+                                    Draft
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'purchase-detail' purchase.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="table-empty">
+                                No purchases have been recorded.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
