@@ -614,15 +614,131 @@ def build_chart_data(
         },
     }
 
-
 @management_required
 def dashboard(request):
-    (
-        selected_period,
-        start_date,
-        end_date,
-        period_label,
-    ) = get_dashboard_period(request)
+    today = timezone.localdate()
+
+    # =====================================================
+    # CUSTOM DATE RANGE
+    # =====================================================
+
+    date_from_value = (
+        request.GET.get("date_from")
+        or ""
+    ).strip()
+
+    date_to_value = (
+        request.GET.get("date_to")
+        or ""
+    ).strip()
+
+    custom_start_date = None
+    custom_end_date = None
+
+    try:
+        if date_from_value:
+            custom_start_date = datetime.strptime(
+                date_from_value,
+                "%Y-%m-%d",
+            ).date()
+    except ValueError:
+        custom_start_date = None
+
+    try:
+        if date_to_value:
+            custom_end_date = datetime.strptime(
+                date_to_value,
+                "%Y-%m-%d",
+            ).date()
+    except ValueError:
+        custom_end_date = None
+
+    # Use custom dates when either date field is supplied.
+    if custom_start_date or custom_end_date:
+        start_date = (
+            custom_start_date
+            or custom_end_date
+            or today
+        )
+
+        end_date = (
+            custom_end_date
+            or custom_start_date
+            or today
+        )
+
+        # Prevent an invalid reversed date range.
+        if start_date > end_date:
+            start_date, end_date = (
+                end_date,
+                start_date,
+            )
+
+        selected_period = "custom"
+        period_label = "Custom date range"
+
+    else:
+        # =================================================
+        # QUICK PERIOD FILTERS
+        # =================================================
+
+        selected_period = (
+            request.GET.get("period")
+            or "today"
+        ).strip().lower()
+
+        period_options = {
+            "today": {
+                "start_date": today,
+                "end_date": today,
+                "label": "Today",
+            },
+            "7d": {
+                "start_date": (
+                    today - timedelta(days=6)
+                ),
+                "end_date": today,
+                "label": "Last 7 days",
+            },
+            "30d": {
+                "start_date": (
+                    today - timedelta(days=29)
+                ),
+                "end_date": today,
+                "label": "Last 30 days",
+            },
+            "month": {
+                "start_date": today.replace(
+                    day=1,
+                ),
+                "end_date": today,
+                "label": "This month",
+            },
+        }
+
+        # Default to today's sales when the value is unknown.
+        if selected_period not in period_options:
+            selected_period = "today"
+
+        selected_option = period_options[
+            selected_period
+        ]
+
+        start_date = selected_option[
+            "start_date"
+        ]
+
+        end_date = selected_option[
+            "end_date"
+        ]
+
+        period_label = selected_option[
+            "label"
+        ]
+
+    # =====================================================
+    # USER ACCESS
+    # =====================================================
 
     can_view_financials = (
         request.user.is_superuser
@@ -632,6 +748,10 @@ def dashboard(request):
             request.user.Role.MANAGER,
         }
     )
+
+    # =====================================================
+    # BUSINESS REPORT
+    # =====================================================
 
     report = build_business_report(
         start_date=start_date,
@@ -661,27 +781,48 @@ def dashboard(request):
         report["net_profit"]
     )
 
+    # =====================================================
+    # CHART DATA
+    # =====================================================
+
     chart_data = build_chart_data(
         report,
         start_date,
         end_date,
     )
 
+    # =====================================================
+    # TEMPLATE CONTEXT
+    # =====================================================
+
     context = {
         "page_title": "Dashboard",
-        "today": timezone.localdate(),
+        "today": today,
+
         "selected_period": selected_period,
         "period_label": period_label,
+
         "date_from": start_date,
         "date_to": end_date,
+
+        # Values used directly inside date input fields.
+        "date_from_value": (
+            start_date.strftime("%Y-%m-%d")
+        ),
+        "date_to_value": (
+            end_date.strftime("%Y-%m-%d")
+        ),
+
         "can_view_financials": (
             can_view_financials
         ),
+
         "report": report,
         "chart_data": chart_data,
+
         "recent_activities": (
             build_recent_activities(
-                limit=10
+                limit=10,
             )
         ),
     }

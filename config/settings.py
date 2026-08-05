@@ -138,6 +138,7 @@ INSTALLED_APPS = [
     "expenses",
     "reports",
     "sms.apps.SMSConfig",
+    "transport.apps.TransportConfig",
 ]
 
 

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static humanize %}
+{% block title %}Transport Trips | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Trip movements, customers, payments, balances and status.</p>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h2>Transport trips</h2><p>Every scheduled, active, completed and cancelled journey.</p></div><a href="{% url 'transport-trip-create' %}" class="button button-primary">Record trip</a></div>
+<div class="stats-grid transport-compact-stats"><article class="stat-card"><div class="stat-card-header"><span>Filtered revenue</span><span class="stat-icon">REV</span></div><strong class="stat-value">TZS {{ filtered_revenue|floatformat:0|intcomma }}</strong><small>Non-cancelled trip charges</small></article><article class="stat-card"><div class="stat-card-header"><span>Filtered received</span><span class="stat-icon">PAID</span></div><strong class="stat-value">TZS {{ filtered_paid|floatformat:0|intcomma }}</strong><small>Amount paid</small></article><article class="stat-card"><div class="stat-card-header"><span>Filtered balance</span><span class="stat-icon">DUE</span></div><strong class="stat-value">TZS {{ filtered_balance|floatformat:0|intcomma }}</strong><small>Outstanding amount</small></article></div>
+<section class="table-card">
+<div class="table-toolbar"><form method="get" class="transport-filter-form transport-filter-wide" data-loading-message="Filtering transport trips">
+<input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Trip, customer, route, vehicle or driver">
+<select name="status" class="form-control"><option value="">All trip statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<select name="payment_status" class="form-control"><option value="">All payment statuses</option>{% for value,label in payment_status_choices %}<option value="{{ value }}" {% if payment_status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<select name="route" class="form-control"><option value="">All routes</option>{% for route in routes %}<option value="{{ route.pk }}" {% if route_filter == route.pk|stringformat:'s' %}selected{% endif %}>{{ route.origin }} → {{ route.destination }}</option>{% endfor %}</select>
+<select name="vehicle" class="form-control"><option value="">All vehicles</option>{% for vehicle in vehicles %}<option value="{{ vehicle.pk }}" {% if vehicle_filter == vehicle.pk|stringformat:'s' %}selected{% endif %}>{{ vehicle.plate_number }}</option>{% endfor %}</select>
+<select name="driver" class="form-control"><option value="">All drivers</option>{% for driver in drivers %}<option value="{{ driver.pk }}" {% if driver_filter == driver.pk|stringformat:'s' %}selected{% endif %}>{{ driver.full_name }}</option>{% endfor %}</select>
+<input type="date" name="date_from" value="{{ date_from }}" class="form-control" aria-label="From date"><input type="date" name="date_to" value="{{ date_to }}" class="form-control" aria-label="To date">
+<button type="submit" class="button button-secondary">Filter</button><a href="{% url 'transport-trip-list' %}" class="button button-secondary">Reset</a>
+</form></div>
+<div class="table-responsive"><table class="data-table"><thead><tr><th>Trip</th><th>Route / customer</th><th>Vehicle / driver</th><th>Departure</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
+{% for trip in trips %}<tr>
+<td><a class="table-link" href="{% url 'transport-trip-detail' trip.pk %}">{{ trip.trip_number }}</a><small class="table-subtitle">{{ trip.get_payment_method_display }}</small></td>
+<td><strong>{{ trip.origin }} → {{ trip.destination }}</strong><small class="table-subtitle">{{ trip.customer_name|default:"Internal / walk-in" }}{% if trip.customer_phone %} · {{ trip.customer_phone }}{% endif %}</small></td>
+<td>{{ trip.vehicle.plate_number }}<small class="table-subtitle">{{ trip.driver.full_name }}</small></td>
+<td>{{ trip.departure_datetime|date:"d M Y" }}<small class="table-subtitle">{{ trip.departure_datetime|date:"H:i" }}</small></td>
+<td>TZS {{ trip.amount_charged|floatformat:0|intcomma }}<small class="table-subtitle"><span class="transport-status status-{{ trip.payment_status }}">{{ trip.get_payment_status_display }}</span> · Due {{ trip.balance_due|floatformat:0|intcomma }}</small></td>
+<td><span class="transport-status status-{{ trip.status }}">{{ trip.get_status_display }}</span></td>
+<td class="transport-actions-cell"><a href="{% url 'transport-trip-edit' trip.pk %}" class="table-link">Edit</a>{% if request.user.is_manager_user %}<a href="{% url 'transport-trip-delete' trip.pk %}" class="table-link table-link-danger">Delete</a>{% endif %}</td>
+</tr>{% empty %}<tr><td colspan="7" class="transport-empty-cell">No trips match the selected filters.</td></tr>{% endfor %}
+</tbody></table></div>{% include "transport/partials/pagination.html" %}</section>
+{% endblock %}

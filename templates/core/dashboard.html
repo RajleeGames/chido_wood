@@ -13,7 +13,7 @@ Dashboard | CHIDO Wood ERP
 
 {% block content %}
 <div class="dashboard-toolbar">
-    <div>
+    <div class="dashboard-toolbar-copy">
         <span class="dashboard-eyebrow">
             Admin overview
         </span>
@@ -30,38 +30,82 @@ Dashboard | CHIDO Wood ERP
     </div>
 
     {% if can_view_financials %}
-        <div
-            class="dashboard-period-filter"
-            aria-label="Dashboard period"
+        <form
+            method="get"
+            class="dashboard-date-ruler"
+            aria-label="Dashboard date filter"
         >
-            <a
-                href="?period=today"
-                class="dashboard-period-link {% if selected_period == 'today' %}active{% endif %}"
-            >
-                Today
-            </a>
+            <div class="dashboard-date-ruler-presets">
+                <a
+                    href="?period=today"
+                    class="{% if selected_period == 'today' %}active{% endif %}"
+                >
+                    Today
+                </a>
 
-            <a
-                href="?period=7d"
-                class="dashboard-period-link {% if selected_period == '7d' %}active{% endif %}"
-            >
-                7 days
-            </a>
+                <a
+                    href="?period=7d"
+                    class="{% if selected_period == '7d' %}active{% endif %}"
+                >
+                    7 days
+                </a>
 
-            <a
-                href="?period=30d"
-                class="dashboard-period-link {% if selected_period == '30d' %}active{% endif %}"
-            >
-                30 days
-            </a>
+                <a
+                    href="?period=30d"
+                    class="{% if selected_period == '30d' %}active{% endif %}"
+                >
+                    30 days
+                </a>
 
-            <a
-                href="?period=month"
-                class="dashboard-period-link {% if selected_period == 'month' %}active{% endif %}"
+                <a
+                    href="?period=month"
+                    class="{% if selected_period == 'month' %}active{% endif %}"
+                >
+                    This month
+                </a>
+            </div>
+
+            <div
+                class="dashboard-date-ruler-divider"
+                aria-hidden="true"
+            ></div>
+
+            <label class="dashboard-date-ruler-field">
+                <span>From</span>
+
+                <input
+                    type="date"
+                    name="date_from"
+                    value="{{ date_from_value }}"
+                    max="{{ today|date:'Y-m-d' }}"
+                >
+            </label>
+
+            <span
+                class="dashboard-date-ruler-arrow"
+                aria-hidden="true"
             >
-                This month
-            </a>
-        </div>
+                →
+            </span>
+
+            <label class="dashboard-date-ruler-field">
+                <span>To</span>
+
+                <input
+                    type="date"
+                    name="date_to"
+                    value="{{ date_to_value }}"
+                    max="{{ today|date:'Y-m-d' }}"
+                >
+            </label>
+
+            <button
+                type="submit"
+                class="dashboard-date-ruler-button"
+            >
+                Apply
+            </button>
+        </form>
     {% endif %}
 </div>
 

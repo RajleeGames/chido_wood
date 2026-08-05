@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }} | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Vehicle identity, capacity, status and legal document dates.</p>{% endblock %}
+{% block content %}
+<form method="post" data-loading-message="Saving vehicle">{% csrf_token %}
+<div class="page-header"><div><h2>{% if is_editing %}Edit {{ vehicle.plate_number }}{% else %}New vehicle{% endif %}</h2><p>Keep odometer and compliance information current.</p></div><div class="page-header-actions"><a href="{% if vehicle %}{% url 'transport-vehicle-detail' vehicle.pk %}{% else %}{% url 'transport-vehicle-list' %}{% endif %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save vehicle</button></div></div>
+<section class="card transport-form-card"><div class="card-header"><div><h2>Vehicle information</h2><p>All fields are kept in the transport module.</p></div></div><div class="transport-card-body">{% include "transport/partials/form_fields.html" %}</div></section>
+</form>
+{% endblock %}

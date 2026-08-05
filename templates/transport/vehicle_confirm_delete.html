@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Delete Vehicle | CHIDO Wood ERP{% endblock %}{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block content %}<section class="card transport-delete-card"><h2>Delete vehicle?</h2><p>You are deleting <strong>{{ object }}</strong>. A vehicle used on trips cannot be deleted; mark it inactive instead.</p><form method="post" data-loading-message="Deleting vehicle">{% csrf_token %}<div class="page-header-actions"><a href="{% url 'transport-vehicle-detail' object.pk %}" class="button button-secondary">Cancel</a><button type="submit" class="button transport-danger-button">Delete vehicle</button></div></form></section>{% endblock %}

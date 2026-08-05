@@ -323,6 +323,82 @@
                         </div>
                     </details>
 
+
+                                        <details
+                        class="sidebar-group"
+                        {% if 'transport-' in request.resolver_match.url_name %}
+                            open
+                        {% endif %}
+                    >
+                        <summary
+                            class="sidebar-group-toggle
+                                {% if 'transport-' in request.resolver_match.url_name %}
+                                    active
+                                {% endif %}
+                            "
+                        >
+                            <span class="sidebar-icon">▧</span>
+                            <span class="sidebar-link-label">Transport</span>
+                            <span class="sidebar-group-chevron" aria-hidden="true">
+                                <svg viewBox="0 0 20 20" fill="none">
+                                    <path
+                                        d="M6.5 8l3.5 3.5L13.5 8"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </span>
+                        </summary>
+
+                        <div class="sidebar-subnav">
+                            <a
+                                href="{% url 'transport-dashboard' %}"
+                                class="sidebar-sublink {% if request.resolver_match.url_name == 'transport-dashboard' %}active{% endif %}"
+                            >
+                                Overview
+                            </a>
+
+                            <a
+                                href="{% url 'transport-trip-list' %}"
+                                class="sidebar-sublink {% if 'transport-trip-' in request.resolver_match.url_name %}active{% endif %}"
+                            >
+                                Trips
+                            </a>
+
+                            <a
+                                href="{% url 'transport-route-list' %}"
+                                class="sidebar-sublink {% if 'transport-route-' in request.resolver_match.url_name %}active{% endif %}"
+                            >
+                                Routes & prices
+                            </a>
+
+                            <a
+                                href="{% url 'transport-vehicle-list' %}"
+                                class="sidebar-sublink {% if 'transport-vehicle-' in request.resolver_match.url_name %}active{% endif %}"
+                            >
+                                Vehicles
+                            </a>
+
+                            <a
+                                href="{% url 'transport-driver-list' %}"
+                                class="sidebar-sublink {% if 'transport-driver-' in request.resolver_match.url_name %}active{% endif %}"
+                            >
+                                Drivers
+                            </a>
+
+                            <a
+                                href="{% url 'transport-expense-list' %}"
+                                class="sidebar-sublink {% if 'transport-expense-' in request.resolver_match.url_name %}active{% endif %}"
+                            >
+                                Transport expenses
+                            </a>
+                        </div>
+                    </details>
+
+
+
                     <details
                         class="sidebar-group"
                         {% if 'sms-' in request.resolver_match.url_name %}

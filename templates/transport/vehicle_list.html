@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static humanize %}
+{% block title %}Vehicles | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Fleet capacity, status, odometer and compliance dates.</p>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h2>Vehicle fleet</h2><p>Track every truck, pickup, van, car and motorcycle.</p></div>
+    <a href="{% url 'transport-vehicle-create' %}" class="button button-primary">Add vehicle</a>
+</div>
+<section class="table-card">
+    <div class="table-toolbar">
+        <form method="get" class="transport-filter-form" data-loading-message="Filtering vehicles">
+            <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Plate number, make or model">
+            <select name="status" class="form-control"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+            <select name="vehicle_type" class="form-control"><option value="">All vehicle types</option>{% for value,label in type_choices %}<option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+            <button type="submit" class="button button-secondary">Filter</button><a href="{% url 'transport-vehicle-list' %}" class="button button-secondary">Reset</a>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead><tr><th>Vehicle</th><th>Type</th><th>Capacity</th><th>Odometer</th><th>Compliance</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for vehicle in vehicles %}
+                <tr>
+                    <td><a class="table-link" href="{% url 'transport-vehicle-detail' vehicle.pk %}">{{ vehicle.plate_number }}</a><small class="table-subtitle">{{ vehicle.make }} {{ vehicle.model }}</small></td>
+                    <td>{{ vehicle.get_vehicle_type_display }}</td>
+                    <td>{{ vehicle.capacity|floatformat:2 }} {{ vehicle.capacity_unit }}</td>
+                    <td>{{ vehicle.current_odometer|floatformat:1|intcomma }} km</td>
+                    <td>{% if vehicle.compliance_warning %}<span class="transport-warning-text">{{ vehicle.compliance_warning }}</span>{% else %}<span class="transport-muted">Clear</span>{% endif %}</td>
+                    <td><span class="transport-status status-{{ vehicle.status }}">{{ vehicle.get_status_display }}</span></td>
+                    <td class="transport-actions-cell"><a href="{% url 'transport-vehicle-edit' vehicle.pk %}" class="table-link">Edit</a>{% if request.user.is_manager_user %}<a href="{% url 'transport-vehicle-delete' vehicle.pk %}" class="table-link table-link-danger">Delete</a>{% endif %}</td>
+                </tr>
+            {% empty %}<tr><td colspan="7" class="transport-empty-cell">No vehicles found.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "transport/partials/pagination.html" %}
+</section>
+{% endblock %}

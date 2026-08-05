@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static humanize %}
+{% block title %}Transport Routes | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Manage regular routes, distance and standard transport prices.</p>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h2>Route directory</h2><p>Use routes to fill trip origin, destination, distance and price faster.</p></div>
+    <a href="{% url 'transport-route-create' %}" class="button button-primary">Add route</a>
+</div>
+<section class="table-card">
+    <div class="table-toolbar">
+        <form method="get" class="transport-filter-form" data-loading-message="Filtering routes">
+            <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search code, origin or destination">
+            <select name="active" class="form-control">
+                <option value="">All routes</option>
+                <option value="yes" {% if active_filter == 'yes' %}selected{% endif %}>Active only</option>
+                <option value="no" {% if active_filter == 'no' %}selected{% endif %}>Inactive only</option>
+            </select>
+            <button type="submit" class="button button-secondary">Filter</button>
+            <a href="{% url 'transport-route-list' %}" class="button button-secondary">Reset</a>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead><tr><th>Code</th><th>Route</th><th>Distance</th><th>Default price</th><th>Duration</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for route in routes %}
+                <tr>
+                    <td><strong>{{ route.code }}</strong></td>
+                    <td>{{ route.origin }} → {{ route.destination }}</td>
+                    <td>{{ route.distance_km|floatformat:2 }} km</td>
+                    <td>TZS {{ route.default_price|floatformat:0|intcomma }}</td>
+                    <td>{{ route.estimated_duration_display }}</td>
+                    <td><span class="transport-status {% if route.is_active %}status-active{% else %}status-inactive{% endif %}">{% if route.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                    <td class="transport-actions-cell">
+                        <a href="{% url 'transport-trip-create' %}?route={{ route.pk }}" class="table-link">New trip</a>
+                        <a href="{% url 'transport-route-edit' route.pk %}" class="table-link">Edit</a>
+                        {% if request.user.is_manager_user %}<a href="{% url 'transport-route-delete' route.pk %}" class="table-link table-link-danger">Delete</a>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}<tr><td colspan="7" class="transport-empty-cell">No transport routes found.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "transport/partials/pagination.html" %}
+</section>
+{% endblock %}

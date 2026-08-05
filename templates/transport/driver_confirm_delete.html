@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Delete Driver | CHIDO Wood ERP{% endblock %}{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block content %}<section class="card transport-delete-card"><h2>Delete driver?</h2><p>You are deleting <strong>{{ object.full_name }}</strong>. Drivers used on trips cannot be deleted; mark the driver inactive instead.</p><form method="post" data-loading-message="Deleting driver">{% csrf_token %}<div class="page-header-actions"><a href="{% url 'transport-driver-detail' object.pk %}" class="button button-secondary">Cancel</a><button type="submit" class="button transport-danger-button">Delete driver</button></div></form></section>{% endblock %}

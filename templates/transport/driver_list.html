@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static humanize %}
+{% block title %}Drivers | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Driver contacts, licenses, assigned vehicles and salary records.</p>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h2>Driver directory</h2><p>Manage active and inactive transport drivers.</p></div><a href="{% url 'transport-driver-create' %}" class="button button-primary">Add driver</a></div>
+<section class="table-card">
+<div class="table-toolbar"><form method="get" class="transport-filter-form" data-loading-message="Filtering drivers"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Name, phone or license"><select name="active" class="form-control"><option value="">All drivers</option><option value="yes" {% if active_filter == 'yes' %}selected{% endif %}>Active only</option><option value="no" {% if active_filter == 'no' %}selected{% endif %}>Inactive only</option></select><select name="vehicle" class="form-control"><option value="">All assigned vehicles</option>{% for vehicle in vehicles %}<option value="{{ vehicle.pk }}" {% if vehicle_filter == vehicle.pk|stringformat:'s' %}selected{% endif %}>{{ vehicle.plate_number }}</option>{% endfor %}</select><button type="submit" class="button button-secondary">Filter</button><a href="{% url 'transport-driver-list' %}" class="button button-secondary">Reset</a></form></div>
+<div class="table-responsive"><table class="data-table"><thead><tr><th>Driver</th><th>Phone</th><th>License</th><th>Assigned vehicle</th><th>Salary</th><th>Status</th><th></th></tr></thead><tbody>
+{% for driver in drivers %}<tr><td><a class="table-link" href="{% url 'transport-driver-detail' driver.pk %}">{{ driver.full_name }}</a>{% if driver.license_warning %}<small class="table-subtitle transport-warning-text">{{ driver.license_warning }}</small>{% endif %}</td><td>{{ driver.phone }}</td><td>{{ driver.license_number }}<small class="table-subtitle">Class {{ driver.license_class|default:"-" }}</small></td><td>{{ driver.assigned_vehicle|default:"Not assigned" }}</td><td>TZS {{ driver.monthly_salary|floatformat:0|intcomma }}</td><td><span class="transport-status {% if driver.is_active %}status-active{% else %}status-inactive{% endif %}">{% if driver.is_active %}Active{% else %}Inactive{% endif %}</span></td><td class="transport-actions-cell"><a href="{% url 'transport-driver-edit' driver.pk %}" class="table-link">Edit</a>{% if request.user.is_manager_user %}<a href="{% url 'transport-driver-delete' driver.pk %}" class="table-link table-link-danger">Delete</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="7" class="transport-empty-cell">No drivers found.</td></tr>{% endfor %}
+</tbody></table></div>{% include "transport/partials/pagination.html" %}</section>
+{% endblock %}

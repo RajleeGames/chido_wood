@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Delete Route | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block content %}
+<section class="card transport-delete-card">
+    <h2>Delete transport route?</h2>
+    <p>You are deleting <strong>{{ object }}</strong>. Routes already used by trips cannot be deleted.</p>
+    <form method="post" data-loading-message="Deleting route">{% csrf_token %}<div class="page-header-actions"><a href="{% url 'transport-route-list' %}" class="button button-secondary">Cancel</a><button type="submit" class="button transport-danger-button">Delete route</button></div></form>
+</section>
+{% endblock %}

@@ -1,0 +1,384 @@
+/* =========================================================
+   CHIDO WOOD ERP — TRANSPORT MODULE
+   Extends static/css/app.css without replacing global styles.
+   ========================================================= */
+
+.transport-date-filter {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+}
+
+.transport-date-filter .form-group {
+    width: min(260px, 100%);
+    margin: 0;
+}
+
+.transport-summary-grid,
+.transport-dashboard-grid,
+.transport-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.transport-summary-card,
+.transport-form-card,
+.transport-warning-card,
+.transport-delete-card,
+.transport-status-actions {
+    overflow: hidden;
+}
+
+.transport-summary-list,
+.transport-detail-list {
+    margin: 0;
+    padding: 8px 18px 18px;
+}
+
+.transport-summary-list > div,
+.transport-detail-list > div {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line, #e5e7eb);
+}
+
+.transport-summary-list > div:last-child,
+.transport-detail-list > div:last-child {
+    border-bottom: 0;
+}
+
+.transport-summary-list span,
+.transport-detail-list dt {
+    color: var(--muted, #667085);
+    font-size: 0.82rem;
+}
+
+.transport-summary-list strong,
+.transport-detail-list dd {
+    margin: 0;
+    color: var(--text, #111827);
+    font-weight: 700;
+    text-align: right;
+}
+
+.transport-filter-form {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(220px, 1.6fr) minmax(150px, 0.8fr) minmax(150px, 0.8fr) auto auto;
+    align-items: end;
+    gap: 10px;
+}
+
+.transport-filter-form.transport-filter-wide {
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.transport-filter-form .button {
+    min-height: 40px;
+    white-space: nowrap;
+}
+
+.transport-form-card .card-header,
+.transport-summary-card .card-header,
+.transport-warning-card .card-header,
+.transport-detail-grid .card-header {
+    border-bottom: 1px solid var(--line, #e5e7eb);
+}
+
+.transport-card-body {
+    padding: 18px;
+}
+
+.transport-form-grid .form-group {
+    min-width: 0;
+}
+
+.transport-checkbox-row {
+    min-height: 44px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line, #d9dee7);
+    border-radius: 8px;
+    background: var(--surface-soft, #f8fafc);
+    cursor: pointer;
+}
+
+.transport-checkbox-row input {
+    width: 17px;
+    height: 17px;
+    margin-top: 2px;
+}
+
+.transport-checkbox-row span,
+.transport-checkbox-row small {
+    display: block;
+}
+
+.transport-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    background: #eef2f6;
+    color: #475467;
+}
+
+.status-active,
+.status-completed,
+.status-paid {
+    background: #e8f7ee;
+    color: #167044;
+}
+
+.status-scheduled,
+.status-partial,
+.status-maintenance {
+    background: #fff4dc;
+    color: #9a5b00;
+}
+
+.status-in_transit {
+    background: #e8f0ff;
+    color: #2459a8;
+}
+
+.status-cancelled,
+.status-inactive,
+.status-unpaid {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.transport-warning-text {
+    color: #b54708;
+    font-weight: 700;
+}
+
+.transport-muted {
+    color: var(--muted, #667085);
+}
+
+.transport-actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.table-link-danger {
+    color: #b42318 !important;
+}
+
+.transport-danger-button {
+    background: #b42318;
+    border-color: #b42318;
+    color: #fff;
+}
+
+.transport-danger-button:hover {
+    background: #8f1c13;
+    border-color: #8f1c13;
+}
+
+.transport-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--line, #e5e7eb);
+    color: var(--muted, #667085);
+    font-size: 0.82rem;
+}
+
+.transport-pagination .is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.transport-empty-cell {
+    padding: 34px 18px !important;
+    text-align: center;
+    color: var(--muted, #667085);
+}
+
+.transport-warning-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 16px 18px 18px;
+}
+
+.transport-warning-list a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid #fedf89;
+    border-radius: 8px;
+    background: #fffaeb;
+    color: #7a2e0e;
+    text-decoration: none;
+}
+
+.transport-warning-list span {
+    font-size: 0.78rem;
+}
+
+.transport-alert {
+    margin: 0 18px 18px;
+    padding: 12px 14px;
+    border: 1px solid #fedf89;
+    border-radius: 8px;
+    background: #fffaeb;
+    color: #934f00;
+    font-weight: 700;
+}
+
+.transport-notes {
+    margin: 0 18px 18px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--surface-soft, #f8fafc);
+}
+
+.transport-notes p {
+    margin: 7px 0 0;
+    color: var(--muted, #667085);
+    line-height: 1.6;
+}
+
+.transport-status-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+}
+
+.transport-status-actions h2,
+.transport-status-actions p {
+    margin: 0;
+}
+
+.transport-status-actions p {
+    margin-top: 4px;
+    color: var(--muted, #667085);
+}
+
+.transport-status-actions form {
+    margin: 0;
+}
+
+.transport-delete-card {
+    max-width: 680px;
+    padding: 24px;
+    margin: 20px auto;
+}
+
+.transport-delete-card h2 {
+    margin-top: 0;
+}
+
+.transport-delete-card p {
+    color: var(--muted, #667085);
+    line-height: 1.65;
+}
+
+.transport-small-value {
+    font-size: clamp(1rem, 2vw, 1.35rem) !important;
+}
+
+.transport-compact-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1180px) {
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .transport-summary-grid,
+    .transport-dashboard-grid,
+    .transport-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .transport-warning-list {
+        grid-template-columns: 1fr;
+    }
+
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .transport-status-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 620px) {
+    .transport-date-filter,
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        grid-template-columns: 1fr;
+        display: grid;
+    }
+
+    .transport-date-filter .form-group {
+        width: 100%;
+    }
+
+    .transport-card-body {
+        padding: 14px;
+    }
+
+    .transport-summary-list,
+    .transport-detail-list {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .transport-summary-list > div,
+    .transport-detail-list > div {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .transport-summary-list strong,
+    .transport-detail-list dd {
+        text-align: left;
+    }
+
+    .transport-pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .transport-compact-stats {
+        grid-template-columns: 1fr;
+    }
+}

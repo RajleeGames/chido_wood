@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}Transport Dashboard | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Routes, vehicles, drivers, trips, revenue and expenses.</p>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>Transport overview</h2>
+        <p>Daily performance and current fleet activity.</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{% url 'transport-expense-create' %}" class="button button-secondary">Record expense</a>
+        <a href="{% url 'transport-trip-create' %}" class="button button-primary">Record trip</a>
+    </div>
+</div>
+
+<form method="get" class="card transport-date-filter" data-loading-message="Loading transport summary">
+    <div class="form-group">
+        <label for="transportDate">Report date</label>
+        <input id="transportDate" type="date" name="date" value="{{ selected_date }}" class="form-control">
+    </div>
+    <button type="submit" class="button button-secondary">Apply date</button>
+</form>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header"><span>Trip revenue</span><span class="stat-icon">REV</span></div>
+        <strong class="stat-value">TZS {{ day_revenue|floatformat:0|intcomma }}</strong>
+        <small>{{ day_trip_count }} trips on selected date</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-header"><span>Money received</span><span class="stat-icon">PAID</span></div>
+        <strong class="stat-value">TZS {{ day_received|floatformat:0|intcomma }}</strong>
+        <small>Cash collected from trips</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-header"><span>Transport expenses</span><span class="stat-icon">COST</span></div>
+        <strong class="stat-value">TZS {{ day_expenses|floatformat:0|intcomma }}</strong>
+        <small>Expenses on selected date</small>
+    </article>
+    <article class="stat-card">
+        <div class="stat-card-header"><span>Net result</span><span class="stat-icon">NET</span></div>
+        <strong class="stat-value">TZS {{ day_net|floatformat:0|intcomma }}</strong>
+        <small>Revenue minus transport expenses</small>
+    </article>
+</div>
+
+<div class="transport-summary-grid">
+    <section class="card transport-summary-card">
+        <div class="card-header"><div><h2>Monthly performance</h2><p>Month containing the selected date.</p></div></div>
+        <div class="transport-summary-list">
+            <div><span>Revenue</span><strong>TZS {{ month_revenue|floatformat:0|intcomma }}</strong></div>
+            <div><span>Expenses</span><strong>TZS {{ month_expenses|floatformat:0|intcomma }}</strong></div>
+            <div><span>Net result</span><strong>TZS {{ month_net|floatformat:0|intcomma }}</strong></div>
+        </div>
+    </section>
+
+    <section class="card transport-summary-card">
+        <div class="card-header"><div><h2>Current resources</h2><p>Active transport setup.</p></div></div>
+        <div class="transport-summary-list">
+            <div><span>Active trips</span><strong>{{ active_trip_count }}</strong></div>
+            <div><span>Available vehicles</span><strong>{{ active_vehicle_count }}</strong></div>
+            <div><span>Active drivers</span><strong>{{ active_driver_count }}</strong></div>
+            <div><span>Active routes</span><strong>{{ route_count }}</strong></div>
+        </div>
+    </section>
+</div>
+
+<div class="transport-dashboard-grid">
+    <section class="table-card">
+        <div class="card-header">
+            <div><h2>Recent trips</h2><p>Latest transport movements.</p></div>
+            <a href="{% url 'transport-trip-list' %}" class="table-link">View all</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead><tr><th>Trip</th><th>Route</th><th>Vehicle</th><th>Status</th><th>Amount</th></tr></thead>
+                <tbody>
+                    {% for trip in recent_trips %}
+                    <tr>
+                        <td><a class="table-link" href="{% url 'transport-trip-detail' trip.pk %}">{{ trip.trip_number }}</a><small class="table-subtitle">{{ trip.departure_datetime|date:"d M Y H:i" }}</small></td>
+                        <td>{{ trip.origin }} → {{ trip.destination }}</td>
+                        <td>{{ trip.vehicle.plate_number }}</td>
+                        <td><span class="transport-status status-{{ trip.status }}">{{ trip.get_status_display }}</span></td>
+                        <td>TZS {{ trip.amount_charged|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="5" class="transport-empty-cell">No trips recorded yet.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="table-card">
+        <div class="card-header">
+            <div><h2>Recent expenses</h2><p>Latest fleet and trip costs.</p></div>
+            <a href="{% url 'transport-expense-list' %}" class="table-link">View all</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead><tr><th>Expense</th><th>Category</th><th>Vehicle</th><th>Amount</th></tr></thead>
+                <tbody>
+                    {% for expense in recent_expenses %}
+                    <tr>
+                        <td>{{ expense.expense_number }}<small class="table-subtitle">{{ expense.expense_date|date:"d M Y H:i" }}</small></td>
+                        <td>{{ expense.get_category_display }}</td>
+                        <td>{{ expense.vehicle|default:"General" }}</td>
+                        <td>TZS {{ expense.amount|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% empty %}<tr><td colspan="4" class="transport-empty-cell">No transport expenses recorded yet.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{% if warning_vehicles or warning_drivers %}
+<section class="card transport-warning-card">
+    <div class="card-header"><div><h2>Compliance warnings</h2><p>Documents expiring within 30 days or already expired.</p></div></div>
+    <div class="transport-warning-list">
+        {% for vehicle in warning_vehicles %}<a href="{% url 'transport-vehicle-detail' vehicle.pk %}"><strong>{{ vehicle.plate_number }}</strong><span>{{ vehicle.compliance_warning }}</span></a>{% endfor %}
+        {% for driver in warning_drivers %}<a href="{% url 'transport-driver-detail' driver.pk %}"><strong>{{ driver.full_name }}</strong><span>{{ driver.license_warning }}</span></a>{% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

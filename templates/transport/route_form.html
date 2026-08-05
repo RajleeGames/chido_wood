@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }} | CHIDO Wood ERP{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
+{% block page_subtitle %}<p>Set the journey locations, standard distance and default charge.</p>{% endblock %}
+{% block content %}
+<form method="post" data-loading-message="Saving transport route">
+    {% csrf_token %}
+    <div class="page-header">
+        <div><h2>{% if is_editing %}Edit {{ route.code }}{% else %}New transport route{% endif %}</h2><p>Default values can still be changed on each trip.</p></div>
+        <div class="page-header-actions"><a href="{% url 'transport-route-list' %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save route</button></div>
+    </div>
+    <section class="card transport-form-card">
+        <div class="card-header"><div><h2>Route information</h2><p>Enter the normal journey details.</p></div></div>
+        <div class="transport-card-body">{% include "transport/partials/form_fields.html" %}</div>
+    </section>
+</form>
+{% endblock %}

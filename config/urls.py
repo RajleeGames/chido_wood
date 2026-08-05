@@ -74,6 +74,11 @@ path(
 
 path("sms/", include("sms.urls")),
 
+path(
+    "transport/",
+    include("transport.urls"),
+),
+
 ]
 
 if settings.DEBUG:
