@@ -15,7 +15,9 @@ from accounts.decorators import management_required, manager_required
 
 from .forms import (
     DriverForm,
+    TransportExpenseBatchHeaderForm,
     TransportExpenseForm,
+    TransportExpenseItemFormSet,
     TransportRouteForm,
     TripForm,
     VehicleForm,
@@ -676,35 +678,196 @@ def expense_list(request):
         },
     )
 
-
 @manager_required
 def expense_create(request):
-    initial = {}
-    trip_id = request.GET.get("trip")
-    vehicle_id = request.GET.get("vehicle")
-    driver_id = request.GET.get("driver")
-    if trip_id and str(trip_id).isdigit():
-        trip = Trip.objects.filter(pk=trip_id).first()
+    initial = {
+        "expense_date": (
+            timezone.localtime()
+            .strftime("%Y-%m-%dT%H:%M")
+        ),
+    }
+
+    trip_id = str(
+        request.GET.get("trip") or ""
+    ).strip()
+
+    vehicle_id = str(
+        request.GET.get("vehicle") or ""
+    ).strip()
+
+    driver_id = str(
+        request.GET.get("driver") or ""
+    ).strip()
+
+    if trip_id.isdigit():
+        trip = (
+            Trip.objects
+            .select_related(
+                "vehicle",
+                "driver",
+            )
+            .filter(pk=trip_id)
+            .first()
+        )
+
         if trip:
-            initial = {"trip": trip, "vehicle": trip.vehicle, "driver": trip.driver}
+            initial.update(
+                {
+                    "trip": trip,
+                    "vehicle": trip.vehicle,
+                    "driver": trip.driver,
+                }
+            )
+
     else:
-        if vehicle_id and str(vehicle_id).isdigit():
-            initial["vehicle"] = Vehicle.objects.filter(pk=vehicle_id).first()
-        if driver_id and str(driver_id).isdigit():
-            initial["driver"] = Driver.objects.filter(pk=driver_id).first()
-    form = TransportExpenseForm(request.POST or None, initial=initial)
-    if request.method == "POST" and form.is_valid():
-        expense = form.save(commit=False)
-        expense.recorded_by = request.user
-        expense.save()
-        messages.success(request, f"Expense {expense.expense_number} recorded successfully.")
-        if expense.trip_id:
-            return redirect(expense.trip)
-        return redirect("transport-expense-list")
+        if vehicle_id.isdigit():
+            initial["vehicle"] = (
+                Vehicle.objects
+                .filter(pk=vehicle_id)
+                .first()
+            )
+
+        if driver_id.isdigit():
+            initial["driver"] = (
+                Driver.objects
+                .filter(pk=driver_id)
+                .first()
+            )
+
+    if request.method == "POST":
+        header_form = TransportExpenseBatchHeaderForm(
+            request.POST,
+            prefix="header",
+        )
+
+        expense_formset = TransportExpenseItemFormSet(
+            request.POST,
+            prefix="expenses",
+        )
+
+        if (
+            header_form.is_valid()
+            and expense_formset.is_valid()
+        ):
+            header_data = header_form.cleaned_data
+            saved_expenses = []
+
+            with transaction.atomic():
+                for item_form in expense_formset:
+                    cleaned_data = (
+                        item_form.cleaned_data
+                    )
+
+                    if not cleaned_data:
+                        continue
+
+                    if cleaned_data.get("DELETE"):
+                        continue
+
+                    category = cleaned_data.get(
+                        "category"
+                    )
+
+                    amount = cleaned_data.get(
+                        "amount"
+                    )
+
+                    if not category or amount is None:
+                        continue
+
+                    expense = TransportExpense(
+                        trip=header_data.get("trip"),
+                        vehicle=header_data.get(
+                            "vehicle"
+                        ),
+                        driver=header_data.get(
+                            "driver"
+                        ),
+                        expense_date=header_data[
+                            "expense_date"
+                        ],
+                        category=category,
+                        amount=amount,
+                        vendor=(
+                            cleaned_data.get("vendor")
+                            or ""
+                        ).strip(),
+                        reference=(
+                            cleaned_data.get(
+                                "reference"
+                            )
+                            or ""
+                        ).strip(),
+                        description=(
+                            cleaned_data.get(
+                                "description"
+                            )
+                            or ""
+                        ).strip(),
+                        recorded_by=request.user,
+                    )
+
+                    expense.full_clean()
+                    expense.save()
+
+                    saved_expenses.append(expense)
+
+            if saved_expenses:
+                total_amount = sum(
+                    (
+                        expense.amount
+                        for expense in saved_expenses
+                    ),
+                    ZERO,
+                )
+
+                messages.success(
+                    request,
+                    (
+                        f"{len(saved_expenses)} expenses "
+                        f"saved successfully. "
+                        f"Total: TZS "
+                        f"{total_amount:,.2f}"
+                    ),
+                )
+
+                selected_trip = header_data.get(
+                    "trip"
+                )
+
+                if selected_trip:
+                    return redirect(selected_trip)
+
+                return redirect(
+                    "transport-expense-list"
+                )
+
+            messages.error(
+                request,
+                "Add at least one expense.",
+            )
+
+    else:
+        header_form = TransportExpenseBatchHeaderForm(
+            initial=initial,
+            prefix="header",
+        )
+
+        expense_formset = TransportExpenseItemFormSet(
+            prefix="expenses",
+        )
+
     return render(
         request,
         "transport/expense_form.html",
-        {"form": form, "page_title": "Record transport expense", "is_editing": False},
+        {
+            "header_form": header_form,
+            "expense_formset": expense_formset,
+            "page_title": (
+                "Record transport expense"
+            ),
+            "is_editing": False,
+        },
     )
 
 

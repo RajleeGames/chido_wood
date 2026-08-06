@@ -1,4 +1,495 @@
-{% extends "base.html" %}{% load static %}
-{% block title %}{{ page_title }} | CHIDO Wood ERP{% endblock %}{% block extra_css %}<link rel="stylesheet" href="{% static 'css/transport.css' %}">{% endblock %}
-{% block page_subtitle %}<p>Record trip, vehicle, driver or general transport operating costs.</p>{% endblock %}
-{% block content %}<form method="post" data-loading-message="Saving transport expense">{% csrf_token %}<div class="page-header"><div><h2>{% if is_editing %}Edit {{ expense.expense_number }}{% else %}New transport expense{% endif %}</h2><p>Linking an expense to a trip includes it in that trip's net result.</p></div><div class="page-header-actions"><a href="{% if expense.trip %}{% url 'transport-trip-detail' expense.trip.pk %}{% else %}{% url 'transport-expense-list' %}{% endif %}" class="button button-secondary">Cancel</a><button type="submit" class="button button-primary">Save expense</button></div></div><section class="card transport-form-card"><div class="card-header"><div><h2>Expense information</h2><p>Vehicle and driver are filled from the selected trip when left blank.</p></div></div><div class="transport-card-body">{% include "transport/partials/form_fields.html" %}</div></section></form>{% endblock %}
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}
+    {{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/transport.css' %}"
+    >
+{% endblock %}
+
+{% block page_subtitle %}
+    <p>
+        Record several transport operating costs and save
+        everything at once.
+    </p>
+{% endblock %}
+
+{% block content %}
+
+{% if is_editing %}
+
+    <form
+        method="post"
+        data-loading-message="Saving transport expense"
+    >
+        {% csrf_token %}
+
+        <div class="page-header">
+            <div>
+                <h2>
+                    Edit {{ expense.expense_number }}
+                </h2>
+
+                <p>
+                    Update this individual transport expense.
+                </p>
+            </div>
+
+            <div class="page-header-actions">
+                <a
+                    href="{% url 'transport-expense-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save changes
+                </button>
+            </div>
+        </div>
+
+        <section class="card transport-form-card">
+            <div class="card-header">
+                <div>
+                    <h2>Expense information</h2>
+
+                    <p>
+                        Update category, amount and other details.
+                    </p>
+                </div>
+            </div>
+
+            <div class="transport-card-body">
+                {% include "transport/partials/form_fields.html" %}
+            </div>
+        </section>
+    </form>
+
+{% else %}
+
+    <form
+        method="post"
+        id="transportExpenseBatchForm"
+        data-loading-message="Saving all transport expenses"
+    >
+        {% csrf_token %}
+
+        <div class="page-header">
+            <div>
+                <h2>Record multiple expenses</h2>
+
+                <p>
+                    Add fuel, mileage, parking and other costs,
+                    then save all rows together.
+                </p>
+            </div>
+
+            <div class="page-header-actions">
+                <a
+                    href="{% url 'transport-expense-list' %}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    Save all expenses
+                </button>
+            </div>
+        </div>
+
+        {% if header_form.non_field_errors %}
+            <div class="form-error-box">
+                {{ header_form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% if expense_formset.non_form_errors %}
+            <div class="form-error-box">
+                {{ expense_formset.non_form_errors }}
+            </div>
+        {% endif %}
+
+        <section class="card transport-form-card">
+            <div class="card-header">
+                <div>
+                    <h2>Shared information</h2>
+
+                    <p>
+                        These details will be used for every expense
+                        row below.
+                    </p>
+                </div>
+            </div>
+
+            <div class="transport-card-body">
+                <div class="form-grid form-grid-two transport-form-grid">
+                    {% for field in header_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <small class="field-help">
+                                    {{ field.help_text }}
+                                </small>
+                            {% endif %}
+
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="card transport-expense-lines-card">
+            <div class="card-header">
+                <div>
+                    <h2>Expense items</h2>
+
+                    <p>
+                        Add every cost before saving the batch.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="button button-secondary"
+                    id="addExpenseRowButton"
+                >
+                    + Add expense
+                </button>
+            </div>
+
+            <div class="transport-expense-table-wrap">
+                {{ expense_formset.management_form }}
+
+                <table class="transport-expense-entry-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Vendor</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="expenseRows">
+                        {% for expense_form in expense_formset %}
+                            <tr class="expense-entry-row">
+                                <td>
+                                    {{ expense_form.category }}
+                                    {{ expense_form.category.errors }}
+                                </td>
+
+                                <td>
+                                    {{ expense_form.amount }}
+                                    {{ expense_form.amount.errors }}
+                                </td>
+
+                                <td>
+                                    {{ expense_form.vendor }}
+                                    {{ expense_form.vendor.errors }}
+                                </td>
+
+                                <td>
+                                    {{ expense_form.reference }}
+                                    {{ expense_form.reference.errors }}
+                                </td>
+
+                                <td>
+                                    {{ expense_form.description }}
+                                    {{ expense_form.description.errors }}
+                                </td>
+
+                                <td class="transport-expense-remove-cell">
+                                    <div class="transport-delete-field">
+                                        {{ expense_form.DELETE }}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="transport-remove-expense-button"
+                                        aria-label="Remove expense"
+                                        title="Remove expense"
+                                    >
+                                        ×
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                    <tfoot>
+                        <tr>
+                            <td>
+                                <strong>Batch total</strong>
+                            </td>
+
+                            <td colspan="5">
+                                <strong id="expenseBatchTotal">
+                                    TZS 0
+                                </strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <template id="emptyExpenseRowTemplate">
+            <tr class="expense-entry-row">
+                <td>
+                    {{ expense_formset.empty_form.category }}
+                </td>
+
+                <td>
+                    {{ expense_formset.empty_form.amount }}
+                </td>
+
+                <td>
+                    {{ expense_formset.empty_form.vendor }}
+                </td>
+
+                <td>
+                    {{ expense_formset.empty_form.reference }}
+                </td>
+
+                <td>
+                    {{ expense_formset.empty_form.description }}
+                </td>
+
+                <td class="transport-expense-remove-cell">
+                    <div class="transport-delete-field">
+                        {{ expense_formset.empty_form.DELETE }}
+                    </div>
+
+                    <button
+                        type="button"
+                        class="transport-remove-expense-button"
+                        aria-label="Remove expense"
+                        title="Remove expense"
+                    >
+                        ×
+                    </button>
+                </td>
+            </tr>
+        </template>
+
+        <div class="transport-batch-submit">
+            <div>
+                <span>Total expenses</span>
+
+                <strong id="expenseBatchFooterTotal">
+                    TZS 0
+                </strong>
+            </div>
+
+            <button
+                type="submit"
+                class="button button-primary"
+            >
+                Save all expenses
+            </button>
+        </div>
+    </form>
+
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if not is_editing %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const rowsContainer = document.getElementById("expenseRows");
+    const addButton = document.getElementById("addExpenseRowButton");
+    const template = document.getElementById("emptyExpenseRowTemplate");
+    const totalFormsInput = document.getElementById(
+        "id_expenses-TOTAL_FORMS"
+    );
+    const topTotal = document.getElementById("expenseBatchTotal");
+    const footerTotal = document.getElementById(
+        "expenseBatchFooterTotal"
+    );
+
+    if (
+        !rowsContainer
+        || !addButton
+        || !template
+        || !totalFormsInput
+    ) {
+        return;
+    }
+
+    function money(value) {
+        return new Intl.NumberFormat("en-TZ", {
+            maximumFractionDigits: 2,
+        }).format(value);
+    }
+
+    function updateTotal() {
+        let total = 0;
+
+        rowsContainer
+            .querySelectorAll(".expense-entry-row")
+            .forEach(function (row) {
+                const deleteInput = row.querySelector(
+                    'input[name$="-DELETE"]'
+                );
+
+                if (
+                    deleteInput
+                    && deleteInput.checked
+                ) {
+                    return;
+                }
+
+                const amountInput = row.querySelector(
+                    'input[name$="-amount"]'
+                );
+
+                const amount = parseFloat(
+                    amountInput?.value || "0"
+                );
+
+                if (!Number.isNaN(amount)) {
+                    total += amount;
+                }
+            });
+
+        const displayValue = "TZS " + money(total);
+
+        if (topTotal) {
+            topTotal.textContent = displayValue;
+        }
+
+        if (footerTotal) {
+            footerTotal.textContent = displayValue;
+        }
+    }
+
+    function bindRow(row) {
+        const removeButton = row.querySelector(
+            ".transport-remove-expense-button"
+        );
+
+        const deleteInput = row.querySelector(
+            'input[name$="-DELETE"]'
+        );
+
+        const amountInput = row.querySelector(
+            'input[name$="-amount"]'
+        );
+
+        if (amountInput) {
+            amountInput.addEventListener(
+                "input",
+                updateTotal
+            );
+        }
+
+        if (removeButton) {
+            removeButton.addEventListener(
+                "click",
+                function () {
+                    const visibleRows = Array.from(
+                        rowsContainer.querySelectorAll(
+                            ".expense-entry-row"
+                        )
+                    ).filter(function (currentRow) {
+                        return (
+                            currentRow.style.display
+                            !== "none"
+                        );
+                    });
+
+                    if (visibleRows.length <= 1) {
+                        row.querySelectorAll(
+                            "input:not([type='hidden']), select"
+                        ).forEach(function (field) {
+                            field.value = "";
+                        });
+
+                        if (deleteInput) {
+                            deleteInput.checked = false;
+                        }
+
+                        updateTotal();
+                        return;
+                    }
+
+                    if (deleteInput) {
+                        deleteInput.checked = true;
+                        row.style.display = "none";
+                    } else {
+                        row.remove();
+                    }
+
+                    updateTotal();
+                }
+            );
+        }
+    }
+
+    addButton.addEventListener("click", function () {
+        const formIndex = parseInt(
+            totalFormsInput.value,
+            10
+        );
+
+        const rowHtml = template.innerHTML.replace(
+            /__prefix__/g,
+            formIndex
+        );
+
+        rowsContainer.insertAdjacentHTML(
+            "beforeend",
+            rowHtml
+        );
+
+        totalFormsInput.value = formIndex + 1;
+
+        const newRow = rowsContainer.lastElementChild;
+
+        if (newRow) {
+            bindRow(newRow);
+
+            const categoryInput = newRow.querySelector(
+                "select"
+            );
+
+            if (categoryInput) {
+                categoryInput.focus();
+            }
+        }
+
+        updateTotal();
+    });
+
+    rowsContainer
+        .querySelectorAll(".expense-entry-row")
+        .forEach(bindRow);
+
+    updateTotal();
+});
+</script>
+{% endif %}
+{% endblock %}

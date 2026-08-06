@@ -4,7 +4,18 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from .models import Driver, TransportExpense, TransportRoute, Trip, Vehicle
+from decimal import Decimal
 
+from django import forms
+from django.forms import formset_factory
+
+from .models import (
+    Driver,
+    TransportExpense,
+    TransportRoute,
+    Trip,
+    Vehicle,
+)
 
 class StyledModelForm(forms.ModelForm):
     """Apply CHIDO's existing form classes without extra libraries."""
@@ -196,8 +207,11 @@ class TripForm(StyledModelForm):
         cleaned["destination"] = destination
         return cleaned
 
-
 class TransportExpenseForm(StyledModelForm):
+    """
+    Used only when editing one existing expense.
+    """
+
     class Meta:
         model = TransportExpense
         fields = [
@@ -211,26 +225,239 @@ class TransportExpenseForm(StyledModelForm):
             "reference",
             "description",
         ]
+
         widgets = {
-            "amount": forms.NumberInput(attrs={"min": "0.01", "step": "0.01"}),
+            "amount": forms.NumberInput(
+                attrs={
+                    "min": "0.01",
+                    "step": "0.01",
+                }
+            ),
             "expense_date": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
+                attrs={
+                    "type": "datetime-local",
+                },
                 format="%Y-%m-%dT%H:%M",
             ),
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
         }
+
         help_texts = {
-            "trip": "Optional. Link this expense to a specific trip for profit calculation.",
-            "vehicle": "Optional for office or general transport expenses.",
+            "trip": (
+                "Optional. Link this expense to a specific "
+                "trip for profit calculation."
+            ),
+            "vehicle": (
+                "Optional for office or general transport expenses."
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["expense_date"].input_formats = ["%Y-%m-%dT%H:%M"]
-        self.fields["trip"].queryset = Trip.objects.exclude(
-            status=Trip.Status.CANCELLED
-        ).order_by("-departure_datetime")
-        self.fields["vehicle"].queryset = Vehicle.objects.order_by("plate_number")
-        self.fields["driver"].queryset = Driver.objects.order_by(
-            "first_name", "last_name"
+
+        self.fields["expense_date"].input_formats = [
+            "%Y-%m-%dT%H:%M",
+        ]
+
+        self.fields["trip"].queryset = (
+            Trip.objects
+            .exclude(
+                status=Trip.Status.CANCELLED,
+            )
+            .order_by(
+                "-departure_datetime",
+            )
         )
+
+        self.fields["vehicle"].queryset = (
+            Vehicle.objects.order_by(
+                "plate_number",
+            )
+        )
+
+        self.fields["driver"].queryset = (
+            Driver.objects.order_by(
+                "first_name",
+                "last_name",
+            )
+        )
+
+
+class TransportExpenseBatchHeaderForm(forms.Form):
+    """
+    Information shared by every expense row in one batch.
+    """
+
+    trip = forms.ModelChoiceField(
+        queryset=Trip.objects.none(),
+        required=False,
+        help_text=(
+            "Optional. All expenses below will be linked "
+            "to this trip."
+        ),
+    )
+
+    vehicle = forms.ModelChoiceField(
+        queryset=Vehicle.objects.none(),
+        required=False,
+        help_text=(
+            "Optional. It is filled automatically when "
+            "a trip is selected."
+        ),
+    )
+
+    driver = forms.ModelChoiceField(
+        queryset=Driver.objects.none(),
+        required=False,
+        help_text=(
+            "Optional. It is filled automatically when "
+            "a trip is selected."
+        ),
+    )
+
+    expense_date = forms.DateTimeField(
+        label="Expense date and time",
+        input_formats=[
+            "%Y-%m-%dT%H:%M",
+        ],
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "class": "form-control",
+            },
+            format="%Y-%m-%dT%H:%M",
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["trip"].queryset = (
+            Trip.objects
+            .exclude(
+                status=Trip.Status.CANCELLED,
+            )
+            .select_related(
+                "vehicle",
+                "driver",
+            )
+            .order_by(
+                "-departure_datetime",
+            )
+        )
+
+        self.fields["vehicle"].queryset = (
+            Vehicle.objects.order_by(
+                "plate_number",
+            )
+        )
+
+        self.fields["driver"].queryset = (
+            Driver.objects.order_by(
+                "first_name",
+                "last_name",
+            )
+        )
+
+        for field_name in [
+            "trip",
+            "vehicle",
+            "driver",
+        ]:
+            self.fields[field_name].widget.attrs[
+                "class"
+            ] = "form-control"
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        trip = cleaned_data.get("trip")
+        vehicle = cleaned_data.get("vehicle")
+        driver = cleaned_data.get("driver")
+
+        if trip:
+            cleaned_data["vehicle"] = (
+                vehicle
+                or trip.vehicle
+            )
+
+            cleaned_data["driver"] = (
+                driver
+                or trip.driver
+            )
+
+        return cleaned_data
+
+
+class TransportExpenseItemForm(forms.Form):
+    """
+    One expense line inside the batch.
+    """
+
+    category = forms.ChoiceField(
+        choices=TransportExpense.Category.choices,
+        widget=forms.Select(
+            attrs={
+                "class": "form-control",
+            }
+        ),
+    )
+
+    amount = forms.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control",
+                "min": "0.01",
+                "step": "0.01",
+                "placeholder": "0",
+            }
+        ),
+    )
+
+    vendor = forms.CharField(
+        max_length=150,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Vendor or person",
+            }
+        ),
+    )
+
+    reference = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Receipt or reference",
+            }
+        ),
+    )
+
+    description = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Short description",
+            }
+        ),
+    )
+
+
+TransportExpenseItemFormSet = formset_factory(
+    TransportExpenseItemForm,
+    extra=1,
+    can_delete=True,
+    min_num=1,
+    validate_min=True,
+)

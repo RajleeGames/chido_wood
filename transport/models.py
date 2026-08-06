@@ -430,6 +430,7 @@ class TransportExpense(models.Model):
     class Category(models.TextChoices):
         FUEL = "fuel", "Fuel"
         REPAIR = "repair", "Repair"
+        MILEAGE = "mileage", "Mileage / road allowance"
         SERVICE = "service", "Vehicle service"
         TOLL = "toll", "Road toll"
         LOADING = "loading", "Loading / unloading"

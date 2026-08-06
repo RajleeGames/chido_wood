@@ -76,7 +76,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 # Prevent JavaScript from reading the session cookie.
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 
 # Standard cross-site cookie protection.
 SESSION_COOKIE_SAMESITE = "Lax"
