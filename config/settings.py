@@ -34,7 +34,7 @@ SECRET_KEY = (
 )
 
 # Production mode.
-DEBUG = True
+DEBUG = False
 
 # Domains permitted to access the Django application.
 ALLOWED_HOSTS = [
@@ -69,11 +69,11 @@ SECURE_PROXY_SSL_HEADER = (
 )
 
 # Redirect normal HTTP traffic to HTTPS.
-SECURE_SSL_REDIRECT = False
+SECURE_SSL_REDIRECT = True
 
 # Cookies are sent over HTTPS only.
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # Prevent JavaScript from reading the session cookie.
 SESSION_COOKIE_HTTPONLY = False
