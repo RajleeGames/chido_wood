@@ -28,18 +28,68 @@ class StyledModelForm(forms.ModelForm):
                 widget.attrs["class"] = (
                     "form-check-input"
                 )
-            else:
-                existing_class = (
-                    widget.attrs.get(
-                        "class",
-                        "",
-                    )
+                continue
+
+            existing_class = widget.attrs.get(
+                "class",
+                "",
+            )
+
+            widget.attrs["class"] = (
+                f"{existing_class} form-control"
+            ).strip()
+
+            # ------------------------------------------
+            # SAFE NUMBER INPUTS
+            # ------------------------------------------
+            if (
+                isinstance(
+                    widget,
+                    forms.NumberInput,
                 )
+                and isinstance(
+                    field,
+                    (
+                        forms.DecimalField,
+                        forms.IntegerField,
+                    ),
+                )
+            ):
+                # Change HTML number input to text.
+                # This removes browser +/- controls
+                # and prevents mouse-wheel changing values.
+                widget.input_type = "text"
 
-                widget.attrs["class"] = (
-                    f"{existing_class} form-control"
-                ).strip()
+                if isinstance(
+                    field,
+                    forms.DecimalField,
+                ):
+                    widget.attrs[
+                        "inputmode"
+                    ] = "decimal"
 
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = str(
+                        field.decimal_places or 0
+                    )
+
+                else:
+                    widget.attrs[
+                        "inputmode"
+                    ] = "numeric"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = "0"
+
+                widget.attrs[
+                    "data-smart-number"
+                ] = "1"
+
+                widget.attrs[
+                    "autocomplete"
+                ] = "off"
 
 class SaleForm(StyledModelForm):
     class Meta:

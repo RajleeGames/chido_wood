@@ -37,11 +37,17 @@ class SupplierForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field in self.fields.values():
+        for field_name, field in self.fields.items():
             widget = field.widget
 
-            if isinstance(widget, forms.CheckboxInput):
-                widget.attrs["class"] = "form-check-input"
+            if isinstance(
+                widget,
+                forms.CheckboxInput,
+            ):
+                widget.attrs["class"] = (
+                    "form-check-input"
+                )
+
             else:
                 existing_class = widget.attrs.get(
                     "class",
@@ -51,6 +57,62 @@ class SupplierForm(forms.ModelForm):
                 widget.attrs["class"] = (
                     f"{existing_class} form-control"
                 ).strip()
+
+            # ------------------------------------------
+            # SAFE NUMBER / DECIMAL INPUTS
+            # ------------------------------------------
+            if (
+                isinstance(
+                    widget,
+                    forms.NumberInput,
+                )
+                and isinstance(
+                    field,
+                    (
+                        forms.DecimalField,
+                        forms.IntegerField,
+                    ),
+                )
+            ):
+                # Prevent browser spinner and
+                # accidental mouse-wheel changes.
+                widget.input_type = "text"
+
+                if isinstance(
+                    field,
+                    forms.DecimalField,
+                ):
+                    widget.attrs[
+                        "inputmode"
+                    ] = "decimal"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = str(
+                        field.decimal_places or 0
+                    )
+
+                else:
+                    widget.attrs[
+                        "inputmode"
+                    ] = "numeric"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = "0"
+
+                widget.attrs[
+                    "data-smart-number"
+                ] = "1"
+
+                widget.attrs[
+                    "autocomplete"
+                ] = "off"
+
+            widget.attrs.setdefault(
+                "id",
+                f"id_{field_name}"
+            )
 
         self.fields["name"].widget.attrs[
             "placeholder"

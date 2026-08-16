@@ -14,23 +14,79 @@ from .models import (
     WoodConversion,
 )
 
-
 class StyledModelForm(forms.ModelForm):
     def apply_styles(self):
         for field in self.fields.values():
             widget = field.widget
 
-            if isinstance(widget, forms.CheckboxInput):
-                widget.attrs["class"] = "form-check-input"
-            else:
-                existing_class = widget.attrs.get(
-                    "class",
-                    "",
-                )
-
+            if isinstance(
+                widget,
+                forms.CheckboxInput,
+            ):
                 widget.attrs["class"] = (
-                    f"{existing_class} form-control"
-                ).strip()
+                    "form-check-input"
+                )
+                continue
+
+            existing_class = widget.attrs.get(
+                "class",
+                "",
+            )
+
+            widget.attrs["class"] = (
+                f"{existing_class} form-control"
+            ).strip()
+
+            # ------------------------------------------
+            # SAFE NUMBER / MONEY INPUTS
+            # ------------------------------------------
+            if (
+                isinstance(
+                    widget,
+                    forms.NumberInput,
+                )
+                and isinstance(
+                    field,
+                    (
+                        forms.DecimalField,
+                        forms.IntegerField,
+                    ),
+                )
+            ):
+                # Prevent browser mouse-wheel number changes
+                # by using a text field with numeric keyboard.
+                widget.input_type = "text"
+
+                if isinstance(
+                    field,
+                    forms.DecimalField,
+                ):
+                    widget.attrs[
+                        "inputmode"
+                    ] = "decimal"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = str(
+                        field.decimal_places or 0
+                    )
+
+                else:
+                    widget.attrs[
+                        "inputmode"
+                    ] = "numeric"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = "0"
+
+                widget.attrs[
+                    "data-smart-number"
+                ] = "1"
+
+                widget.attrs[
+                    "autocomplete"
+                ] = "off"
 
 
 class StockAdjustmentForm(StyledModelForm):

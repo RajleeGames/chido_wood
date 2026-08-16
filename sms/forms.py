@@ -20,17 +20,95 @@ class StyledFormMixin:
             widget = field.widget
 
             if isinstance(widget, forms.CheckboxInput):
-                widget.attrs.setdefault("class", "form-check-input")
-            elif isinstance(widget, forms.CheckboxSelectMultiple):
-                widget.attrs.setdefault("class", "checkbox-list")
-            elif isinstance(widget, forms.SelectMultiple):
-                widget.attrs.setdefault("class", "form-select form-select-multiple")
-            elif isinstance(widget, forms.Select):
-                widget.attrs.setdefault("class", "form-select")
-            else:
-                widget.attrs.setdefault("class", "form-control")
+                widget.attrs.setdefault(
+                    "class",
+                    "form-check-input"
+                )
 
-            widget.attrs.setdefault("id", f"id_{field_name}")
+            elif isinstance(
+                widget,
+                forms.CheckboxSelectMultiple
+            ):
+                widget.attrs.setdefault(
+                    "class",
+                    "checkbox-list"
+                )
+
+            elif isinstance(
+                widget,
+                forms.SelectMultiple
+            ):
+                widget.attrs.setdefault(
+                    "class",
+                    "form-select form-select-multiple"
+                )
+
+            elif isinstance(widget, forms.Select):
+                widget.attrs.setdefault(
+                    "class",
+                    "form-select"
+                )
+
+            else:
+                widget.attrs.setdefault(
+                    "class",
+                    "form-control"
+                )
+
+            widget.attrs.setdefault(
+                "id",
+                f"id_{field_name}"
+            )
+
+            # --------------------------------------
+            # SAFE NUMBER / DECIMAL INPUTS
+            # --------------------------------------
+            if (
+                isinstance(
+                    widget,
+                    forms.NumberInput
+                )
+                and isinstance(
+                    field,
+                    (
+                        forms.DecimalField,
+                        forms.IntegerField,
+                    )
+                )
+            ):
+                # Avoid browser spinner/wheel changing values.
+                widget.input_type = "text"
+
+                if isinstance(
+                    field,
+                    forms.DecimalField
+                ):
+                    widget.attrs[
+                        "inputmode"
+                    ] = "decimal"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = str(
+                        field.decimal_places or 0
+                    )
+
+                else:
+                    widget.attrs[
+                        "inputmode"
+                    ] = "numeric"
+
+                    widget.attrs[
+                        "data-decimal-places"
+                    ] = "0"
+
+                widget.attrs[
+                    "data-smart-number"
+                ] = "1"
+
+                widget.attrs[
+                    "autocomplete"
+                ] = "off"
 
 
 class SenderIDForm(StyledFormMixin, forms.ModelForm):

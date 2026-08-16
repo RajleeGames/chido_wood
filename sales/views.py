@@ -185,31 +185,15 @@ def get_cutting_item_data(sale):
 
 @login_required
 def sale_list(request):
-    search_query = request.GET.get(
-        "q",
-        "",
-    ).strip()
+    search_query = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    payment_filter = request.GET.get("payment", "").strip()
+    date_from = request.GET.get("date_from", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
 
-    status_filter = request.GET.get(
-        "status",
-        "",
-    ).strip()
-
-    payment_filter = request.GET.get(
-        "payment",
-        "",
-    ).strip()
-
-    date_from = request.GET.get(
-        "date_from",
-        "",
-    ).strip()
-
-    date_to = request.GET.get(
-        "date_to",
-        "",
-    ).strip()
-
+    # --------------------------------------------------
+    # BASE QUERYSET
+    # --------------------------------------------------
     sales = (
         Sale.objects
         .select_related(
@@ -227,6 +211,9 @@ def sale_list(request):
         )
     )
 
+    # --------------------------------------------------
+    # SEARCH
+    # --------------------------------------------------
     if search_query:
         sales = sales.filter(
             Q(sale_number__icontains=search_query)
@@ -236,40 +223,63 @@ def sale_list(request):
             | Q(items__product__code__icontains=search_query)
         ).distinct()
 
+    # --------------------------------------------------
+    # STATUS FILTER
+    # --------------------------------------------------
     valid_statuses = {
         choice[0]
         for choice in Sale.Status.choices
     }
 
-    if status_filter in valid_statuses:
+    if status_filter and status_filter in valid_statuses:
         sales = sales.filter(
             status=status_filter
         )
 
+    # --------------------------------------------------
+    # PAYMENT METHOD FILTER
+    # --------------------------------------------------
     valid_payment_methods = {
         choice[0]
         for choice in Sale.PaymentMethod.choices
     }
 
-    if payment_filter in valid_payment_methods:
+    if (
+        payment_filter
+        and payment_filter in valid_payment_methods
+    ):
         sales = sales.filter(
             payment_method=payment_filter
         )
 
+    # --------------------------------------------------
+    # DATE FROM
+    # --------------------------------------------------
     if date_from:
         sales = sales.filter(
             sale_date__date__gte=date_from
         )
 
+    # --------------------------------------------------
+    # DATE TO
+    # --------------------------------------------------
     if date_to:
         sales = sales.filter(
             sale_date__date__lte=date_to
         )
 
-    all_sales = Sale.objects.all()
+    # --------------------------------------------------
+    # IMPORTANT:
+    # STATISTICS NOW USE THE FILTERED QUERYSET
+    # --------------------------------------------------
+    filtered_sales = sales
 
-    completed_sales = all_sales.filter(
+    completed_sales = filtered_sales.filter(
         status=Sale.Status.COMPLETED
+    )
+
+    draft_sales = filtered_sales.filter(
+        status=Sale.Status.DRAFT
     )
 
     outstanding_expression = ExpressionWrapper(
@@ -289,6 +299,7 @@ def sale_list(request):
                 decimal_places=2,
             ),
         ),
+
         total_paid=Coalesce(
             Sum("amount_paid"),
             Value(ZERO_MONEY),
@@ -297,6 +308,7 @@ def sale_list(request):
                 decimal_places=2,
             ),
         ),
+
         total_outstanding=Coalesce(
             Sum(outstanding_expression),
             Value(ZERO_MONEY),
@@ -305,6 +317,7 @@ def sale_list(request):
                 decimal_places=2,
             ),
         ),
+
         total_sale_discounts=Coalesce(
             Sum("discount"),
             Value(ZERO_MONEY),
@@ -315,10 +328,13 @@ def sale_list(request):
         ),
     )
 
+    # --------------------------------------------------
+    # PROFIT FOR FILTERED COMPLETED SALES ONLY
+    # --------------------------------------------------
     item_profit_total = (
         SaleItem.objects
         .filter(
-            sale__status=Sale.Status.COMPLETED
+            sale__in=completed_sales
         )
         .aggregate(
             total=Coalesce(
@@ -337,8 +353,11 @@ def sale_list(request):
         - totals["total_sale_discounts"]
     )
 
+    # --------------------------------------------------
+    # PAGINATION
+    # --------------------------------------------------
     paginator = Paginator(
-        sales,
+        filtered_sales,
         25,
     )
 
@@ -346,23 +365,30 @@ def sale_list(request):
         request.GET.get("page")
     )
 
+    # --------------------------------------------------
+    # CONTEXT
+    # --------------------------------------------------
     context = {
         "page_title": "Sales",
+
         "sales": page_obj.object_list,
         "page_obj": page_obj,
+
         "search_query": search_query,
         "status_filter": status_filter,
         "payment_filter": payment_filter,
         "date_from": date_from,
         "date_to": date_to,
+
         "payment_methods": (
             Sale.PaymentMethod.choices
         ),
-        "sale_count": all_sales.count(),
+
+        # These now respect filters
+        "sale_count": filtered_sales.count(),
         "completed_count": completed_sales.count(),
-        "draft_count": all_sales.filter(
-            status=Sale.Status.DRAFT
-        ).count(),
+        "draft_count": draft_sales.count(),
+
         "total_sales": totals["total_sales"],
         "total_paid": totals["total_paid"],
         "total_outstanding": totals[
