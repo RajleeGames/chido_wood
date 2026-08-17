@@ -653,7 +653,258 @@ function initializeMessages() {
 }
 
 
+
+/* ======================================================================
+ * GLOBAL SMART NUMBER INPUTS
+ * ======================================================================
+ * Works with Django widgets marked with:
+ *
+ *     data-smart-number="1"
+ *     data-decimal-places="2"
+ *
+ * Features:
+ * - 10000 -> 10,000 while typing
+ * - 1500000.5 -> 1,500,000.5
+ * - existing 0 / 0.00 / 0.000 clears when focused
+ * - browser number spinner / mouse-wheel value changes are avoided because
+ *   the Django form helpers render these widgets as type="text"
+ * - commas are removed immediately before a form is submitted to Django
+ * - event delegation means dynamically-added formset rows work automatically
+ */
+
+function cleanSmartNumberValue(value) {
+    return String(value ?? "")
+        .replace(/,/g, "")
+        .replace(/\s+/g, "")
+        .trim();
+}
+
+
+function parseSmartNumber(value, fallback = 0) {
+    const cleaned = cleanSmartNumberValue(value);
+
+    if (
+        cleaned === ""
+        || cleaned === "."
+        || cleaned === "-"
+        || cleaned === "-."
+    ) {
+        return fallback;
+    }
+
+    const parsed = Number.parseFloat(cleaned);
+
+    return Number.isFinite(parsed)
+        ? parsed
+        : fallback;
+}
+
+
+function smartNumberDecimalPlaces(input) {
+    const parsed = Number.parseInt(
+        input?.dataset?.decimalPlaces ?? "0",
+        10
+    );
+
+    return Number.isFinite(parsed)
+        ? Math.max(0, parsed)
+        : 0;
+}
+
+
+function formatSmartNumberInput(
+    input,
+    trimFractionZeros = false
+) {
+    if (
+        !(input instanceof HTMLInputElement)
+        || input.dataset.smartNumber !== "1"
+    ) {
+        return;
+    }
+
+    let raw = cleanSmartNumberValue(input.value);
+
+    if (!raw) {
+        input.value = "";
+        return;
+    }
+
+    /*
+     * Keep an optional leading minus sign, digits and one decimal separator.
+     * Django still remains responsible for enforcing each field's min/max.
+     */
+    const isNegative = raw.startsWith("-");
+
+    raw = raw
+        .replace(/-/g, "")
+        .replace(/[^0-9.]/g, "");
+
+    const firstDotIndex = raw.indexOf(".");
+
+    if (firstDotIndex !== -1) {
+        raw = (
+            raw.slice(0, firstDotIndex + 1)
+            + raw
+                .slice(firstDotIndex + 1)
+                .replace(/\./g, "")
+        );
+    }
+
+    const decimalPlaces = smartNumberDecimalPlaces(input);
+    const hasDecimalPoint = raw.includes(".");
+    let [wholePart, fractionPart = ""] = raw.split(".");
+
+    if (!wholePart) {
+        wholePart = "0";
+    }
+
+    wholePart = wholePart.replace(/^0+(?=\d)/, "");
+
+    if (!wholePart) {
+        wholePart = "0";
+    }
+
+    fractionPart = fractionPart.slice(0, decimalPlaces);
+
+    if (trimFractionZeros) {
+        fractionPart = fractionPart.replace(/0+$/, "");
+    }
+
+    const formattedWhole = wholePart.replace(
+        /\B(?=(\d{3})+(?!\d))/g,
+        ","
+    );
+
+    const sign = isNegative ? "-" : "";
+
+    if (
+        decimalPlaces > 0
+        && hasDecimalPoint
+        && !trimFractionZeros
+    ) {
+        input.value = `${sign}${formattedWhole}.${fractionPart}`;
+        return;
+    }
+
+    if (decimalPlaces > 0 && fractionPart) {
+        input.value = `${sign}${formattedWhole}.${fractionPart}`;
+        return;
+    }
+
+    input.value = `${sign}${formattedWhole}`;
+}
+
+
+function normaliseSmartNumberInput(input) {
+    if (
+        !(input instanceof HTMLInputElement)
+        || input.dataset.smartNumber !== "1"
+    ) {
+        return;
+    }
+
+    input.value = cleanSmartNumberValue(input.value);
+}
+
+
+function initializeSmartNumberInputs() {
+    /* Format values Django rendered when the page first loads. */
+    document
+        .querySelectorAll('input[data-smart-number="1"]')
+        .forEach((input) => {
+            formatSmartNumberInput(input, true);
+        });
+
+    /* Clear 0, 0.00, 0.000, etc. as soon as the user enters the field. */
+    document.addEventListener("focusin", (event) => {
+        const input = event.target;
+
+        if (
+            !(input instanceof HTMLInputElement)
+            || input.dataset.smartNumber !== "1"
+        ) {
+            return;
+        }
+
+        const raw = cleanSmartNumberValue(input.value);
+
+        if (!raw) {
+            return;
+        }
+
+        const numericValue = Number(raw);
+
+        if (Number.isFinite(numericValue) && numericValue === 0) {
+            input.value = "";
+        }
+    });
+
+    /* Add thousands separators while typing. */
+    document.addEventListener("input", (event) => {
+        const input = event.target;
+
+        if (
+            !(input instanceof HTMLInputElement)
+            || input.dataset.smartNumber !== "1"
+        ) {
+            return;
+        }
+
+        formatSmartNumberInput(input, false);
+    });
+
+    /* Clean unnecessary .00 / .000 when leaving the field. */
+    document.addEventListener(
+        "blur",
+        (event) => {
+            const input = event.target;
+
+            if (
+                !(input instanceof HTMLInputElement)
+                || input.dataset.smartNumber !== "1"
+            ) {
+                return;
+            }
+
+            formatSmartNumberInput(input, true);
+        },
+        true
+    );
+
+    /*
+     * Django DecimalField does not accept commas.
+     * Run in capture phase so values are clean before any page-specific
+     * submit listener reads them and before the browser creates form data.
+     */
+    document.addEventListener(
+        "submit",
+        (event) => {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            form
+                .querySelectorAll('input[data-smart-number="1"]')
+                .forEach(normaliseSmartNumberInput);
+        },
+        true
+    );
+}
+
+
+window.ChidoNumbers = {
+    clean: cleanSmartNumberValue,
+    parse: parseSmartNumber,
+    formatInput: formatSmartNumberInput,
+    normaliseInput: normaliseSmartNumberInput,
+};
+
+
 document.addEventListener("DOMContentLoaded", () => {
+    initializeSmartNumberInputs();
     initializePageLoader();
     initializeSidebar();
     initializeModals();
