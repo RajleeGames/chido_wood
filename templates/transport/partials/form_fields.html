@@ -1,24 +1,83 @@
 {% if form.non_field_errors %}
-    <div class="form-error-box">{{ form.non_field_errors }}</div>
+    <div class="form-error-box">
+        {{ form.non_field_errors }}
+    </div>
 {% endif %}
 
-<div class="form-grid form-grid-two transport-form-grid">
+
+<div class="transport-form-grid">
+
     {% for field in form %}
-        <div class="form-group {% if field.name == 'notes' or field.name == 'description' or field.name == 'cargo_description' %}form-grid-full{% endif %}">
+
+        <div
+            class="
+                transport-field
+
+                {% if field.name == 'notes' %}
+                    transport-field-full
+                {% elif field.name == 'description' %}
+                    transport-field-full
+                {% elif field.name == 'cargo_description' %}
+                    transport-field-full
+                {% endif %}
+
+                {% if field.errors %}
+                    transport-field-error
+                {% endif %}
+            "
+        >
+
             {% if field.field.widget.input_type == 'checkbox' %}
-                <label class="transport-checkbox-row" for="{{ field.id_for_label }}">
+
+                <label
+                    class="transport-checkbox-row"
+                    for="{{ field.id_for_label }}"
+                >
                     {{ field }}
+
                     <span>
-                        <strong>{{ field.label }}</strong>
-                        {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+                        <strong>
+                            {{ field.label }}
+                        </strong>
+
+                        {% if field.help_text %}
+                            <small class="field-help">
+                                {{ field.help_text }}
+                            </small>
+                        {% endif %}
                     </span>
                 </label>
+
             {% else %}
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+
+                <label
+                    class="transport-field-label"
+                    for="{{ field.id_for_label }}"
+                >
+                    {{ field.label }}
+                </label>
+
+                <div class="transport-input-wrap">
+                    {{ field }}
+                </div>
+
+                {% if field.help_text %}
+                    <small class="field-help">
+                        {{ field.help_text }}
+                    </small>
+                {% endif %}
+
             {% endif %}
-            {{ field.errors }}
+
+
+            {% if field.errors %}
+                <div class="transport-field-errors">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+
         </div>
+
     {% endfor %}
+
 </div>

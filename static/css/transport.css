@@ -1,386 +1,1146 @@
 /* =========================================================
    CHIDO WOOD ERP — TRANSPORT MODULE
-   Extends static/css/app.css without replacing global styles.
+   Clean transport UI layered on top of static/css/app.css
    ========================================================= */
+
+
+/* =========================================================
+   COMMON TRANSPORT VARIABLES / FALLBACKS
+========================================================= */
+
+.transport-form-card,
+.transport-summary-card,
+.transport-warning-card,
+.transport-delete-card,
+.transport-status-actions,
+.transport-expense-lines-card {
+    --transport-line: var(--line, #e5e7eb);
+    --transport-text: var(--text, #111827);
+    --transport-muted: var(--muted, #667085);
+    --transport-surface: var(--surface, #ffffff);
+    --transport-soft: var(--surface-soft, #f8fafc);
+    --transport-primary: var(--primary, #2563eb);
+}
+
+
+/* =========================================================
+   DATE FILTER
+========================================================= */
 
 .transport-date-filter {
     display: flex;
     align-items: end;
+    flex-wrap: wrap;
     gap: 12px;
+
     padding: 16px;
+
     margin-bottom: 18px;
+
+    background: var(--surface, #ffffff);
+
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 10px;
 }
+
 
 .transport-date-filter .form-group {
     width: min(260px, 100%);
     margin: 0;
 }
 
+
+/* =========================================================
+   SUMMARY / DASHBOARD / DETAIL GRIDS
+========================================================= */
+
 .transport-summary-grid,
 .transport-dashboard-grid,
 .transport-detail-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
     gap: 18px;
+
     margin-bottom: 18px;
 }
+
+
+/* =========================================================
+   TRANSPORT CARDS
+========================================================= */
 
 .transport-summary-card,
 .transport-form-card,
 .transport-warning-card,
 .transport-delete-card,
-.transport-status-actions {
+.transport-status-actions,
+.transport-expense-lines-card {
     overflow: hidden;
 }
+
+
+/* =========================================================
+   SUMMARY / DETAIL LIST
+========================================================= */
 
 .transport-summary-list,
 .transport-detail-list {
     margin: 0;
-    padding: 8px 18px 18px;
+
+    padding:
+        8px
+        18px
+        18px;
 }
+
 
 .transport-summary-list > div,
 .transport-detail-list > div {
     display: flex;
+
     align-items: flex-start;
+
     justify-content: space-between;
+
     gap: 18px;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--line, #e5e7eb);
+
+    padding:
+        11px
+        0;
+
+    border-bottom:
+        1px solid
+        var(--line, #e5e7eb);
 }
+
 
 .transport-summary-list > div:last-child,
 .transport-detail-list > div:last-child {
     border-bottom: 0;
 }
 
+
 .transport-summary-list span,
 .transport-detail-list dt {
-    color: var(--muted, #667085);
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
     font-size: 0.82rem;
+
+    line-height: 1.45;
 }
+
 
 .transport-summary-list strong,
 .transport-detail-list dd {
     margin: 0;
-    color: var(--text, #111827);
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
     font-weight: 700;
+
     text-align: right;
+
+    line-height: 1.45;
 }
+
+
+/* =========================================================
+   FILTER FORMS
+========================================================= */
 
 .transport-filter-form {
     width: 100%;
+
     display: grid;
-    grid-template-columns: minmax(220px, 1.6fr) minmax(150px, 0.8fr) minmax(150px, 0.8fr) auto auto;
+
+    grid-template-columns:
+        minmax(220px, 1.6fr)
+        minmax(150px, 0.8fr)
+        minmax(150px, 0.8fr)
+        auto
+        auto;
+
     align-items: end;
+
     gap: 10px;
 }
 
+
 .transport-filter-form.transport-filter-wide {
-    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(150px, 1fr)
+        );
 }
+
 
 .transport-filter-form .button {
     min-height: 40px;
+
     white-space: nowrap;
 }
+
+
+/* =========================================================
+   CARD HEADERS
+========================================================= */
 
 .transport-form-card .card-header,
 .transport-summary-card .card-header,
 .transport-warning-card .card-header,
-.transport-detail-grid .card-header {
-    border-bottom: 1px solid var(--line, #e5e7eb);
+.transport-detail-grid .card-header,
+.transport-expense-lines-card .card-header {
+    padding:
+        16px
+        18px;
+
+    border-bottom:
+        1px solid
+        var(--line, #e5e7eb);
 }
 
-.transport-card-body {
-    padding: 18px;
+
+.transport-form-card .card-header h2,
+.transport-summary-card .card-header h2,
+.transport-warning-card .card-header h2,
+.transport-expense-lines-card .card-header h2 {
+    margin: 0;
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-size: 0.95rem;
+
+    font-weight: 700;
+
+    line-height: 1.3;
 }
+
+
+.transport-form-card .card-header p,
+.transport-summary-card .card-header p,
+.transport-warning-card .card-header p,
+.transport-expense-lines-card .card-header p {
+    margin:
+        4px
+        0
+        0;
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
+    font-size: 0.76rem;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   MAIN TRANSPORT FORM CARD
+
+   This is the important section fixing the huge stretched
+   form from the screenshot.
+========================================================= */
+
+.transport-form-card {
+    width: 100%;
+
+    max-width: 1180px;
+
+    margin:
+        0
+        auto
+        18px;
+}
+
+
+/* =========================================================
+   FORM BODY
+========================================================= */
+
+.transport-card-body {
+    padding:
+        22px
+        22px
+        24px;
+}
+
+
+/* =========================================================
+   FORM GRID
+
+   Supports BOTH:
+
+   old:
+   .form-grid.form-grid-two.transport-form-grid
+
+   new:
+   .transport-form-grid + .transport-field
+========================================================= */
+
+.transport-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    column-gap: 24px;
+
+    row-gap: 18px;
+}
+
+
+/* Override global form-grid behaviour if app.css has it */
+.form-grid.transport-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap:
+        18px
+        24px;
+}
+
+
+/* =========================================================
+   OLD PARTIAL SUPPORT — .form-group
+========================================================= */
 
 .transport-form-grid .form-group {
     min-width: 0;
+
+    margin: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
 }
+
+
+.transport-form-grid .form-grid-full {
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================================
+   NEW PARTIAL SUPPORT — .transport-field
+========================================================= */
+
+.transport-field {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.transport-field-full {
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================================
+   LABELS
+========================================================= */
+
+.transport-form-grid .form-group > label:not(.transport-checkbox-row),
+.transport-field-label {
+    display: block;
+
+    margin: 0;
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-size: 0.78rem;
+
+    font-weight: 650;
+
+    line-height: 1.35;
+}
+
+
+/* =========================================================
+   INPUT WRAPPER
+========================================================= */
+
+.transport-input-wrap {
+    width: 100%;
+}
+
+
+/* =========================================================
+   FORM CONTROLS
+========================================================= */
+
+.transport-form-grid .form-control,
+.transport-field .form-control {
+    width: 100%;
+
+    min-width: 0;
+
+    min-height: 42px;
+
+    padding:
+        9px
+        11px;
+
+    margin: 0;
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-family: inherit;
+
+    font-size: 0.84rem;
+
+    font-weight: 400;
+
+    line-height: 1.4;
+
+    background:
+        var(
+            --surface,
+            #ffffff
+        );
+
+    border:
+        1px solid
+        var(
+            --line,
+            #d0d5dd
+        );
+
+    border-radius: 7px;
+
+    outline: none;
+
+    box-shadow: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.transport-form-grid .form-control::placeholder,
+.transport-field .form-control::placeholder {
+    color: #98a2b3;
+
+    opacity: 1;
+}
+
+
+/* =========================================================
+   INPUT HOVER
+========================================================= */
+
+.transport-form-grid .form-control:hover,
+.transport-field .form-control:hover {
+    border-color: #b8c0cc;
+}
+
+
+/* =========================================================
+   INPUT FOCUS
+========================================================= */
+
+.transport-form-grid .form-control:focus,
+.transport-field .form-control:focus {
+    border-color:
+        var(
+            --primary,
+            #2563eb
+        );
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            37,
+            99,
+            235,
+            0.08
+        );
+}
+
+
+/* =========================================================
+   SELECTS
+========================================================= */
+
+.transport-form-grid select.form-control,
+.transport-field select.form-control {
+    cursor: pointer;
+
+    padding-right: 34px;
+}
+
+
+/* =========================================================
+   TEXTAREAS
+========================================================= */
+
+.transport-form-grid textarea.form-control,
+.transport-field textarea.form-control {
+    min-height: 96px;
+
+    resize: vertical;
+
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   DATE / DATETIME INPUTS
+========================================================= */
+
+.transport-form-grid input[type="date"].form-control,
+.transport-form-grid input[type="datetime-local"].form-control,
+.transport-field input[type="date"].form-control,
+.transport-field input[type="datetime-local"].form-control {
+    min-height: 42px;
+}
+
+
+/* =========================================================
+   SMART NUMBER FIELDS
+========================================================= */
+
+.transport-form-grid input[data-smart-number="1"],
+.transport-field input[data-smart-number="1"],
+.transport-expense-entry-table input[data-smart-number="1"] {
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================================
+   DISABLED / READONLY
+========================================================= */
+
+.transport-form-grid .form-control:disabled,
+.transport-form-grid .form-control[readonly],
+.transport-field .form-control:disabled,
+.transport-field .form-control[readonly] {
+    color: #667085;
+
+    background: #f5f7fa;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.transport-form-grid .field-help,
+.transport-field .field-help {
+    display: block;
+
+    margin: 0;
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
+    font-size: 0.7rem;
+
+    font-weight: 400;
+
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   ERRORS
+========================================================= */
+
+.transport-form-grid .errorlist,
+.transport-field-errors .errorlist {
+    list-style: none;
+
+    margin:
+        1px
+        0
+        0;
+
+    padding: 0;
+
+    color: #b42318;
+
+    font-size: 0.72rem;
+
+    line-height: 1.4;
+}
+
+
+.transport-form-grid .errorlist li,
+.transport-field-errors .errorlist li {
+    margin: 0;
+}
+
+
+.transport-field-error .form-control,
+.transport-form-grid .form-group:has(.errorlist) .form-control {
+    border-color: #dc2626;
+}
+
+
+.transport-field-errors {
+    color: #b42318;
+
+    font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   FORM NON-FIELD ERROR BOX
+========================================================= */
+
+.transport-form-card .form-error-box {
+    margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   CHECKBOX ROW
+========================================================= */
 
 .transport-checkbox-row {
     min-height: 44px;
+
     display: flex;
+
     align-items: flex-start;
+
     gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid var(--line, #d9dee7);
-    border-radius: 8px;
-    background: var(--surface-soft, #f8fafc);
+
+    padding:
+        10px
+        12px;
+
+    background:
+        var(
+            --surface-soft,
+            #f8fafc
+        );
+
+    border:
+        1px solid
+        var(
+            --line,
+            #d9dee7
+        );
+
+    border-radius: 7px;
+
     cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
 }
+
+
+.transport-checkbox-row:hover {
+    border-color: #c3cad4;
+
+    background: #f5f7fa;
+}
+
 
 .transport-checkbox-row input {
     width: 17px;
+
     height: 17px;
+
+    flex: 0 0 auto;
+
     margin-top: 2px;
 }
+
 
 .transport-checkbox-row span,
 .transport-checkbox-row small {
     display: block;
 }
 
+
+.transport-checkbox-row strong {
+    display: block;
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-size: 0.78rem;
+
+    font-weight: 650;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
 .transport-status {
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
+
     min-height: 24px;
-    padding: 3px 8px;
+
+    padding:
+        3px
+        8px;
+
     border-radius: 999px;
+
     font-size: 0.72rem;
+
     font-weight: 700;
+
     line-height: 1.2;
+
     white-space: nowrap;
+
     background: #eef2f6;
+
     color: #475467;
 }
+
 
 .status-active,
 .status-completed,
 .status-paid {
     background: #e8f7ee;
+
     color: #167044;
 }
+
 
 .status-scheduled,
 .status-partial,
 .status-maintenance {
     background: #fff4dc;
+
     color: #9a5b00;
 }
 
+
 .status-in_transit {
     background: #e8f0ff;
+
     color: #2459a8;
 }
+
 
 .status-cancelled,
 .status-inactive,
 .status-unpaid {
     background: #fdecec;
+
     color: #b42318;
 }
 
+
+/* =========================================================
+   WARNING / MUTED TEXT
+========================================================= */
+
 .transport-warning-text {
     color: #b54708;
+
     font-weight: 700;
 }
 
+
 .transport-muted {
-    color: var(--muted, #667085);
+    color:
+        var(
+            --muted,
+            #667085
+        );
 }
+
+
+/* =========================================================
+   ACTION CELLS
+========================================================= */
 
 .transport-actions-cell {
     display: flex;
+
     align-items: center;
+
     justify-content: flex-end;
+
     flex-wrap: wrap;
+
     gap: 10px;
+
     white-space: nowrap;
 }
+
+
+/* =========================================================
+   TABLE DANGER LINK
+========================================================= */
 
 .table-link-danger {
     color: #b42318 !important;
 }
 
+
+/* =========================================================
+   DANGER BUTTON
+========================================================= */
+
 .transport-danger-button {
     background: #b42318;
+
     border-color: #b42318;
-    color: #fff;
+
+    color: #ffffff;
 }
+
 
 .transport-danger-button:hover {
     background: #8f1c13;
+
     border-color: #8f1c13;
 }
 
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
 .transport-pagination {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
+
     gap: 12px;
-    padding: 14px 16px;
-    border-top: 1px solid var(--line, #e5e7eb);
-    color: var(--muted, #667085);
+
+    padding:
+        14px
+        16px;
+
+    border-top:
+        1px solid
+        var(
+            --line,
+            #e5e7eb
+        );
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
     font-size: 0.82rem;
 }
 
+
 .transport-pagination .is-disabled {
     opacity: 0.45;
+
     pointer-events: none;
 }
 
+
+/* =========================================================
+   EMPTY TABLE CELL
+========================================================= */
+
 .transport-empty-cell {
-    padding: 34px 18px !important;
+    padding:
+        34px
+        18px !important;
+
     text-align: center;
-    color: var(--muted, #667085);
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
 }
+
+
+/* =========================================================
+   WARNING LIST
+========================================================= */
 
 .transport-warning-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
     gap: 10px;
-    padding: 16px 18px 18px;
+
+    padding:
+        16px
+        18px
+        18px;
 }
+
 
 .transport-warning-list a {
     display: flex;
+
     flex-direction: column;
+
     gap: 4px;
+
     padding: 12px;
+
     border: 1px solid #fedf89;
+
     border-radius: 8px;
+
     background: #fffaeb;
+
     color: #7a2e0e;
+
     text-decoration: none;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
 }
+
+
+.transport-warning-list a:hover {
+    border-color: #fdb022;
+
+    background: #fff7e0;
+}
+
 
 .transport-warning-list span {
     font-size: 0.78rem;
 }
 
+
+/* =========================================================
+   ALERT
+========================================================= */
+
 .transport-alert {
-    margin: 0 18px 18px;
-    padding: 12px 14px;
+    margin:
+        0
+        18px
+        18px;
+
+    padding:
+        12px
+        14px;
+
     border: 1px solid #fedf89;
+
     border-radius: 8px;
+
     background: #fffaeb;
+
     color: #934f00;
+
     font-weight: 700;
 }
 
+
+/* =========================================================
+   NOTES
+========================================================= */
+
 .transport-notes {
-    margin: 0 18px 18px;
+    margin:
+        0
+        18px
+        18px;
+
     padding: 14px;
+
     border-radius: 8px;
-    background: var(--surface-soft, #f8fafc);
+
+    background:
+        var(
+            --surface-soft,
+            #f8fafc
+        );
 }
 
+
 .transport-notes p {
-    margin: 7px 0 0;
-    color: var(--muted, #667085);
+    margin:
+        7px
+        0
+        0;
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
     line-height: 1.6;
 }
 
+
+/* =========================================================
+   STATUS ACTIONS
+========================================================= */
+
 .transport-status-actions {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
+
     gap: 18px;
-    padding: 16px 18px;
+
+    padding:
+        16px
+        18px;
+
     margin-bottom: 18px;
 }
+
 
 .transport-status-actions h2,
 .transport-status-actions p {
     margin: 0;
 }
 
+
 .transport-status-actions p {
     margin-top: 4px;
-    color: var(--muted, #667085);
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
 }
+
 
 .transport-status-actions form {
     margin: 0;
 }
 
+
+/* =========================================================
+   DELETE CARD
+========================================================= */
+
 .transport-delete-card {
     max-width: 680px;
+
     padding: 24px;
-    margin: 20px auto;
+
+    margin:
+        20px
+        auto;
 }
+
 
 .transport-delete-card h2 {
     margin-top: 0;
 }
 
+
 .transport-delete-card p {
-    color: var(--muted, #667085);
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
     line-height: 1.65;
 }
 
+
+/* =========================================================
+   STAT VALUES
+========================================================= */
+
 .transport-small-value {
-    font-size: clamp(1rem, 2vw, 1.35rem) !important;
+    font-size:
+        clamp(
+            1rem,
+            2vw,
+            1.35rem
+        ) !important;
 }
+
 
 .transport-compact-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media (max-width: 1180px) {
-    .transport-filter-form,
-    .transport-filter-form.transport-filter-wide {
-        grid-template-columns: repeat(3, minmax(160px, 1fr));
-    }
-}
-
-@media (max-width: 900px) {
-    .transport-summary-grid,
-    .transport-dashboard-grid,
-    .transport-detail-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .transport-warning-list {
-        grid-template-columns: 1fr;
-    }
-
-    .transport-filter-form,
-    .transport-filter-form.transport-filter-wide {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .transport-status-actions {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 620px) {
-    .transport-date-filter,
-    .transport-filter-form,
-    .transport-filter-form.transport-filter-wide {
-        grid-template-columns: 1fr;
-        display: grid;
-    }
-
-    .transport-date-filter .form-group {
-        width: 100%;
-    }
-
-    .transport-card-body {
-        padding: 14px;
-    }
-
-    .transport-summary-list,
-    .transport-detail-list {
-        padding-left: 14px;
-        padding-right: 14px;
-    }
-
-    .transport-summary-list > div,
-    .transport-detail-list > div {
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .transport-summary-list strong,
-    .transport-detail-list dd {
-        text-align: left;
-    }
-
-    .transport-pagination {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .transport-compact-stats {
-        grid-template-columns: 1fr;
-    }
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
 }
 
 
@@ -389,146 +1149,552 @@
 ========================================================= */
 
 .transport-expense-lines-card {
+    width: 100%;
+
     margin-top: 18px;
+
     overflow: hidden;
 }
 
+
 .transport-expense-lines-card .card-header {
-    border-bottom: 1px solid var(--line, #e5e7eb);
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 16px;
 }
+
+
+/* =========================================================
+   EXPENSE TABLE WRAPPER
+========================================================= */
 
 .transport-expense-table-wrap {
     width: 100%;
+
     overflow-x: auto;
+
+    overscroll-behavior-x: contain;
 }
+
+
+/* =========================================================
+   EXPENSE TABLE
+========================================================= */
 
 .transport-expense-entry-table {
     width: 100%;
+
     min-width: 1050px;
+
     border-collapse: collapse;
 }
 
+
+/* =========================================================
+   EXPENSE TABLE HEADER
+========================================================= */
+
 .transport-expense-entry-table th {
-    padding: 11px 10px;
-    color: var(--muted, #667085);
-    font-size: 0.72rem;
+    padding:
+        11px
+        10px;
+
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
+    font-size: 0.7rem;
+
     font-weight: 700;
+
     text-align: left;
+
     text-transform: uppercase;
+
     letter-spacing: 0.04em;
-    background: var(--surface-soft, #f8fafc);
-    border-bottom: 1px solid var(--line, #e5e7eb);
+
+    background:
+        var(
+            --surface-soft,
+            #f8fafc
+        );
+
+    border-bottom:
+        1px solid
+        var(
+            --line,
+            #e5e7eb
+        );
 }
 
+
+/* =========================================================
+   EXPENSE TABLE CELLS
+========================================================= */
+
 .transport-expense-entry-table td {
-    padding: 9px 10px;
+    padding:
+        9px
+        10px;
+
     vertical-align: top;
-    border-bottom: 1px solid var(--line, #e5e7eb);
+
+    border-bottom:
+        1px solid
+        var(
+            --line,
+            #e5e7eb
+        );
 }
+
+
+/* =========================================================
+   EXPENSE TABLE INPUTS
+========================================================= */
 
 .transport-expense-entry-table .form-control {
     width: 100%;
+
+    min-width: 0;
+
     min-height: 40px;
+
+    padding:
+        8px
+        10px;
+
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-family: inherit;
+
+    font-size: 0.82rem;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(
+            --line,
+            #d0d5dd
+        );
+
+    border-radius: 7px;
+
+    outline: none;
+
+    box-shadow: none;
 }
+
+
+.transport-expense-entry-table .form-control:focus {
+    border-color:
+        var(
+            --primary,
+            #2563eb
+        );
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            37,
+            99,
+            235,
+            0.07
+        );
+}
+
+
+/* =========================================================
+   EXPENSE COLUMN WIDTHS
+========================================================= */
 
 .transport-expense-entry-table th:nth-child(1) {
     min-width: 170px;
 }
 
+
 .transport-expense-entry-table th:nth-child(2) {
     width: 145px;
+
+    min-width: 145px;
 }
+
 
 .transport-expense-entry-table th:nth-child(3),
 .transport-expense-entry-table th:nth-child(4) {
     min-width: 160px;
 }
 
+
 .transport-expense-entry-table th:nth-child(5) {
     min-width: 230px;
 }
 
+
+/* =========================================================
+   EXPENSE FOOTER
+========================================================= */
+
 .transport-expense-entry-table tfoot td {
-    padding: 14px 10px;
-    background: var(--surface-soft, #f8fafc);
+    padding:
+        14px
+        10px;
+
+    background:
+        var(
+            --surface-soft,
+            #f8fafc
+        );
+
     border-bottom: 0;
 }
 
+
 .transport-expense-entry-table tfoot strong {
-    color: var(--text, #111827);
-    font-size: 0.95rem;
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-size: 0.92rem;
 }
+
+
+/* =========================================================
+   EXPENSE REMOVE CELL
+========================================================= */
 
 .transport-expense-remove-cell {
     width: 54px;
+
     text-align: center;
 }
+
 
 .transport-delete-field {
     display: none;
 }
 
+
+/* =========================================================
+   EXPENSE REMOVE BUTTON
+========================================================= */
+
 .transport-remove-expense-button {
     width: 34px;
+
     height: 34px;
+
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
+
+    padding: 0;
+
     color: #b42318;
+
     font-size: 20px;
+
     line-height: 1;
+
     cursor: pointer;
+
     background: #fff2f0;
+
     border: 1px solid #fecdca;
-    border-radius: 8px;
+
+    border-radius: 7px;
+
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
 }
+
 
 .transport-remove-expense-button:hover {
     color: #ffffff;
+
     background: #b42318;
+
     border-color: #b42318;
 }
 
+
+/* =========================================================
+   BATCH SUBMIT AREA
+========================================================= */
+
 .transport-batch-submit {
     display: flex;
+
     align-items: center;
+
     justify-content: flex-end;
+
     gap: 22px;
-    padding: 16px 18px;
+
+    padding:
+        15px
+        18px;
+
     margin-top: 18px;
+
     background: #ffffff;
-    border: 1px solid var(--line, #e5e7eb);
-    border-radius: 10px;
+
+    border:
+        1px solid
+        var(
+            --line,
+            #e5e7eb
+        );
+
+    border-radius: 9px;
 }
+
 
 .transport-batch-submit > div {
     display: flex;
+
     flex-direction: column;
+
     gap: 3px;
+
     text-align: right;
 }
 
+
 .transport-batch-submit span {
-    color: var(--muted, #667085);
-    font-size: 0.75rem;
+    color:
+        var(
+            --muted,
+            #667085
+        );
+
+    font-size: 0.72rem;
 }
+
 
 .transport-batch-submit strong {
-    color: var(--text, #111827);
-    font-size: 1.05rem;
+    color:
+        var(
+            --text,
+            #111827
+        );
+
+    font-size: 1rem;
 }
 
-@media (max-width: 620px) {
-    .transport-batch-submit {
-        align-items: stretch;
+
+/* =========================================================
+   DESKTOP / MEDIUM SCREENS
+========================================================= */
+
+@media (max-width: 1180px) {
+
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(160px, 1fr)
+            );
+    }
+
+
+    .transport-form-card {
+        max-width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .transport-summary-grid,
+    .transport-dashboard-grid,
+    .transport-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .transport-warning-list {
+        grid-template-columns: 1fr;
+    }
+
+
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    .transport-status-actions {
+        align-items: flex-start;
+
         flex-direction: column;
     }
+
+
+    .transport-form-grid,
+    .form-grid.transport-form-grid {
+        grid-template-columns: 1fr;
+
+        column-gap: 0;
+
+        row-gap: 16px;
+    }
+
+
+    .transport-form-grid .form-grid-full,
+    .transport-field-full {
+        grid-column: auto;
+    }
+
+
+    .transport-expense-lines-card .card-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 620px) {
+
+    .transport-date-filter,
+    .transport-filter-form,
+    .transport-filter-form.transport-filter-wide {
+        display: grid;
+
+        grid-template-columns: 1fr;
+    }
+
+
+    .transport-date-filter .form-group {
+        width: 100%;
+    }
+
+
+    .transport-form-card {
+        margin-bottom: 14px;
+    }
+
+
+    .transport-form-card .card-header,
+    .transport-summary-card .card-header,
+    .transport-warning-card .card-header,
+    .transport-expense-lines-card .card-header {
+        padding:
+            14px
+            14px;
+    }
+
+
+    .transport-card-body {
+        padding:
+            16px
+            14px
+            18px;
+    }
+
+
+    .transport-form-grid,
+    .form-grid.transport-form-grid {
+        gap: 15px;
+    }
+
+
+    /*
+     * 16px prevents Safari/iPhone from automatically
+     * zooming when the field receives focus.
+     */
+    .transport-form-grid .form-control,
+    .transport-field .form-control {
+        min-height: 44px;
+
+        font-size: 16px;
+    }
+
+
+    .transport-summary-list,
+    .transport-detail-list {
+        padding-left: 14px;
+
+        padding-right: 14px;
+    }
+
+
+    .transport-summary-list > div,
+    .transport-detail-list > div {
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .transport-summary-list strong,
+    .transport-detail-list dd {
+        text-align: left;
+    }
+
+
+    .transport-pagination {
+        flex-wrap: wrap;
+
+        justify-content: center;
+    }
+
+
+    .transport-compact-stats {
+        grid-template-columns: 1fr;
+    }
+
+
+    .transport-batch-submit {
+        align-items: stretch;
+
+        flex-direction: column;
+
+        gap: 12px;
+
+        padding: 14px;
+    }
+
 
     .transport-batch-submit > div {
         text-align: left;
     }
 
+
     .transport-batch-submit .button {
         width: 100%;
     }
+
 }

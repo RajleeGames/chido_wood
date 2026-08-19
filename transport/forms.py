@@ -1,12 +1,6 @@
 from decimal import Decimal
 
 from django import forms
-from django.core.exceptions import ValidationError
-
-from .models import Driver, TransportExpense, TransportRoute, Trip, Vehicle
-from decimal import Decimal
-
-from django import forms
 from django.forms import formset_factory
 
 from .models import (
@@ -17,11 +11,27 @@ from .models import (
     Vehicle,
 )
 
+
 class StyledModelForm(forms.ModelForm):
+    SMART_NUMBER_EXCLUDE = {
+        "manufacture_year",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # IMPORTANT:
+        # Automatically apply styling and smart-number
+        # attributes to every form that inherits this class.
+        self.apply_styles()
+
     def apply_styles(self):
-        for field in self.fields.values():
+        for field_name, field in self.fields.items():
             widget = field.widget
 
+            # ------------------------------------------
+            # CHECKBOX
+            # ------------------------------------------
             if isinstance(
                 widget,
                 forms.CheckboxInput,
@@ -31,6 +41,9 @@ class StyledModelForm(forms.ModelForm):
                 )
                 continue
 
+            # ------------------------------------------
+            # NORMAL FORM CONTROL CLASS
+            # ------------------------------------------
             existing_class = widget.attrs.get(
                 "class",
                 "",
@@ -41,7 +54,7 @@ class StyledModelForm(forms.ModelForm):
             ).strip()
 
             # ------------------------------------------
-            # SAFE NUMBER / MONEY INPUTS
+            # SMART NUMBER FIELDS
             # ------------------------------------------
             if (
                 isinstance(
@@ -56,8 +69,16 @@ class StyledModelForm(forms.ModelForm):
                     ),
                 )
             ):
-                # Prevent browser mouse-wheel number changes
-                # by using a text field with numeric keyboard.
+                # Example:
+                # 2026 should remain 2026,
+                # not 2,026.
+                if (
+                    field_name
+                    in self.SMART_NUMBER_EXCLUDE
+                ):
+                    continue
+
+                # Allow comma formatted display.
                 widget.input_type = "text"
 
                 if isinstance(
@@ -71,7 +92,8 @@ class StyledModelForm(forms.ModelForm):
                     widget.attrs[
                         "data-decimal-places"
                     ] = str(
-                        field.decimal_places or 0
+                        field.decimal_places
+                        or 0
                     )
 
                 else:
@@ -91,10 +113,14 @@ class StyledModelForm(forms.ModelForm):
                     "autocomplete"
                 ] = "off"
 
+# ============================================================
+# TRANSPORT ROUTE FORM
+# ============================================================
 
 class TransportRouteForm(StyledModelForm):
     class Meta:
         model = TransportRoute
+
         fields = [
             "code",
             "origin",
@@ -105,21 +131,57 @@ class TransportRouteForm(StyledModelForm):
             "notes",
             "is_active",
         ]
+
         widgets = {
-            "notes": forms.Textarea(attrs={"rows": 4}),
-            "distance_km": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "default_price": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "estimated_duration_minutes": forms.NumberInput(attrs={"min": "0"}),
-        }
-        help_texts = {
-            "code": "Leave blank and the system will generate a route code.",
-            "default_price": "Suggested charge when creating a trip on this route.",
+            "notes": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
+
+            "distance_km": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "default_price": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "estimated_duration_minutes": (
+                forms.NumberInput(
+                    attrs={
+                        "min": "0",
+                    }
+                )
+            ),
         }
 
+        help_texts = {
+            "code": (
+                "Leave blank and the system will "
+                "generate a route code."
+            ),
+            "default_price": (
+                "Suggested charge when creating "
+                "a trip on this route."
+            ),
+        }
+
+
+# ============================================================
+# VEHICLE FORM
+# ============================================================
 
 class VehicleForm(StyledModelForm):
     class Meta:
         model = Vehicle
+
         fields = [
             "plate_number",
             "make",
@@ -135,19 +197,56 @@ class VehicleForm(StyledModelForm):
             "status",
             "notes",
         ]
+
         widgets = {
-            "manufacture_year": forms.NumberInput(attrs={"min": "1950"}),
-            "capacity": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "current_odometer": forms.NumberInput(attrs={"min": "0", "step": "0.1"}),
-            "insurance_expiry": forms.DateInput(attrs={"type": "date"}),
-            "inspection_expiry": forms.DateInput(attrs={"type": "date"}),
-            "notes": forms.Textarea(attrs={"rows": 4}),
+            "manufacture_year": forms.NumberInput(
+                attrs={
+                    "min": "1950",
+                }
+            ),
+
+            "capacity": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "current_odometer": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.1",
+                }
+            ),
+
+            "insurance_expiry": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+
+            "inspection_expiry": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+
+            "notes": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
         }
 
+
+# ============================================================
+# DRIVER FORM
+# ============================================================
 
 class DriverForm(StyledModelForm):
     class Meta:
         model = Driver
+
         fields = [
             "first_name",
             "last_name",
@@ -162,23 +261,68 @@ class DriverForm(StyledModelForm):
             "notes",
             "is_active",
         ]
+
         widgets = {
-            "license_expiry": forms.DateInput(attrs={"type": "date"}),
-            "monthly_salary": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "notes": forms.Textarea(attrs={"rows": 4}),
+            "license_expiry": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+
+            "monthly_salary": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "notes": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        vehicle_qs = Vehicle.objects.order_by("plate_number")
-        if not self.instance.pk:
-            vehicle_qs = vehicle_qs.filter(status=Vehicle.Status.ACTIVE)
-        self.fields["assigned_vehicle"].queryset = vehicle_qs
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
+        vehicle_qs = (
+            Vehicle.objects
+            .order_by(
+                "plate_number"
+            )
+        )
+
+        if not self.instance.pk:
+            vehicle_qs = (
+                vehicle_qs
+                .filter(
+                    status=(
+                        Vehicle.Status.ACTIVE
+                    )
+                )
+            )
+
+        self.fields[
+            "assigned_vehicle"
+        ].queryset = vehicle_qs
+
+
+# ============================================================
+# TRIP FORM
+# ============================================================
 
 class TripForm(StyledModelForm):
     class Meta:
         model = Trip
+
         fields = [
             "route",
             "origin",
@@ -201,80 +345,280 @@ class TripForm(StyledModelForm):
             "status",
             "notes",
         ]
+
         widgets = {
-            "departure_datetime": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
+            "departure_datetime": (
+                forms.DateTimeInput(
+                    attrs={
+                        "type": "datetime-local",
+                    },
+                    format="%Y-%m-%dT%H:%M",
+                )
             ),
-            "arrival_datetime": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
+
+            "arrival_datetime": (
+                forms.DateTimeInput(
+                    attrs={
+                        "type": "datetime-local",
+                    },
+                    format="%Y-%m-%dT%H:%M",
+                )
             ),
-            "load_quantity": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "distance_km": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "odometer_start": forms.NumberInput(attrs={"min": "0", "step": "0.1"}),
-            "odometer_end": forms.NumberInput(attrs={"min": "0", "step": "0.1"}),
-            "amount_charged": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "amount_paid": forms.NumberInput(attrs={"min": "0", "step": "0.01"}),
-            "notes": forms.Textarea(attrs={"rows": 4}),
+
+            "load_quantity": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "distance_km": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "odometer_start": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.1",
+                }
+            ),
+
+            "odometer_end": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.1",
+                }
+            ),
+
+            "amount_charged": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "amount_paid": forms.NumberInput(
+                attrs={
+                    "min": "0",
+                    "step": "0.01",
+                }
+            ),
+
+            "notes": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                }
+            ),
         }
+
         help_texts = {
-            "route": "When origin or destination is left blank, the selected route values are used when saving.",
-            "amount_paid": "A balance is created automatically when less than the charge is paid.",
+            "route": (
+                "When origin or destination is left "
+                "blank, the selected route values "
+                "are used when saving."
+            ),
+
+            "amount_paid": (
+                "A balance is created automatically "
+                "when less than the charge is paid."
+            ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["origin"].required = False
-        self.fields["destination"].required = False
-        self.fields["departure_datetime"].input_formats = ["%Y-%m-%dT%H:%M"]
-        self.fields["arrival_datetime"].input_formats = ["%Y-%m-%dT%H:%M"]
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
-        routes = TransportRoute.objects.order_by("origin", "destination")
-        vehicles = Vehicle.objects.order_by("plate_number")
-        drivers = Driver.objects.order_by("first_name", "last_name")
+        self.fields[
+            "origin"
+        ].required = False
+
+        self.fields[
+            "destination"
+        ].required = False
+
+        self.fields[
+            "departure_datetime"
+        ].input_formats = [
+            "%Y-%m-%dT%H:%M",
+        ]
+
+        self.fields[
+            "arrival_datetime"
+        ].input_formats = [
+            "%Y-%m-%dT%H:%M",
+        ]
+
+        routes = (
+            TransportRoute.objects
+            .order_by(
+                "origin",
+                "destination",
+            )
+        )
+
+        vehicles = (
+            Vehicle.objects
+            .order_by(
+                "plate_number"
+            )
+        )
+
+        drivers = (
+            Driver.objects
+            .order_by(
+                "first_name",
+                "last_name",
+            )
+        )
 
         if not self.instance.pk:
-            routes = routes.filter(is_active=True)
-            vehicles = vehicles.filter(status=Vehicle.Status.ACTIVE)
-            drivers = drivers.filter(is_active=True)
+            routes = (
+                routes
+                .filter(
+                    is_active=True
+                )
+            )
 
-        self.fields["route"].queryset = routes
-        self.fields["vehicle"].queryset = vehicles
-        self.fields["driver"].queryset = drivers
+            vehicles = (
+                vehicles
+                .filter(
+                    status=(
+                        Vehicle.Status.ACTIVE
+                    )
+                )
+            )
+
+            drivers = (
+                drivers
+                .filter(
+                    is_active=True
+                )
+            )
+
+        self.fields[
+            "route"
+        ].queryset = routes
+
+        self.fields[
+            "vehicle"
+        ].queryset = vehicles
+
+        self.fields[
+            "driver"
+        ].queryset = drivers
 
     def clean(self):
         cleaned = super().clean()
-        route = cleaned.get("route")
-        origin = (cleaned.get("origin") or "").strip()
-        destination = (cleaned.get("destination") or "").strip()
-        amount_charged = cleaned.get("amount_charged") or Decimal("0.00")
-        distance_km = cleaned.get("distance_km") or Decimal("0.00")
+
+        route = cleaned.get(
+            "route"
+        )
+
+        origin = (
+            cleaned.get(
+                "origin"
+            )
+            or ""
+        ).strip()
+
+        destination = (
+            cleaned.get(
+                "destination"
+            )
+            or ""
+        ).strip()
+
+        amount_charged = (
+            cleaned.get(
+                "amount_charged"
+            )
+            or Decimal("0.00")
+        )
+
+        distance_km = (
+            cleaned.get(
+                "distance_km"
+            )
+            or Decimal("0.00")
+        )
 
         if route:
-            origin = origin or route.origin
-            destination = destination or route.destination
-            if amount_charged == Decimal("0.00"):
-                cleaned["amount_charged"] = route.default_price
-            if distance_km == Decimal("0.00"):
-                cleaned["distance_km"] = route.distance_km
+            origin = (
+                origin
+                or route.origin
+            )
+
+            destination = (
+                destination
+                or route.destination
+            )
+
+            if (
+                amount_charged
+                == Decimal("0.00")
+            ):
+                cleaned[
+                    "amount_charged"
+                ] = route.default_price
+
+            if (
+                distance_km
+                == Decimal("0.00")
+            ):
+                cleaned[
+                    "distance_km"
+                ] = route.distance_km
 
         if not origin:
-            self.add_error("origin", "Enter an origin or select a route.")
-        if not destination:
-            self.add_error("destination", "Enter a destination or select a route.")
+            self.add_error(
+                "origin",
+                (
+                    "Enter an origin or "
+                    "select a route."
+                ),
+            )
 
-        cleaned["origin"] = origin
-        cleaned["destination"] = destination
+        if not destination:
+            self.add_error(
+                "destination",
+                (
+                    "Enter a destination or "
+                    "select a route."
+                ),
+            )
+
+        cleaned[
+            "origin"
+        ] = origin
+
+        cleaned[
+            "destination"
+        ] = destination
+
         return cleaned
+
+
+# ============================================================
+# SINGLE TRANSPORT EXPENSE FORM
+# ============================================================
 
 class TransportExpenseForm(StyledModelForm):
     """
-    Used only when editing one existing expense.
+    Used only when editing one existing transport expense.
     """
 
     class Meta:
         model = TransportExpense
+
         fields = [
             "trip",
             "vehicle",
@@ -294,12 +638,16 @@ class TransportExpenseForm(StyledModelForm):
                     "step": "0.01",
                 }
             ),
-            "expense_date": forms.DateTimeInput(
-                attrs={
-                    "type": "datetime-local",
-                },
-                format="%Y-%m-%dT%H:%M",
+
+            "expense_date": (
+                forms.DateTimeInput(
+                    attrs={
+                        "type": "datetime-local",
+                    },
+                    format="%Y-%m-%dT%H:%M",
+                )
             ),
+
             "description": forms.Textarea(
                 attrs={
                     "rows": 4,
@@ -309,46 +657,74 @@ class TransportExpenseForm(StyledModelForm):
 
         help_texts = {
             "trip": (
-                "Optional. Link this expense to a specific "
-                "trip for profit calculation."
+                "Optional. Link this expense "
+                "to a specific trip for profit "
+                "calculation."
             ),
+
             "vehicle": (
-                "Optional for office or general transport expenses."
+                "Optional for office or general "
+                "transport expenses."
             ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
-        self.fields["expense_date"].input_formats = [
+        self.fields[
+            "expense_date"
+        ].input_formats = [
             "%Y-%m-%dT%H:%M",
         ]
 
-        self.fields["trip"].queryset = (
+        self.fields[
+            "trip"
+        ].queryset = (
             Trip.objects
             .exclude(
-                status=Trip.Status.CANCELLED,
+                status=(
+                    Trip.Status.CANCELLED
+                ),
             )
             .order_by(
                 "-departure_datetime",
             )
         )
 
-        self.fields["vehicle"].queryset = (
-            Vehicle.objects.order_by(
+        self.fields[
+            "vehicle"
+        ].queryset = (
+            Vehicle.objects
+            .order_by(
                 "plate_number",
             )
         )
 
-        self.fields["driver"].queryset = (
-            Driver.objects.order_by(
+        self.fields[
+            "driver"
+        ].queryset = (
+            Driver.objects
+            .order_by(
                 "first_name",
                 "last_name",
             )
         )
 
 
-class TransportExpenseBatchHeaderForm(forms.Form):
+# ============================================================
+# TRANSPORT EXPENSE BATCH HEADER
+# ============================================================
+
+class TransportExpenseBatchHeaderForm(
+    forms.Form
+):
     """
     Information shared by every expense row in one batch.
     """
@@ -357,8 +733,8 @@ class TransportExpenseBatchHeaderForm(forms.Form):
         queryset=Trip.objects.none(),
         required=False,
         help_text=(
-            "Optional. All expenses below will be linked "
-            "to this trip."
+            "Optional. All expenses below will "
+            "be linked to this trip."
         ),
     )
 
@@ -366,8 +742,8 @@ class TransportExpenseBatchHeaderForm(forms.Form):
         queryset=Vehicle.objects.none(),
         required=False,
         help_text=(
-            "Optional. It is filled automatically when "
-            "a trip is selected."
+            "Optional. It is filled automatically "
+            "when a trip is selected."
         ),
     )
 
@@ -375,8 +751,8 @@ class TransportExpenseBatchHeaderForm(forms.Form):
         queryset=Driver.objects.none(),
         required=False,
         help_text=(
-            "Optional. It is filled automatically when "
-            "a trip is selected."
+            "Optional. It is filled automatically "
+            "when a trip is selected."
         ),
     )
 
@@ -394,13 +770,24 @@ class TransportExpenseBatchHeaderForm(forms.Form):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
-        self.fields["trip"].queryset = (
+        self.fields[
+            "trip"
+        ].queryset = (
             Trip.objects
             .exclude(
-                status=Trip.Status.CANCELLED,
+                status=(
+                    Trip.Status.CANCELLED
+                ),
             )
             .select_related(
                 "vehicle",
@@ -411,14 +798,20 @@ class TransportExpenseBatchHeaderForm(forms.Form):
             )
         )
 
-        self.fields["vehicle"].queryset = (
-            Vehicle.objects.order_by(
+        self.fields[
+            "vehicle"
+        ].queryset = (
+            Vehicle.objects
+            .order_by(
                 "plate_number",
             )
         )
 
-        self.fields["driver"].queryset = (
-            Driver.objects.order_by(
+        self.fields[
+            "driver"
+        ].queryset = (
+            Driver.objects
+            .order_by(
                 "first_name",
                 "last_name",
             )
@@ -429,24 +822,40 @@ class TransportExpenseBatchHeaderForm(forms.Form):
             "vehicle",
             "driver",
         ]:
-            self.fields[field_name].widget.attrs[
+            self.fields[
+                field_name
+            ].widget.attrs[
                 "class"
             ] = "form-control"
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = (
+            super().clean()
+        )
 
-        trip = cleaned_data.get("trip")
-        vehicle = cleaned_data.get("vehicle")
-        driver = cleaned_data.get("driver")
+        trip = cleaned_data.get(
+            "trip"
+        )
+
+        vehicle = cleaned_data.get(
+            "vehicle"
+        )
+
+        driver = cleaned_data.get(
+            "driver"
+        )
 
         if trip:
-            cleaned_data["vehicle"] = (
+            cleaned_data[
+                "vehicle"
+            ] = (
                 vehicle
                 or trip.vehicle
             )
 
-            cleaned_data["driver"] = (
+            cleaned_data[
+                "driver"
+            ] = (
                 driver
                 or trip.driver
             )
@@ -454,13 +863,23 @@ class TransportExpenseBatchHeaderForm(forms.Form):
         return cleaned_data
 
 
-class TransportExpenseItemForm(forms.Form):
+# ============================================================
+# TRANSPORT EXPENSE ITEM FORM
+# ============================================================
+
+class TransportExpenseItemForm(
+    forms.Form
+):
     """
     One expense line inside the batch.
     """
 
     category = forms.ChoiceField(
-        choices=TransportExpense.Category.choices,
+        choices=(
+            TransportExpense
+            .Category
+            .choices
+        ),
         widget=forms.Select(
             attrs={
                 "class": "form-control",
@@ -468,15 +887,38 @@ class TransportExpenseItemForm(forms.Form):
         ),
     )
 
+    # --------------------------------------------------------
+    # IMPORTANT:
+    #
+    # This form does NOT inherit StyledModelForm.
+    #
+    # Therefore the smart-number attributes must be added
+    # manually here.
+    #
+    # User can type:
+    #
+    # 50000
+    #
+    # and base.html can display:
+    #
+    # 50,000
+    #
+    # Before Django receives POST data, base.html changes it
+    # back to:
+    #
+    # 50000
+    # --------------------------------------------------------
     amount = forms.DecimalField(
         max_digits=14,
         decimal_places=2,
         min_value=Decimal("0.01"),
-        widget=forms.NumberInput(
+        widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "min": "0.01",
-                "step": "0.01",
+                "inputmode": "decimal",
+                "data-smart-number": "1",
+                "data-decimal-places": "2",
+                "autocomplete": "off",
                 "placeholder": "0",
             }
         ),
@@ -488,7 +930,9 @@ class TransportExpenseItemForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Vendor or person",
+                "placeholder": (
+                    "Vendor or person"
+                ),
             }
         ),
     )
@@ -499,7 +943,9 @@ class TransportExpenseItemForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Receipt or reference",
+                "placeholder": (
+                    "Receipt or reference"
+                ),
             }
         ),
     )
@@ -509,16 +955,24 @@ class TransportExpenseItemForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Short description",
+                "placeholder": (
+                    "Short description"
+                ),
             }
         ),
     )
 
 
-TransportExpenseItemFormSet = formset_factory(
-    TransportExpenseItemForm,
-    extra=1,
-    can_delete=True,
-    min_num=1,
-    validate_min=True,
+# ============================================================
+# TRANSPORT EXPENSE FORMSET
+# ============================================================
+
+TransportExpenseItemFormSet = (
+    formset_factory(
+        TransportExpenseItemForm,
+        extra=1,
+        can_delete=True,
+        min_num=1,
+        validate_min=True,
+    )
 )
