@@ -9,6 +9,7 @@
 <p>Add products, supplier costs and purchase expenses.</p>
 {% endblock %}
 
+
 {% block content %}
 <form
     method="post"
@@ -59,11 +60,13 @@
         </div>
     </div>
 
+
     {% if form.non_field_errors %}
         <div class="form-error-box">
             {{ form.non_field_errors }}
         </div>
     {% endif %}
+
 
     {% if formset.non_form_errors %}
         <div class="form-error-box">
@@ -71,16 +74,24 @@
         </div>
     {% endif %}
 
+
+    <!-- =====================================================
+         PURCHASE INFORMATION
+    ====================================================== -->
     <section class="card purchase-section">
         <div class="card-header">
             <div>
                 <h2>Purchase information</h2>
-                <p>Supplier, date and payment details.</p>
+
+                <p>
+                    Supplier, date and payment details.
+                </p>
             </div>
         </div>
 
         <div class="purchase-section-body">
             <div class="form-grid form-grid-three">
+
                 <div class="form-group">
                     <label for="{{ form.supplier.id_for_label }}">
                         Supplier
@@ -89,6 +100,7 @@
                     {{ form.supplier }}
                     {{ form.supplier.errors }}
                 </div>
+
 
                 <div class="form-group">
                     <label for="{{ form.purchase_date.id_for_label }}">
@@ -99,6 +111,7 @@
                     {{ form.purchase_date.errors }}
                 </div>
 
+
                 <div class="form-group">
                     <label for="{{ form.supplier_invoice_number.id_for_label }}">
                         Supplier invoice
@@ -107,6 +120,7 @@
                     {{ form.supplier_invoice_number }}
                     {{ form.supplier_invoice_number.errors }}
                 </div>
+
 
                 <div class="form-group">
                     <label for="{{ form.payment_method.id_for_label }}">
@@ -117,6 +131,7 @@
                     {{ form.payment_method.errors }}
                 </div>
 
+
                 <div class="form-group">
                     <label for="{{ form.amount_paid.id_for_label }}">
                         Amount paid
@@ -126,6 +141,7 @@
                     {{ form.amount_paid.errors }}
                 </div>
 
+
                 <div class="form-group">
                     <label for="{{ form.discount.id_for_label }}">
                         Purchase discount
@@ -134,15 +150,23 @@
                     {{ form.discount }}
                     {{ form.discount.errors }}
                 </div>
+
             </div>
         </div>
     </section>
 
+
+    <!-- =====================================================
+         PURCHASE PRODUCTS
+    ====================================================== -->
     <section class="card purchase-section">
         <div class="card-header">
             <div>
                 <h2>Purchase products</h2>
-                <p>Add every product included in this purchase.</p>
+
+                <p>
+                    Add every product included in this purchase.
+                </p>
             </div>
 
             <button
@@ -154,11 +178,14 @@
             </button>
         </div>
 
+
         <div class="purchase-items-wrap">
+
             {{ formset.management_form }}
 
             <div class="table-responsive">
                 <table class="data-table purchase-items-table">
+
                     <thead>
                         <tr>
                             <th>Product</th>
@@ -170,24 +197,30 @@
                         </tr>
                     </thead>
 
+
                     <tbody id="purchaseItemsBody">
+
                         {% for item_form in formset %}
                             <tr class="purchase-item-row">
+
                                 <td>
                                     {{ item_form.id }}
                                     {{ item_form.product }}
                                     {{ item_form.product.errors }}
                                 </td>
 
+
                                 <td>
                                     {{ item_form.quantity }}
                                     {{ item_form.quantity.errors }}
                                 </td>
 
+
                                 <td>
                                     {{ item_form.unit_cost }}
                                     {{ item_form.unit_cost.errors }}
                                 </td>
+
 
                                 <td>
                                     <strong
@@ -197,10 +230,12 @@
                                     </strong>
                                 </td>
 
+
                                 <td>
                                     {{ item_form.notes }}
                                     {{ item_form.notes.errors }}
                                 </td>
+
 
                                 <td>
                                     <div class="hidden-delete-field">
@@ -215,26 +250,36 @@
                                         Remove
                                     </button>
                                 </td>
+
                             </tr>
                         {% endfor %}
+
                     </tbody>
                 </table>
             </div>
 
+
+            <!-- =================================================
+                 EMPTY FORM TEMPLATE
+            ================================================== -->
             <template id="purchaseItemTemplate">
                 <tr class="purchase-item-row">
+
                     <td>
                         {{ formset.empty_form.id }}
                         {{ formset.empty_form.product }}
                     </td>
 
+
                     <td>
                         {{ formset.empty_form.quantity }}
                     </td>
 
+
                     <td>
                         {{ formset.empty_form.unit_cost }}
                     </td>
+
 
                     <td>
                         <strong class="purchase-line-total">
@@ -242,9 +287,11 @@
                         </strong>
                     </td>
 
+
                     <td>
                         {{ formset.empty_form.notes }}
                     </td>
+
 
                     <td>
                         <div class="hidden-delete-field">
@@ -259,22 +306,40 @@
                             Remove
                         </button>
                     </td>
+
                 </tr>
             </template>
+
         </div>
     </section>
 
+
+    <!-- =====================================================
+         BOTTOM AREA
+    ====================================================== -->
     <div class="purchase-bottom-grid">
+
+        <!-- =================================================
+             ADDITIONAL COSTS
+        ================================================== -->
         <section class="card purchase-section">
+
             <div class="card-header">
                 <div>
-                    <h2>Additional purchase costs</h2>
-                    <p>These costs increase the real stock cost.</p>
+                    <h2>
+                        Additional purchase costs
+                    </h2>
+
+                    <p>
+                        These costs increase the real stock cost.
+                    </p>
                 </div>
             </div>
 
+
             <div class="purchase-section-body">
                 <div class="form-grid form-grid-three">
+
                     <div class="form-group">
                         <label for="{{ form.transport_cost.id_for_label }}">
                             Transport
@@ -283,6 +348,7 @@
                         {{ form.transport_cost }}
                         {{ form.transport_cost.errors }}
                     </div>
+
 
                     <div class="form-group">
                         <label for="{{ form.loading_cost.id_for_label }}">
@@ -293,6 +359,7 @@
                         {{ form.loading_cost.errors }}
                     </div>
 
+
                     <div class="form-group">
                         <label for="{{ form.other_cost.id_for_label }}">
                             Other cost
@@ -302,6 +369,7 @@
                         {{ form.other_cost.errors }}
                     </div>
 
+
                     <div class="form-group form-grid-full">
                         <label for="{{ form.notes.id_for_label }}">
                             Purchase notes
@@ -310,69 +378,115 @@
                         {{ form.notes }}
                         {{ form.notes.errors }}
                     </div>
+
                 </div>
             </div>
         </section>
 
+
+        <!-- =================================================
+             PURCHASE SUMMARY
+        ================================================== -->
         <aside class="card purchase-summary-card">
+
             <div class="card-header">
                 <div>
                     <h2>Purchase summary</h2>
-                    <p>Live purchase calculation.</p>
+
+                    <p>
+                        Live purchase calculation.
+                    </p>
                 </div>
             </div>
 
+
             <div class="purchase-summary">
+
                 <div>
-                    <span>Products subtotal</span>
+                    <span>
+                        Products subtotal
+                    </span>
+
                     <strong id="purchaseSubtotal">
                         TZS 0
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Additional costs</span>
+                    <span>
+                        Additional costs
+                    </span>
+
                     <strong id="purchaseAdditionalCosts">
                         TZS 0
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Discount</span>
+                    <span>
+                        Discount
+                    </span>
+
                     <strong id="purchaseDiscount">
                         TZS 0
                     </strong>
                 </div>
 
+
                 <div class="purchase-summary-total">
-                    <span>Total purchase</span>
+                    <span>
+                        Total purchase
+                    </span>
+
                     <strong id="purchaseGrandTotal">
                         TZS 0
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Amount paid</span>
+                    <span>
+                        Amount paid
+                    </span>
+
                     <strong id="purchaseAmountPaid">
                         TZS 0
                     </strong>
                 </div>
 
+
                 <div>
-                    <span>Supplier balance</span>
+                    <span>
+                        Supplier balance
+                    </span>
+
                     <strong id="purchaseBalance">
                         TZS 0
                     </strong>
                 </div>
+
             </div>
         </aside>
+
     </div>
+
 </form>
 {% endblock %}
 
+
+
 {% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const form = document.getElementById(
+            "purchaseForm"
+        );
+
         const body = document.getElementById(
             "purchaseItemsBody"
         );
@@ -385,148 +499,623 @@
             "addPurchaseItem"
         );
 
-        const totalFormsInput = document.getElementById(
-            "id_items-TOTAL_FORMS"
-        );
+        const totalFormsInput =
+            document.getElementById(
+                "id_items-TOTAL_FORMS"
+            );
 
+
+        /*
+        ========================================================
+        SAFE NUMBER PARSER
+
+        IMPORTANT:
+        "50,000" must become 50000,
+        not 50.
+        ========================================================
+        */
         function numberValue(value) {
-            const parsed = Number.parseFloat(value);
+
+            if (
+                value === null
+                || value === undefined
+                || value === ""
+            ) {
+                return 0;
+            }
+
+            const cleanedValue = String(value)
+                .replace(/,/g, "")
+                .replace(/\s+/g, "")
+                .trim();
+
+            const parsed =
+                Number.parseFloat(
+                    cleanedValue
+                );
 
             return Number.isFinite(parsed)
                 ? parsed
                 : 0;
         }
 
+
+        /*
+        ========================================================
+        MONEY DISPLAY
+        ========================================================
+        */
         function money(value) {
+
+            const safeValue =
+                Number.isFinite(value)
+                    ? value
+                    : 0;
+
             return new Intl.NumberFormat(
                 "en-US",
                 {
-                    maximumFractionDigits: 0,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
                 }
-            ).format(value);
+            ).format(
+                safeValue
+            );
         }
 
+
+        /*
+        ========================================================
+        FIND NORMAL PURCHASE FIELD
+        ========================================================
+        */
         function getInput(name) {
             return document.querySelector(
                 `[name="${name}"]`
             );
         }
 
-        function calculatePurchase() {
-            let subtotal = 0;
 
-            document.querySelectorAll(
-                ".purchase-item-row"
-            ).forEach((row) => {
-                const deleteInput = row.querySelector(
-                    'input[name$="-DELETE"]'
+        /*
+        ========================================================
+        DETERMINE WHETHER ROW IS REALLY EMPTY
+        ========================================================
+        */
+        function rowIsEmpty(row) {
+
+            const productInput =
+                row.querySelector(
+                    'select[name$="-product"]'
                 );
 
-                if (
-                    deleteInput
-                    && deleteInput.checked
-                ) {
-                    return;
-                }
-
-                const quantityInput = row.querySelector(
+            const quantityInput =
+                row.querySelector(
                     'input[name$="-quantity"]'
                 );
 
-                const costInput = row.querySelector(
+            const costInput =
+                row.querySelector(
                     'input[name$="-unit_cost"]'
                 );
 
-                const quantity = numberValue(
+            const notesInput =
+                row.querySelector(
+                    'input[name$="-notes"], textarea[name$="-notes"]'
+                );
+
+            const idInput =
+                row.querySelector(
+                    'input[name$="-id"]'
+                );
+
+
+            /*
+             * If it already has a database ID,
+             * this is an existing purchase item.
+             */
+            if (
+                idInput
+                && idInput.value
+            ) {
+                return false;
+            }
+
+
+            const hasProduct =
+                Boolean(
+                    productInput?.value
+                );
+
+            const hasQuantity =
+                numberValue(
                     quantityInput?.value
-                );
+                ) !== 0;
 
-                const unitCost = numberValue(
+            const hasCost =
+                numberValue(
                     costInput?.value
+                ) !== 0;
+
+            const hasNotes =
+                Boolean(
+                    notesInput?.value?.trim()
                 );
 
-                const lineTotal = quantity * unitCost;
 
-                subtotal += lineTotal;
-
-                const lineTotalElement = row.querySelector(
-                    ".purchase-line-total"
-                );
-
-                if (lineTotalElement) {
-                    lineTotalElement.textContent = (
-                        `TZS ${money(lineTotal)}`
-                    );
-                }
-            });
-
-            const transport = numberValue(
-                getInput("transport_cost")?.value
+            return !(
+                hasProduct
+                || hasQuantity
+                || hasCost
+                || hasNotes
             );
-
-            const loading = numberValue(
-                getInput("loading_cost")?.value
-            );
-
-            const other = numberValue(
-                getInput("other_cost")?.value
-            );
-
-            const discount = numberValue(
-                getInput("discount")?.value
-            );
-
-            const amountPaid = numberValue(
-                getInput("amount_paid")?.value
-            );
-
-            const additionalCosts = (
-                transport
-                + loading
-                + other
-            );
-
-            const grandTotal = Math.max(
-                0,
-                subtotal
-                + additionalCosts
-                - discount
-            );
-
-            const balance = Math.max(
-                0,
-                grandTotal - amountPaid
-            );
-
-            document.getElementById(
-                "purchaseSubtotal"
-            ).textContent = `TZS ${money(subtotal)}`;
-
-            document.getElementById(
-                "purchaseAdditionalCosts"
-            ).textContent = `TZS ${money(additionalCosts)}`;
-
-            document.getElementById(
-                "purchaseDiscount"
-            ).textContent = `TZS ${money(discount)}`;
-
-            document.getElementById(
-                "purchaseGrandTotal"
-            ).textContent = `TZS ${money(grandTotal)}`;
-
-            document.getElementById(
-                "purchaseAmountPaid"
-            ).textContent = `TZS ${money(amountPaid)}`;
-
-            document.getElementById(
-                "purchaseBalance"
-            ).textContent = `TZS ${money(balance)}`;
         }
 
+
+        /*
+        ========================================================
+        HIDE DJANGO'S UNNECESSARY EXTRA BLANK ROWS
+
+        Your formset currently generates more than one blank
+        row because min_num + extra can create two forms.
+
+        Keep ONE blank row when creating a new purchase.
+        Hide any additional blank forms.
+
+        When editing an existing purchase:
+        existing items remain visible,
+        blank extras are hidden.
+        ========================================================
+        */
+        function cleanInitialBlankRows() {
+
+            const rows = Array.from(
+                body.querySelectorAll(
+                    ".purchase-item-row"
+                )
+            );
+
+            const existingRows =
+                rows.filter(
+                    (row) => !rowIsEmpty(row)
+                );
+
+            const blankRows =
+                rows.filter(
+                    (row) => rowIsEmpty(row)
+                );
+
+
+            /*
+             * Editing purchase:
+             * existing items already exist,
+             * therefore Django blank extras can be hidden.
+             */
+            if (existingRows.length > 0) {
+
+                blankRows.forEach(
+                    (row) => {
+                        row.style.display = "none";
+                    }
+                );
+
+                return;
+            }
+
+
+            /*
+             * New purchase:
+             * keep only the first blank row visible.
+             */
+            blankRows.forEach(
+                (row, index) => {
+
+                    if (index === 0) {
+                        row.style.display = "";
+                        return;
+                    }
+
+                    row.style.display = "none";
+                }
+            );
+        }
+
+
+        /*
+        ========================================================
+        PURCHASE CALCULATION
+        ========================================================
+        */
+        function calculatePurchase() {
+
+            let subtotal = 0;
+
+
+            body.querySelectorAll(
+                ".purchase-item-row"
+            ).forEach(
+                (row) => {
+
+                    const deleteInput =
+                        row.querySelector(
+                            'input[name$="-DELETE"]'
+                        );
+
+
+                    if (
+                        deleteInput
+                        && deleteInput.checked
+                    ) {
+                        return;
+                    }
+
+
+                    /*
+                     * Ignore hidden blank Django extra rows.
+                     */
+                    if (
+                        row.style.display === "none"
+                        && rowIsEmpty(row)
+                    ) {
+                        return;
+                    }
+
+
+                    const quantityInput =
+                        row.querySelector(
+                            'input[name$="-quantity"]'
+                        );
+
+                    const costInput =
+                        row.querySelector(
+                            'input[name$="-unit_cost"]'
+                        );
+
+
+                    const quantity =
+                        numberValue(
+                            quantityInput?.value
+                        );
+
+                    const unitCost =
+                        numberValue(
+                            costInput?.value
+                        );
+
+
+                    const lineTotal =
+                        quantity * unitCost;
+
+
+                    subtotal += lineTotal;
+
+
+                    const lineTotalElement =
+                        row.querySelector(
+                            ".purchase-line-total"
+                        );
+
+
+                    if (lineTotalElement) {
+
+                        lineTotalElement.textContent =
+                            `TZS ${money(lineTotal)}`;
+                    }
+
+                }
+            );
+
+
+            /*
+            ====================================================
+            EXTRA PURCHASE COSTS
+            ====================================================
+            */
+
+            const transport =
+                numberValue(
+                    getInput(
+                        "transport_cost"
+                    )?.value
+                );
+
+
+            const loading =
+                numberValue(
+                    getInput(
+                        "loading_cost"
+                    )?.value
+                );
+
+
+            const other =
+                numberValue(
+                    getInput(
+                        "other_cost"
+                    )?.value
+                );
+
+
+            const discount =
+                numberValue(
+                    getInput(
+                        "discount"
+                    )?.value
+                );
+
+
+            const amountPaid =
+                numberValue(
+                    getInput(
+                        "amount_paid"
+                    )?.value
+                );
+
+
+            const additionalCosts =
+                transport
+                + loading
+                + other;
+
+
+            const grandTotal =
+                Math.max(
+                    0,
+                    subtotal
+                    + additionalCosts
+                    - discount
+                );
+
+
+            const balance =
+                Math.max(
+                    0,
+                    grandTotal
+                    - amountPaid
+                );
+
+
+            /*
+            ====================================================
+            UPDATE SUMMARY
+            ====================================================
+            */
+
+            const subtotalElement =
+                document.getElementById(
+                    "purchaseSubtotal"
+                );
+
+            const additionalElement =
+                document.getElementById(
+                    "purchaseAdditionalCosts"
+                );
+
+            const discountElement =
+                document.getElementById(
+                    "purchaseDiscount"
+                );
+
+            const grandTotalElement =
+                document.getElementById(
+                    "purchaseGrandTotal"
+                );
+
+            const paidElement =
+                document.getElementById(
+                    "purchaseAmountPaid"
+                );
+
+            const balanceElement =
+                document.getElementById(
+                    "purchaseBalance"
+                );
+
+
+            if (subtotalElement) {
+                subtotalElement.textContent =
+                    `TZS ${money(subtotal)}`;
+            }
+
+
+            if (additionalElement) {
+                additionalElement.textContent =
+                    `TZS ${money(additionalCosts)}`;
+            }
+
+
+            if (discountElement) {
+                discountElement.textContent =
+                    `TZS ${money(discount)}`;
+            }
+
+
+            if (grandTotalElement) {
+                grandTotalElement.textContent =
+                    `TZS ${money(grandTotal)}`;
+            }
+
+
+            if (paidElement) {
+                paidElement.textContent =
+                    `TZS ${money(amountPaid)}`;
+            }
+
+
+            if (balanceElement) {
+                balanceElement.textContent =
+                    `TZS ${money(balance)}`;
+            }
+        }
+
+
+        /*
+        ========================================================
+        BIND EVENTS TO PRODUCT ROW
+        ========================================================
+        */
         function bindRow(row) {
+
             row.querySelectorAll(
-                "input, select"
-            ).forEach((input) => {
+                "input, select, textarea"
+            ).forEach(
+                (input) => {
+
+                    input.addEventListener(
+                        "input",
+                        calculatePurchase
+                    );
+
+                    input.addEventListener(
+                        "change",
+                        calculatePurchase
+                    );
+                }
+            );
+
+
+            const removeButton =
+                row.querySelector(
+                    "[data-remove-purchase-item]"
+                );
+
+
+            if (removeButton) {
+
+                removeButton.addEventListener(
+                    "click",
+                    () => {
+
+                        const deleteInput =
+                            row.querySelector(
+                                'input[name$="-DELETE"]'
+                            );
+
+
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                        }
+
+
+                        row.style.display =
+                            "none";
+
+
+                        calculatePurchase();
+
+                    }
+                );
+            }
+        }
+
+
+        /*
+        ========================================================
+        ADD NEW PRODUCT ROW
+        ========================================================
+        */
+        function addProductRow() {
+
+            if (
+                !template
+                || !body
+                || !totalFormsInput
+            ) {
+                return;
+            }
+
+
+            const formIndex =
+                Number.parseInt(
+                    totalFormsInput.value,
+                    10
+                );
+
+
+            if (
+                !Number.isFinite(
+                    formIndex
+                )
+            ) {
+                return;
+            }
+
+
+            const html =
+                template.innerHTML.replaceAll(
+                    "__prefix__",
+                    String(formIndex)
+                );
+
+
+            body.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+
+
+            totalFormsInput.value =
+                formIndex + 1;
+
+
+            const newRow =
+                body.lastElementChild;
+
+
+            if (newRow) {
+
+                newRow.style.display = "";
+
+                bindRow(
+                    newRow
+                );
+            }
+
+
+            calculatePurchase();
+        }
+
+
+        /*
+        ========================================================
+        ADD PRODUCT BUTTON
+        ========================================================
+        */
+        if (addButton) {
+
+            addButton.addEventListener(
+                "click",
+                addProductRow
+            );
+        }
+
+
+        /*
+        ========================================================
+        INITIAL ROW BINDING
+        ========================================================
+        */
+        body.querySelectorAll(
+            ".purchase-item-row"
+        ).forEach(
+            (row) => {
+
+                bindRow(
+                    row
+                );
+            }
+        );
+
+
+        /*
+        ========================================================
+        PURCHASE HEADER FIELD EVENTS
+        ========================================================
+        */
+        form.querySelectorAll(
+            "input, select, textarea"
+        ).forEach(
+            (input) => {
+
                 input.addEventListener(
                     "input",
                     calculatePurchase
@@ -536,77 +1125,62 @@
                     "change",
                     calculatePurchase
                 );
-            });
+            }
+        );
 
-            const removeButton = row.querySelector(
-                "[data-remove-purchase-item]"
-            );
 
-            if (removeButton) {
-                removeButton.addEventListener(
-                    "click",
-                    () => {
-                        const deleteInput = row.querySelector(
-                            'input[name$="-DELETE"]'
-                        );
+        /*
+        ========================================================
+        REMOVE COMMAS BEFORE DJANGO SUBMISSION
 
-                        if (deleteInput) {
-                            deleteInput.checked = true;
+        Example visible value:
+            50,000
+
+        Django receives:
+            50000
+
+        This protects DecimalField validation.
+        ========================================================
+        */
+        form.addEventListener(
+            "submit",
+            () => {
+
+                form.querySelectorAll(
+                    '[data-smart-number="1"]'
+                ).forEach(
+                    (input) => {
+
+                        if (
+                            typeof input.value
+                            !== "string"
+                        ) {
+                            return;
                         }
 
-                        row.style.display = "none";
 
-                        calculatePurchase();
+                        input.value =
+                            input.value
+                                .replace(/,/g, "")
+                                .replace(/\s+/g, "")
+                                .trim();
                     }
                 );
+
             }
-        }
+        );
 
-        addButton.addEventListener("click", () => {
-            const formIndex = Number.parseInt(
-                totalFormsInput.value,
-                10
-            );
 
-            const html = template.innerHTML.replaceAll(
-                "__prefix__",
-                String(formIndex)
-            );
-
-            body.insertAdjacentHTML(
-                "beforeend",
-                html
-            );
-
-            totalFormsInput.value = (
-                formIndex + 1
-            );
-
-            const newRow = body.lastElementChild;
-
-            bindRow(newRow);
-            calculatePurchase();
-        });
-
-        document.querySelectorAll(
-            ".purchase-item-row"
-        ).forEach(bindRow);
-
-        document.querySelectorAll(
-            "#purchaseForm input, #purchaseForm select"
-        ).forEach((input) => {
-            input.addEventListener(
-                "input",
-                calculatePurchase
-            );
-
-            input.addEventListener(
-                "change",
-                calculatePurchase
-            );
-        });
+        /*
+        ========================================================
+        INITIAL PAGE PREPARATION
+        ========================================================
+        */
+        cleanInitialBlankRows();
 
         calculatePurchase();
-    });
+
+    }
+);
 </script>
 {% endblock %}
