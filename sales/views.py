@@ -153,7 +153,7 @@ def get_cutting_item_data(sale):
     items = (
         sale.items
         .filter(
-            product__category__code="TIMBER",
+            product__allow_customer_cutting=True,
             product__is_active=True,
         )
         .select_related(
@@ -181,7 +181,6 @@ def get_cutting_item_data(sale):
         }
         for item in items
     ]
-
 
 @login_required
 def sale_list(request):
@@ -632,8 +631,11 @@ def sale_detail(request, pk):
         pk=pk,
     )
 
+    # Cutting is controlled ONLY by the
+    # product's Allow Customer Cutting setting.
     has_cuttable_items = sale.items.filter(
-        product__category__code="TIMBER",
+        product__allow_customer_cutting=True,
+        product__is_active=True,
     ).exists()
 
     completed_cutting_services = (
@@ -683,9 +685,13 @@ def sale_detail(request, pk):
     context = {
         "page_title": sale.sale_number,
         "sale": sale,
+
+        # True when at least one sold product
+        # has Allow Customer Cutting enabled.
         "has_cuttable_items": (
             has_cuttable_items
         ),
+
         "cutting_total_fee": (
             cutting_total_fee
         ),
@@ -1000,16 +1006,19 @@ def cutting_service_create(
         status=Sale.Status.COMPLETED,
     )
 
-    has_timber = sale.items.filter(
-        product__category__code="TIMBER"
+    # Only allow Customer Cutting when at least one
+    # product in the sale has "Allow Customer Cutting"
+    # enabled.
+    has_cuttable_product = sale.items.filter(
+        product__allow_customer_cutting=True
     ).exists()
 
-    if not has_timber:
+    if not has_cuttable_product:
         messages.error(
             request,
             (
-                "This sale does not contain any "
-                "Timber product that can be cut."
+                "This sale does not contain any product "
+                "that allows customer cutting."
             ),
         )
 
@@ -1018,12 +1027,10 @@ def cutting_service_create(
             pk=sale.pk,
         )
 
-    cutting_service = (
-        CustomerCuttingService(
-            sale=sale,
-            created_by=request.user,
-            service_date=timezone.now(),
-        )
+    cutting_service = CustomerCuttingService(
+        sale=sale,
+        created_by=request.user,
+        service_date=timezone.now(),
     )
 
     form = CustomerCuttingServiceForm(
@@ -1117,7 +1124,6 @@ def cutting_service_create(
         "sales/cutting_service_form.html",
         context,
     )
-
 
 @login_required
 def cutting_service_edit(request, pk):

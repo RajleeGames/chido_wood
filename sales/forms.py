@@ -347,7 +347,6 @@ SaleItemFormSet = inlineformset_factory(
     min_num=1,
     validate_min=True,
 )
-
 class CustomerCuttingServiceForm(
     StyledModelForm
 ):
@@ -404,6 +403,9 @@ class CustomerCuttingServiceForm(
             "%Y-%m-%dT%H:%M",
         ]
 
+        # Only active products with
+        # "Allow Customer Cutting" enabled
+        # can be selected.
         sale_items = SaleItem.objects.none()
 
         if self.sale and self.sale.pk:
@@ -411,7 +413,7 @@ class CustomerCuttingServiceForm(
                 SaleItem.objects
                 .filter(
                     sale=self.sale,
-                    product__category__code="TIMBER",
+                    product__allow_customer_cutting=True,
                     product__is_active=True,
                 )
                 .select_related(
@@ -553,15 +555,30 @@ class CustomerCuttingServiceForm(
 
             return cleaned_data
 
-        if (
-            sale_item.product.category.code
-            != "TIMBER"
-        ):
+        # The product's Allow Customer Cutting
+        # setting is the source of truth.
+        allows_cutting = getattr(
+            sale_item.product,
+            "allow_customer_cutting",
+            False,
+        )
+
+        if not allows_cutting:
             self.add_error(
                 "sale_item",
                 (
-                    "Customer cutting is only "
-                    "available for Timber products."
+                    f"{sale_item.product.name} does "
+                    "not allow customer cutting."
+                ),
+            )
+
+        # Product must still be active.
+        if not sale_item.product.is_active:
+            self.add_error(
+                "sale_item",
+                (
+                    f"{sale_item.product.name} is "
+                    "currently inactive."
                 ),
             )
 

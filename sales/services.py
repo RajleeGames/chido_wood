@@ -335,7 +335,6 @@ def complete_sale(
     return sale
 
 
-
 @transaction.atomic
 def complete_customer_cutting_service(
     *,
@@ -381,21 +380,20 @@ def complete_customer_cutting_service(
     if sale_item.sale_id != sale.id:
         raise ValidationError(
             (
-                "The selected Timber product does "
+                "The selected product does "
                 "not belong to this sale."
             )
         )
 
+    # Customer cutting is controlled by the
+    # product's "Allow Customer Cutting" setting.
     allows_cutting = getattr(
         product,
         "allow_customer_cutting",
         False,
     )
 
-    if (
-        product.category.code != "TIMBER"
-        or not allows_cutting
-    ):
+    if not allows_cutting:
         raise ValidationError(
             (
                 f"{product.name} does not allow "
