@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+Supplier Accounts | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Track supplier debts, balances and payments.</p>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total suppliers</span>
+            <span class="stat-icon">ALL</span>
+        </div>
+        <strong class="stat-value">{{ supplier_count|intcomma }}</strong>
+        <small>{{ payable_count|intcomma }} suppliers are owed money</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Suppliers payable</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+        <strong class="stat-value">{{ payable_count|intcomma }}</strong>
+        <small>{{ clear_count|intcomma }} accounts are clear</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Total supplier payable</span>
+            <span class="stat-icon">TZS</span>
+        </div>
+        <strong class="stat-value">
+            TZS {{ total_payable|floatformat:0|intcomma }}
+        </strong>
+        <small>Opening balances and posted purchase balances</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Account payments made</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+        <strong class="stat-value">
+            TZS {{ payments_made|floatformat:0|intcomma }}
+        </strong>
+        <small>Posted later supplier payments</small>
+    </article>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2>Supplier accounts</h2>
+        <p>Review balances and make full or partial supplier payments.</p>
+    </div>
+
+    <a href="{% url 'supplier-list' %}" class="button button-secondary">
+        Supplier directory
+    </a>
+</div>
+
+<section class="table-card">
+    <div class="table-toolbar">
+        <form
+            method="get"
+            class="customer-account-filter"
+            data-loading-message="Filtering supplier accounts"
+        >
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Supplier name, phone, email or TIN"
+            >
+
+            <select name="status" class="form-control">
+                <option value="payables" {% if status_filter == "payables" %}selected{% endif %}>
+                    Suppliers with balance
+                </option>
+                <option value="clear" {% if status_filter == "clear" %}selected{% endif %}>
+                    Clear accounts
+                </option>
+                <option value="active" {% if status_filter == "active" %}selected{% endif %}>
+                    Active suppliers
+                </option>
+                <option value="inactive" {% if status_filter == "inactive" %}selected{% endif %}>
+                    Inactive suppliers
+                </option>
+                <option value="all" {% if status_filter == "all" %}selected{% endif %}>
+                    All suppliers
+                </option>
+            </select>
+
+            <button type="submit" class="button button-secondary">Filter</button>
+            <a href="{% url 'supplier-account-list' %}" class="button button-secondary">
+                Clear
+            </a>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Phone</th>
+                    <th>Opening debt</th>
+                    <th>Purchase debt</th>
+                    <th>Current balance</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for supplier in suppliers %}
+                    <tr>
+                        <td>
+                            <strong>{{ supplier.name }}</strong>
+                            {% if supplier.tin %}
+                                <small class="table-subtitle">TIN {{ supplier.tin }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ supplier.phone|default:"—" }}</td>
+                        <td>TZS {{ supplier.remaining_opening_debt|floatformat:0|intcomma }}</td>
+                        <td>TZS {{ supplier.purchase_debt|floatformat:0|intcomma }}</td>
+                        <td>
+                            <strong>TZS {{ supplier.account_balance|floatformat:0|intcomma }}</strong>
+                        </td>
+                        <td>
+                            {% if supplier.account_balance > 0 %}
+                                <span class="badge badge-danger">Payment due</span>
+                            {% else %}
+                                <span class="badge badge-success">Clear</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="table-action-links">
+                                <a
+                                    href="{% url 'supplier-account-detail' supplier.pk %}"
+                                    class="table-link"
+                                >
+                                    Statement
+                                </a>
+                                {% if supplier.account_balance > 0 %}
+                                    <a
+                                        href="{% url 'supplier-payment-create' supplier.pk %}"
+                                        class="table-link"
+                                    >
+                                        Pay supplier
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">
+                                No supplier accounts matched the filters.
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if page_obj.has_other_pages %}
+    <div class="pagination-row">
+        {% if page_obj.has_previous %}
+            <a
+                class="button button-secondary"
+                href="?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter|urlencode }}"
+            >
+                Previous
+            </a>
+        {% endif %}
+
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            <a
+                class="button button-secondary"
+                href="?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&status={{ status_filter|urlencode }}"
+            >
+                Next
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

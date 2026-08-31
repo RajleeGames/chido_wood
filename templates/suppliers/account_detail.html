@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ supplier.name }} Account | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>Supplier statement, purchase debts and account payments.</p>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>{{ supplier.name }}</h2>
+        <p>
+            {% if supplier.phone %}{{ supplier.phone }}{% else %}Supplier account{% endif %}
+            {% if supplier.tin %} · TIN {{ supplier.tin }}{% endif %}
+        </p>
+    </div>
+
+    <div class="page-header-actions">
+        <a href="{% url 'supplier-account-list' %}" class="button button-secondary">
+            Back
+        </a>
+        {% if current_debt > 0 %}
+            <a
+                href="{% url 'supplier-payment-create' supplier.pk %}"
+                class="button button-primary"
+            >
+                Pay supplier
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Current payable</span>
+            <span class="stat-icon">DUE</span>
+        </div>
+        <strong class="stat-value">
+            TZS {{ current_debt|floatformat:0|intcomma }}
+        </strong>
+        <small>Outstanding supplier balance</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Opening debt remaining</span>
+            <span class="stat-icon">OPN</span>
+        </div>
+        <strong class="stat-value">
+            TZS {{ remaining_opening_balance|floatformat:0|intcomma }}
+        </strong>
+        <small>
+            Original: TZS {{ supplier.opening_balance|floatformat:0|intcomma }}
+        </small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Posted purchases</span>
+            <span class="stat-icon">PUR</span>
+        </div>
+        <strong class="stat-value">{{ posted_purchases|length|intcomma }}</strong>
+        <small>TZS {{ total_purchases|floatformat:0|intcomma }} purchased</small>
+    </article>
+
+    <article class="stat-card">
+        <div class="stat-card-header">
+            <span>Account payments</span>
+            <span class="stat-icon">PAY</span>
+        </div>
+        <strong class="stat-value">{{ payments|length|intcomma }}</strong>
+        <small>Posted and cancelled later payments</small>
+    </article>
+</div>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Supplier statement</h2>
+            <p>Debits increase what you owe; credits reduce the balance.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Reference</th>
+                    <th>Description</th>
+                    <th>Debit</th>
+                    <th>Credit</th>
+                    <th>Running balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in statement_entries %}
+                    <tr>
+                        <td>{{ entry.date|date:"d M Y H:i" }}</td>
+                        <td>{{ entry.entry_type }}</td>
+                        <td><strong>{{ entry.reference }}</strong></td>
+                        <td>{{ entry.description }}</td>
+                        <td>TZS {{ entry.debit|floatformat:0|intcomma }}</td>
+                        <td>TZS {{ entry.credit|floatformat:0|intcomma }}</td>
+                        <td>
+                            <strong>TZS {{ entry.balance|floatformat:0|intcomma }}</strong>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">No supplier account activity exists.</div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Posted purchases</h2>
+            <p>Balances below automatically change when supplier payments are posted.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Purchase</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Payment status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in posted_purchases %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'purchase-detail' purchase.pk %}" class="table-link">
+                                {{ purchase.purchase_number }}
+                            </a>
+                        </td>
+                        <td>{{ purchase.purchase_date|date:"d M Y" }}</td>
+                        <td>TZS {{ purchase.total_amount|floatformat:0|intcomma }}</td>
+                        <td>TZS {{ purchase.amount_paid|floatformat:0|intcomma }}</td>
+                        <td>
+                            <strong>TZS {{ purchase.balance_due|floatformat:0|intcomma }}</strong>
+                        </td>
+                        <td>{{ purchase.payment_status }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="table-empty">No posted purchases for this supplier.</div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="table-card account-section">
+    <div class="card-header">
+        <div>
+            <h2>Supplier payments</h2>
+            <p>Payments made after purchases were posted.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Payment</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                    <tr>
+                        <td><strong>{{ payment.payment_number }}</strong></td>
+                        <td>{{ payment.payment_date|date:"d M Y H:i" }}</td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>{{ payment.reference|default:"—" }}</td>
+                        <td>TZS {{ payment.amount|floatformat:0|intcomma }}</td>
+                        <td>
+                            {% if payment.status == "posted" %}
+                                <span class="badge badge-success">Posted</span>
+                            {% else %}
+                                <span class="badge badge-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a
+                                href="{% url 'supplier-payment-detail' payment.pk %}"
+                                class="table-link"
+                            >
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="table-empty">No supplier payments recorded.</div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

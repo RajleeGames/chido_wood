@@ -2,13 +2,49 @@ from decimal import Decimal
 
 from django import forms
 
-from .models import Supplier
+from .models import Supplier, SupplierPayment
 
 
-class SupplierForm(forms.ModelForm):
+class StyledModelForm(forms.ModelForm):
+    def apply_styles(self):
+        for field_name, field in self.fields.items():
+            widget = field.widget
+
+            if isinstance(widget, forms.CheckboxInput):
+                widget.attrs["class"] = "form-check-input"
+            else:
+                existing_class = widget.attrs.get("class", "")
+                widget.attrs["class"] = (
+                    f"{existing_class} form-control"
+                ).strip()
+
+            if (
+                isinstance(widget, forms.NumberInput)
+                and isinstance(
+                    field,
+                    (forms.DecimalField, forms.IntegerField),
+                )
+            ):
+                widget.input_type = "text"
+
+                if isinstance(field, forms.DecimalField):
+                    widget.attrs["inputmode"] = "decimal"
+                    widget.attrs["data-decimal-places"] = str(
+                        field.decimal_places or 0
+                    )
+                else:
+                    widget.attrs["inputmode"] = "numeric"
+                    widget.attrs["data-decimal-places"] = "0"
+
+                widget.attrs["data-smart-number"] = "1"
+                widget.attrs["autocomplete"] = "off"
+
+            widget.attrs.setdefault("id", f"id_{field_name}")
+
+
+class SupplierForm(StyledModelForm):
     class Meta:
         model = Supplier
-
         fields = [
             "name",
             "contact_person",
@@ -20,141 +56,126 @@ class SupplierForm(forms.ModelForm):
             "notes",
             "is_active",
         ]
-
         widgets = {
-            "address": forms.Textarea(
-                attrs={
-                    "rows": 3,
-                }
-            ),
-            "notes": forms.Textarea(
-                attrs={
-                    "rows": 3,
-                }
-            ),
+            "address": forms.Textarea(attrs={"rows": 3}),
+            "notes": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.apply_styles()
 
-        for field_name, field in self.fields.items():
-            widget = field.widget
-
-            if isinstance(
-                widget,
-                forms.CheckboxInput,
-            ):
-                widget.attrs["class"] = (
-                    "form-check-input"
-                )
-
-            else:
-                existing_class = widget.attrs.get(
-                    "class",
-                    "",
-                )
-
-                widget.attrs["class"] = (
-                    f"{existing_class} form-control"
-                ).strip()
-
-            # ------------------------------------------
-            # SAFE NUMBER / DECIMAL INPUTS
-            # ------------------------------------------
-            if (
-                isinstance(
-                    widget,
-                    forms.NumberInput,
-                )
-                and isinstance(
-                    field,
-                    (
-                        forms.DecimalField,
-                        forms.IntegerField,
-                    ),
-                )
-            ):
-                # Prevent browser spinner and
-                # accidental mouse-wheel changes.
-                widget.input_type = "text"
-
-                if isinstance(
-                    field,
-                    forms.DecimalField,
-                ):
-                    widget.attrs[
-                        "inputmode"
-                    ] = "decimal"
-
-                    widget.attrs[
-                        "data-decimal-places"
-                    ] = str(
-                        field.decimal_places or 0
-                    )
-
-                else:
-                    widget.attrs[
-                        "inputmode"
-                    ] = "numeric"
-
-                    widget.attrs[
-                        "data-decimal-places"
-                    ] = "0"
-
-                widget.attrs[
-                    "data-smart-number"
-                ] = "1"
-
-                widget.attrs[
-                    "autocomplete"
-                ] = "off"
-
-            widget.attrs.setdefault(
-                "id",
-                f"id_{field_name}"
-            )
-
-        self.fields["name"].widget.attrs[
-            "placeholder"
-        ] = "Example: Kilimanjaro Timber Supplies"
-
-        self.fields["contact_person"].widget.attrs[
-            "placeholder"
-        ] = "Supplier contact person"
-
-        self.fields["phone"].widget.attrs[
-            "placeholder"
-        ] = "Example: 0754 000 000"
-
-        self.fields["email"].widget.attrs[
-            "placeholder"
-        ] = "Optional email address"
-
-        self.fields["tin"].widget.attrs[
-            "placeholder"
-        ] = "Optional TIN"
+        self.fields["name"].widget.attrs["placeholder"] = (
+            "Example: Kilimanjaro Timber Supplies"
+        )
+        self.fields["contact_person"].widget.attrs["placeholder"] = (
+            "Supplier contact person"
+        )
+        self.fields["phone"].widget.attrs["placeholder"] = (
+            "Example: 0754 000 000"
+        )
+        self.fields["email"].widget.attrs["placeholder"] = (
+            "Optional email address"
+        )
+        self.fields["tin"].widget.attrs["placeholder"] = "Optional TIN"
 
         self.fields["opening_balance"].required = False
-
-        self.fields["opening_balance"].widget.attrs[
-            "placeholder"
-        ] = "0"
-
-        self.fields["opening_balance"].widget.attrs[
-            "step"
-        ] = "0.01"
-
-    def clean_opening_balance(self):
-        opening_balance = self.cleaned_data.get(
-            "opening_balance"
+        self.fields["opening_balance"].widget.attrs.update(
+            {
+                "placeholder": "0",
+                "step": "0.01",
+                "min": "0",
+            }
         )
 
+    def clean_opening_balance(self):
+        opening_balance = self.cleaned_data.get("opening_balance")
+
         if opening_balance in (None, ""):
-            return Decimal("0.00")
+            opening_balance = Decimal("0.00")
 
         if opening_balance < Decimal("0.00"):
             raise forms.ValidationError(
                 "Opening balance cannot be negative."
             )
 
+        if (
+            self.instance.pk
+            and opening_balance < self.instance.opening_balance_paid
+        ):
+            raise forms.ValidationError(
+                "Opening balance cannot be lower than the amount already paid toward it."
+            )
+
         return opening_balance
+
+
+class SupplierPaymentForm(StyledModelForm):
+    class Meta:
+        model = SupplierPayment
+        fields = [
+            "payment_date",
+            "amount",
+            "payment_method",
+            "reference",
+            "notes",
+        ]
+        widgets = {
+            "payment_date": forms.DateTimeInput(
+                attrs={"type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(
+        self,
+        *args,
+        maximum_amount=None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.maximum_amount = maximum_amount
+        self.apply_styles()
+
+        self.fields["payment_date"].input_formats = [
+            "%Y-%m-%dT%H:%M",
+        ]
+
+        self.fields["amount"].widget.attrs.update(
+            {
+                "step": "0.01",
+                "min": "0.01",
+                "placeholder": "0",
+            }
+        )
+
+        if maximum_amount is not None:
+            self.fields["amount"].widget.attrs["max"] = str(
+                maximum_amount
+            )
+
+        self.fields["reference"].widget.attrs["placeholder"] = (
+            "Mobile transaction, bank, cheque or receipt reference"
+        )
+        self.fields["notes"].widget.attrs["placeholder"] = (
+            "Optional supplier payment notes"
+        )
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get("amount")
+
+        if amount is None or amount <= Decimal("0.00"):
+            raise forms.ValidationError(
+                "Payment amount must be greater than zero."
+            )
+
+        if (
+            self.maximum_amount is not None
+            and amount > self.maximum_amount
+        ):
+            raise forms.ValidationError(
+                "Payment cannot exceed the supplier's current outstanding balance."
+            )
+
+        return amount

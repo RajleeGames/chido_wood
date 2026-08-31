@@ -1,0 +1,183 @@
+{% load humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ payment.payment_number }} | Supplier Payment Receipt</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #f4f6f8;
+            color: #111827;
+            font-family: Arial, sans-serif;
+        }
+        .receipt {
+            width: min(760px, 100%);
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 28px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 22px;
+        }
+        h1, h2, p { margin-top: 0; }
+        h1 { font-size: 22px; margin-bottom: 6px; }
+        h2 { font-size: 16px; margin-bottom: 12px; }
+        .muted { color: #6b7280; }
+        .amount {
+            font-size: 28px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .box {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .box span {
+            display: block;
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        th, td {
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 8px;
+            font-size: 13px;
+        }
+        th { color: #4b5563; }
+        .footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .print-actions {
+            width: min(760px, 100%);
+            margin: 0 auto 12px;
+            text-align: right;
+        }
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .receipt { border: 0; border-radius: 0; width: 100%; }
+            .print-actions { display: none; }
+        }
+        @media (max-width: 600px) {
+            .header { display: block; }
+            .amount { margin-top: 14px; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-actions">
+        <button type="button" onclick="window.print()">Print</button>
+    </div>
+
+    <main class="receipt">
+        <div class="header">
+            <div>
+                <h1>CHIDO Wood ERP</h1>
+                <p class="muted">Supplier Payment Receipt</p>
+                <strong>{{ payment.payment_number }}</strong>
+            </div>
+            <div class="amount">
+                TZS {{ payment.amount|floatformat:0|intcomma }}
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="box">
+                <span>Supplier</span>
+                <strong>{{ payment.supplier.name }}</strong>
+            </div>
+            <div class="box">
+                <span>Payment date</span>
+                <strong>{{ payment.payment_date|date:"d M Y H:i" }}</strong>
+            </div>
+            <div class="box">
+                <span>Payment method</span>
+                <strong>{{ payment.get_payment_method_display }}</strong>
+            </div>
+            <div class="box">
+                <span>Reference</span>
+                <strong>{{ payment.reference|default:"—" }}</strong>
+            </div>
+            <div class="box">
+                <span>Remaining supplier balance</span>
+                <strong>TZS {{ remaining_balance|floatformat:0|intcomma }}</strong>
+            </div>
+            <div class="box">
+                <span>Recorded by</span>
+                <strong>{{ payment.created_by }}</strong>
+            </div>
+        </div>
+
+        <h2>Payment allocations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Reference</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for allocation in payment.allocations.all %}
+                    <tr>
+                        <td>{{ allocation.get_allocation_type_display }}</td>
+                        <td>
+                            {% if allocation.purchase %}
+                                {{ allocation.purchase.purchase_number }}
+                            {% else %}
+                                Opening balance
+                            {% endif %}
+                        </td>
+                        <td>TZS {{ allocation.amount|floatformat:0|intcomma }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if payment.notes %}
+            <div class="footer">
+                <strong>Notes:</strong> {{ payment.notes }}
+            </div>
+        {% else %}
+            <div class="footer">
+                Supplier payment recorded in CHIDO Wood ERP.
+            </div>
+        {% endif %}
+    </main>
+</body>
+</html>
