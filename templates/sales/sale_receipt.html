@@ -4,11 +4,16 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1"
     >
-    <title>{{ sale.sale_number }} | {{ receipt_cfg.business_name }} Receipt</title>
+
+    <title>
+        {{ sale.sale_number }} |
+        {{ receipt_cfg.business_name }} Receipt
+    </title>
 
     <style>
         :root {
@@ -38,7 +43,10 @@
             padding: 20px;
             background: var(--page-bg);
             color: var(--ink);
-            font-family: Arial, Helvetica, sans-serif;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
         }
 
         button,
@@ -114,6 +122,7 @@
             min-width: 0;
             height: 40px;
             padding: 0 10px;
+            color: var(--ink);
             background: #ffffff;
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -147,8 +156,13 @@
             margin: 0 auto;
             padding: 5mm 4mm;
             background: var(--paper);
-            box-shadow: 0 12px 34px rgba(40, 29, 20, 0.12);
-            font-family: "Courier New", Courier, monospace;
+            box-shadow:
+                0 12px 34px
+                rgba(40, 29, 20, 0.12);
+            font-family:
+                "Courier New",
+                Courier,
+                monospace;
             font-size: 11px;
             line-height: 1.45;
         }
@@ -159,17 +173,20 @@
 
         .receipt-brand {
             margin: 0;
-            font-size: 18px;
-            line-height: 1.2;
-            letter-spacing: 0.3px;
+            font-size: 15px;
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: 0;
+            overflow-wrap: anywhere;
         }
 
         .receipt-title {
-            margin: 5px 0 0;
-            font-size: 11px;
+            margin: 4px 0 0;
+            font-size: 10px;
+            line-height: 1.15;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.25px;
         }
 
         .receipt-header-line {
@@ -254,7 +271,9 @@
 
             .receipt-button,
             .receipt-link {
-                flex: 1 1 calc(50% - 8px);
+                flex:
+                    1 1
+                    calc(50% - 8px);
                 text-align: center;
             }
 
@@ -306,1263 +325,1507 @@
 </head>
 
 <body>
-<div class="receipt-shell">
-    <div class="receipt-toolbar">
-        <button
-            type="button"
-            class="receipt-button receipt-button-primary"
-            id="thermalPrintButton"
-        >
-            Thermal print
-        </button>
-
-        <button
-            type="button"
-            class="receipt-button receipt-button-secondary"
-            id="selectPrinterButton"
-        >
-            Select printer
-        </button>
-
-        <button
-            type="button"
-            class="receipt-button receipt-button-secondary"
-            id="browserPrintButton"
-        >
-            Browser print
-        </button>
-
-        <a
-            href="{% url 'sale-detail' sale.pk %}"
-            class="receipt-link"
-        >
-            Back
-        </a>
-    </div>
-
-    <div
-        class="printer-panel"
-        id="printerPanel"
-    >
-        <div class="printer-panel-row">
-            <select
-                class="printer-select"
-                id="printerSelect"
-                aria-label="Thermal printer"
+    <div class="receipt-shell">
+        <div class="receipt-toolbar">
+            <button
+                type="button"
+                class="
+                    receipt-button
+                    receipt-button-primary
+                "
+                id="thermalPrintButton"
             >
-                <option value="">
-                    Loading printers...
-                </option>
-            </select>
+                Thermal print
+            </button>
 
             <button
                 type="button"
-                class="receipt-button receipt-button-primary"
-                id="savePrinterButton"
+                class="
+                    receipt-button
+                    receipt-button-secondary
+                "
+                id="selectPrinterButton"
             >
-                Use printer
+                Select printer
             </button>
-        </div>
-    </div>
 
-    <div
-        class="printer-status"
-        id="printerStatus"
-        aria-live="polite"
-    ></div>
+            <button
+                type="button"
+                class="
+                    receipt-button
+                    receipt-button-secondary
+                "
+                id="browserPrintButton"
+            >
+                Browser print
+            </button>
 
-    <main
-        class="receipt-paper"
-        id="receiptPaper"
-
-        data-sale-number="{{ sale.sale_number|escape }}"
-        data-sale-date="{{ sale.sale_date|date:'d/m/Y H:i' }}"
-        data-customer="{% if sale.customer %}{{ sale.customer.name|escape }}{% else %}Walk-in customer{% endif %}"
-        data-customer-phone="{% if sale.customer and sale.customer.phone %}{{ sale.customer.phone|escape }}{% endif %}"
-        data-cashier="{% if sale.completed_by %}{{ sale.completed_by.get_full_name|default:sale.completed_by.username|escape }}{% else %}System{% endif %}"
-        data-payment-method="{{ sale.get_payment_method_display|escape }}"
-        data-payment-status="{{ sale.payment_status|escape }}"
-        data-subtotal="{{ sale.subtotal }}"
-        data-discount="{{ sale.discount }}"
-        data-total="{{ sale.total_amount }}"
-        data-tendered="{{ sale.amount_tendered }}"
-        data-paid="{{ sale.amount_paid }}"
-        data-change="{{ sale.change_due }}"
-        data-balance="{{ sale.balance_due }}"
-
-        data-business-name="{{ receipt_cfg.business_name|escape }}"
-        data-receipt-title="{{ receipt_cfg.receipt_title|escape }}"
-        data-business-address="{{ receipt_cfg.address|escape }}"
-        data-business-phone="{{ receipt_cfg.phone|escape }}"
-        data-business-email="{{ receipt_cfg.email|escape }}"
-        data-business-tin="{{ receipt_cfg.tin|escape }}"
-        data-business-vrn="{{ receipt_cfg.vrn|escape }}"
-        data-header-note="{{ receipt_cfg.header_note|escape }}"
-        data-footer-line-1="{{ receipt_cfg.footer_line_1|escape }}"
-        data-footer-line-2="{{ receipt_cfg.footer_line_2|escape }}"
-        data-receipt-width="{{ receipt_cfg.characters_per_line }}"
-        data-feed-lines="{{ receipt_cfg.feed_lines_before_cut }}"
-        data-show-customer-phone="{% if receipt_cfg.show_customer_phone %}1{% else %}0{% endif %}"
-        data-show-cashier="{% if receipt_cfg.show_cashier %}1{% else %}0{% endif %}"
-    >
-        <header class="receipt-header">
-            <h1 class="receipt-brand">
-                {{ receipt_cfg.business_name }}
-            </h1>
-
-            <p class="receipt-title">
-                {{ receipt_cfg.receipt_title }}
-            </p>
-
-            {% if receipt_cfg.address %}
-                <p class="receipt-header-line">
-                    {{ receipt_cfg.address }}
-                </p>
-            {% endif %}
-
-            {% if receipt_cfg.phone %}
-                <p class="receipt-header-line">
-                    Tel: {{ receipt_cfg.phone }}
-                </p>
-            {% endif %}
-
-            {% if receipt_cfg.email %}
-                <p class="receipt-header-line">
-                    {{ receipt_cfg.email }}
-                </p>
-            {% endif %}
-
-            {% if receipt_cfg.tin or receipt_cfg.vrn %}
-                <p class="receipt-header-line">
-                    {% if receipt_cfg.tin %}
-                        TIN: {{ receipt_cfg.tin }}
-                    {% endif %}
-
-                    {% if receipt_cfg.tin and receipt_cfg.vrn %}
-                        &nbsp;&nbsp;
-                    {% endif %}
-
-                    {% if receipt_cfg.vrn %}
-                        VRN: {{ receipt_cfg.vrn }}
-                    {% endif %}
-                </p>
-            {% endif %}
-
-            {% if receipt_cfg.header_note %}
-                <p class="receipt-header-line">
-                    {{ receipt_cfg.header_note }}
-                </p>
-            {% endif %}
-        </header>
-
-        <hr class="receipt-rule">
-
-        <div class="receipt-row">
-            <span>Receipt</span>
-            <strong>{{ sale.sale_number }}</strong>
+            <a
+                href="{% url 'sale-detail' sale.pk %}"
+                class="receipt-link"
+            >
+                Back
+            </a>
         </div>
 
-        <div class="receipt-row">
-            <span>Date</span>
-            <span>{{ sale.sale_date|date:"d/m/Y H:i" }}</span>
+        <div
+            class="printer-panel"
+            id="printerPanel"
+        >
+            <div class="printer-panel-row">
+                <select
+                    class="printer-select"
+                    id="printerSelect"
+                    aria-label="Thermal printer"
+                >
+                    <option value="">
+                        Loading printers...
+                    </option>
+                </select>
+
+                <button
+                    type="button"
+                    class="
+                        receipt-button
+                        receipt-button-primary
+                    "
+                    id="savePrinterButton"
+                >
+                    Use printer
+                </button>
+            </div>
         </div>
 
-        <div class="receipt-row">
-            <span>Customer</span>
-            <span>
+        <div
+            class="printer-status"
+            id="printerStatus"
+            aria-live="polite"
+        ></div>
+
+        <main
+            class="receipt-paper"
+            id="receiptPaper"
+
+            data-sale-number="
+                {{ sale.sale_number|escape }}
+            "
+            data-sale-date="
+                {{ sale.sale_date|date:'d/m/Y H:i' }}
+            "
+            data-customer="
                 {% if sale.customer %}
-                    {{ sale.customer.name }}
+                    {{ sale.customer.name|escape }}
                 {% else %}
                     Walk-in customer
                 {% endif %}
-            </span>
-        </div>
+            "
+            data-customer-phone="
+                {% if sale.customer and sale.customer.phone %}
+                    {{ sale.customer.phone|escape }}
+                {% endif %}
+            "
+            data-cashier="
+                {% if sale.completed_by %}
+                    {{ sale.completed_by.get_full_name|default:sale.completed_by.username|escape }}
+                {% else %}
+                    System
+                {% endif %}
+            "
+            data-payment-method="
+                {{ sale.get_payment_method_display|escape }}
+            "
+            data-payment-status="
+                {{ sale.payment_status|escape }}
+            "
+            data-subtotal="{{ sale.subtotal }}"
+            data-discount="{{ sale.discount }}"
+            data-total="{{ sale.total_amount }}"
+            data-tendered="{{ sale.amount_tendered }}"
+            data-paid="{{ sale.amount_paid }}"
+            data-change="{{ sale.change_due }}"
+            data-balance="{{ sale.balance_due }}"
 
-        {% if receipt_cfg.show_customer_phone and sale.customer and sale.customer.phone %}
+            data-business-name="
+                {{ receipt_cfg.business_name|escape }}
+            "
+            data-receipt-title="
+                {{ receipt_cfg.receipt_title|escape }}
+            "
+            data-business-address="
+                {{ receipt_cfg.address|escape }}
+            "
+            data-business-phone="
+                {{ receipt_cfg.phone|escape }}
+            "
+            data-business-email="
+                {{ receipt_cfg.email|escape }}
+            "
+            data-business-tin="
+                {{ receipt_cfg.tin|escape }}
+            "
+            data-business-vrn="
+                {{ receipt_cfg.vrn|escape }}
+            "
+            data-header-note="
+                {{ receipt_cfg.header_note|escape }}
+            "
+            data-footer-line-1="
+                {{ receipt_cfg.footer_line_1|escape }}
+            "
+            data-footer-line-2="
+                {{ receipt_cfg.footer_line_2|escape }}
+            "
+            data-receipt-width="
+                {{ receipt_cfg.characters_per_line }}
+            "
+            data-feed-lines="
+                {{ receipt_cfg.feed_lines_before_cut }}
+            "
+            data-show-customer-phone="
+                {% if receipt_cfg.show_customer_phone %}
+                    1
+                {% else %}
+                    0
+                {% endif %}
+            "
+            data-show-cashier="
+                {% if receipt_cfg.show_cashier %}
+                    1
+                {% else %}
+                    0
+                {% endif %}
+            "
+        >
+            <header class="receipt-header">
+                <h1 class="receipt-brand">
+                    {{ receipt_cfg.business_name }}
+                </h1>
+
+                <p class="receipt-title">
+                    {{ receipt_cfg.receipt_title }}
+                </p>
+
+                {% if receipt_cfg.address %}
+                    <p class="receipt-header-line">
+                        {{ receipt_cfg.address }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.phone %}
+                    <p class="receipt-header-line">
+                        Tel:
+                        {{ receipt_cfg.phone }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.email %}
+                    <p class="receipt-header-line">
+                        {{ receipt_cfg.email }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.tin or receipt_cfg.vrn %}
+                    <p class="receipt-header-line">
+                        {% if receipt_cfg.tin %}
+                            TIN:
+                            {{ receipt_cfg.tin }}
+                        {% endif %}
+
+                        {% if receipt_cfg.tin and receipt_cfg.vrn %}
+                            &nbsp;&nbsp;
+                        {% endif %}
+
+                        {% if receipt_cfg.vrn %}
+                            VRN:
+                            {{ receipt_cfg.vrn }}
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.header_note %}
+                    <p class="receipt-header-line">
+                        {{ receipt_cfg.header_note }}
+                    </p>
+                {% endif %}
+            </header>
+
+            <hr class="receipt-rule">
+
             <div class="receipt-row">
-                <span>Phone</span>
-                <span>{{ sale.customer.phone }}</span>
+                <span>Receipt</span>
+
+                <strong>
+                    {{ sale.sale_number }}
+                </strong>
             </div>
-        {% endif %}
 
-        {% if receipt_cfg.show_cashier %}
             <div class="receipt-row">
-                <span>Cashier</span>
+                <span>Date</span>
+
                 <span>
-                    {% if sale.completed_by %}
-                        {{ sale.completed_by.get_full_name|default:sale.completed_by.username }}
+                    {{ sale.sale_date|date:"d/m/Y H:i" }}
+                </span>
+            </div>
+
+            <div class="receipt-row">
+                <span>Customer</span>
+
+                <span>
+                    {% if sale.customer %}
+                        {{ sale.customer.name }}
                     {% else %}
-                        System
+                        Walk-in customer
                     {% endif %}
                 </span>
             </div>
-        {% endif %}
 
-        <div class="receipt-row">
-            <span>Payment</span>
-            <span>{{ sale.get_payment_method_display }}</span>
-        </div>
+            {% if receipt_cfg.show_customer_phone and sale.customer and sale.customer.phone %}
+                <div class="receipt-row">
+                    <span>Phone</span>
 
-        <hr class="receipt-rule">
-
-        {% for item in sale.items.all %}
-            <div
-                class="receipt-item js-receipt-item"
-                data-name="{{ item.product.name|escape }}"
-                data-quantity="{{ item.quantity }}"
-                data-unit-price="{{ item.unit_price }}"
-                data-line-discount="{{ item.line_discount }}"
-                data-line-total="{{ item.line_total }}"
-                data-notes="{{ item.notes|default:''|escape }}"
-            >
-                <div class="receipt-item-name">
-                    {{ item.product.name }}
-                </div>
-
-                <div class="receipt-row receipt-item-detail">
                     <span>
-                        {{ item.quantity|floatformat:3|intcomma }}
-                        x
-                        {{ item.unit_price|floatformat:0|intcomma }}
+                        {{ sale.customer.phone }}
+                    </span>
+                </div>
+            {% endif %}
+
+            {% if receipt_cfg.show_cashier %}
+                <div class="receipt-row">
+                    <span>Cashier</span>
+
+                    <span>
+                        {% if sale.completed_by %}
+                            {{ sale.completed_by.get_full_name|default:sale.completed_by.username }}
+                        {% else %}
+                            System
+                        {% endif %}
+                    </span>
+                </div>
+            {% endif %}
+
+            <div class="receipt-row">
+                <span>Payment</span>
+
+                <span>
+                    {{ sale.get_payment_method_display }}
+                </span>
+            </div>
+
+            <hr class="receipt-rule">
+
+            {% for item in sale.items.all %}
+                <div
+                    class="
+                        receipt-item
+                        js-receipt-item
+                    "
+                    data-name="
+                        {{ item.product.name|escape }}
+                    "
+                    data-quantity="
+                        {{ item.quantity }}
+                    "
+                    data-unit-price="
+                        {{ item.unit_price }}
+                    "
+                    data-line-discount="
+                        {{ item.line_discount }}
+                    "
+                    data-line-total="
+                        {{ item.line_total }}
+                    "
+                    data-notes="
+                        {{ item.notes|default:''|escape }}
+                    "
+                >
+                    <div class="receipt-item-name">
+                        {{ item.product.name }}
+                    </div>
+
+                    <div
+                        class="
+                            receipt-row
+                            receipt-item-detail
+                        "
+                    >
+                        <span>
+                            {{ item.quantity|floatformat:3|intcomma }}
+                            x
+                            {{ item.unit_price|floatformat:0|intcomma }}
+                        </span>
+
+                        <strong>
+                            {{ item.line_total|floatformat:0|intcomma }}
+                        </strong>
+                    </div>
+
+                    {% if item.line_discount > 0 %}
+                        <div
+                            class="
+                                receipt-row
+                                receipt-item-detail
+                            "
+                        >
+                            <span>
+                                Line discount
+                            </span>
+
+                            <span>
+                                -
+                                {{ item.line_discount|floatformat:0|intcomma }}
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    {% if item.notes %}
+                        <div class="receipt-item-note">
+                            Note:
+                            {{ item.notes }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <hr class="receipt-rule">
+
+            <div class="receipt-row">
+                <span>Subtotal</span>
+
+                <span>
+                    TZS
+                    {{ sale.subtotal|floatformat:0|intcomma }}
+                </span>
+            </div>
+
+            {% if sale.discount > 0 %}
+                <div class="receipt-row">
+                    <span>
+                        Sale discount
                     </span>
 
-                    <strong>
-                        {{ item.line_total|floatformat:0|intcomma }}
-                    </strong>
+                    <span>
+                        -TZS
+                        {{ sale.discount|floatformat:0|intcomma }}
+                    </span>
                 </div>
+            {% endif %}
 
-                {% if item.line_discount > 0 %}
-                    <div class="receipt-row receipt-item-detail">
-                        <span>Line discount</span>
-                        <span>
-                            -{{ item.line_discount|floatformat:0|intcomma }}
-                        </span>
-                    </div>
-                {% endif %}
+            <div
+                class="
+                    receipt-row
+                    receipt-total
+                "
+            >
+                <span>TOTAL</span>
 
-                {% if item.notes %}
-                    <div class="receipt-item-note">
-                        Note: {{ item.notes }}
-                    </div>
-                {% endif %}
+                <span>
+                    TZS
+                    {{ sale.total_amount|floatformat:0|intcomma }}
+                </span>
             </div>
-        {% endfor %}
 
-        <hr class="receipt-rule">
-
-        <div class="receipt-row">
-            <span>Subtotal</span>
-            <span>
-                TZS {{ sale.subtotal|floatformat:0|intcomma }}
-            </span>
-        </div>
-
-        {% if sale.discount > 0 %}
             <div class="receipt-row">
-                <span>Sale discount</span>
+                <span>Tendered</span>
+
                 <span>
-                    -TZS {{ sale.discount|floatformat:0|intcomma }}
+                    TZS
+                    {{ sale.amount_tendered|floatformat:0|intcomma }}
                 </span>
             </div>
-        {% endif %}
 
-        <div class="receipt-row receipt-total">
-            <span>TOTAL</span>
-            <span>
-                TZS {{ sale.total_amount|floatformat:0|intcomma }}
-            </span>
-        </div>
+            <div class="receipt-row">
+                <span>Paid</span>
 
-        <div class="receipt-row">
-            <span>Tendered</span>
-            <span>
-                TZS {{ sale.amount_tendered|floatformat:0|intcomma }}
-            </span>
-        </div>
-
-        <div class="receipt-row">
-            <span>Paid</span>
-            <span>
-                TZS {{ sale.amount_paid|floatformat:0|intcomma }}
-            </span>
-        </div>
-
-        <div class="receipt-row">
-            <span>Change</span>
-            <span>
-                TZS {{ sale.change_due|floatformat:0|intcomma }}
-            </span>
-        </div>
-
-        {% if sale.balance_due > 0 %}
-            <div class="receipt-row receipt-balance">
-                <span>BALANCE</span>
                 <span>
-                    TZS {{ sale.balance_due|floatformat:0|intcomma }}
+                    TZS
+                    {{ sale.amount_paid|floatformat:0|intcomma }}
                 </span>
             </div>
-        {% endif %}
 
-        <hr class="receipt-rule">
+            <div class="receipt-row">
+                <span>Change</span>
 
-        <footer class="receipt-footer">
-            {% if receipt_cfg.footer_line_1 %}
-                <p>
-                    <strong>{{ receipt_cfg.footer_line_1 }}</strong>
+                <span>
+                    TZS
+                    {{ sale.change_due|floatformat:0|intcomma }}
+                </span>
+            </div>
+
+            {% if sale.balance_due > 0 %}
+                <div
+                    class="
+                        receipt-row
+                        receipt-balance
+                    "
+                >
+                    <span>BALANCE</span>
+
+                    <span>
+                        TZS
+                        {{ sale.balance_due|floatformat:0|intcomma }}
+                    </span>
+                </div>
+            {% endif %}
+
+            <hr class="receipt-rule">
+
+            <footer class="receipt-footer">
+                {% if receipt_cfg.footer_line_1 %}
+                    <p>
+                        <strong>
+                            {{ receipt_cfg.footer_line_1 }}
+                        </strong>
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.footer_line_2 %}
+                    <p>
+                        {{ receipt_cfg.footer_line_2 }}
+                    </p>
+                {% endif %}
+
+                <p class="receipt-small">
+                    {{ sale.sale_number }}
                 </p>
-            {% endif %}
+            </footer>
+        </main>
+    </div>
 
-            {% if receipt_cfg.footer_line_2 %}
-                <p>{{ receipt_cfg.footer_line_2 }}</p>
-            {% endif %}
+    <script
+        src="{% static 'vendor/qz/qz-tray.js' %}"
+    ></script>
 
-            <p class="receipt-small">
-                {{ sale.sale_number }}
-            </p>
-        </footer>
-    </main>
-</div>
+    <form
+        id="qzCsrfTokenForm"
+        hidden
+    >
+        {% csrf_token %}
+    </form>
 
-<script src="{% static 'vendor/qz/qz-tray.js' %}"></script>
+    <script>
+        (function configureQzSecurity() {
+            "use strict";
 
-<form id="qzCsrfTokenForm" hidden>
-    {% csrf_token %}
-</form>
+            if (
+                typeof window.qz === "undefined"
+                || !window.qz.security
+            ) {
+                return;
+            }
 
-<script>
-(function configureQzSecurity() {
-    "use strict";
+            const certificateUrl =
+                "{% url 'qz-certificate' %}";
 
-    if (
-        typeof window.qz === "undefined"
-        || !window.qz.security
-    ) {
-        return;
-    }
+            const signatureUrl =
+                "{% url 'qz-sign' %}";
 
-    const certificateUrl = "{% url 'qz-certificate' %}";
-    const signatureUrl = "{% url 'qz-sign' %}";
-
-    const csrfInput = document.querySelector(
-        "#qzCsrfTokenForm input[name='csrfmiddlewaretoken']"
-    );
-
-    const csrfToken = csrfInput
-        ? csrfInput.value
-        : "";
-
-    qz.security.setCertificatePromise(
-        async function () {
-            const response = await fetch(
-                certificateUrl,
-                {
-                    method: "GET",
-                    credentials: "same-origin",
-                    cache: "no-store",
-                    headers: {
-                        "Accept": "text/plain"
-                    }
-                }
-            );
-
-            const certificate =
-                await response.text();
-
-            if (!response.ok) {
-                throw new Error(
-                    certificate
-                    || "Unable to load QZ certificate."
+            const csrfInput =
+                document.querySelector(
+                    "#qzCsrfTokenForm "
+                    + "input[name='csrfmiddlewaretoken']"
                 );
-            }
 
-            return certificate;
-        }
-    );
+            const csrfToken =
+                csrfInput
+                ? csrfInput.value
+                : "";
 
-    qz.security.setSignatureAlgorithm(
-        "SHA512"
-    );
-
-    qz.security.setSignaturePromise(
-        async function (toSign) {
-            const response = await fetch(
-                signatureUrl,
-                {
-                    method: "POST",
-                    credentials: "same-origin",
-                    cache: "no-store",
-                    headers: {
-                        "Accept": "text/plain",
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({
-                        request: toSign
-                    })
-                }
-            );
-
-            const signature =
-                await response.text();
-
-            if (!response.ok) {
-                throw new Error(
-                    signature
-                    || "Unable to sign QZ request."
-                );
-            }
-
-            return signature.trim();
-        }
-    );
-})();
-</script>
-
-<script>
-(function () {
-    "use strict";
-
-    const paper =
-        document.getElementById(
-            "receiptPaper"
-        );
-
-    const configuredWidth =
-        Number.parseInt(
-            paper.dataset.receiptWidth
-            || "42",
-            10
-        );
-
-    const RECEIPT_WIDTH =
-        Number.isFinite(configuredWidth)
-        ? Math.max(
-            32,
-            Math.min(
-                64,
-                configuredWidth
-            )
-        )
-        : 42;
-
-    const configuredFeedLines =
-        Number.parseInt(
-            paper.dataset.feedLines
-            || "6",
-            10
-        );
-
-    const FEED_LINES =
-        Number.isFinite(
-            configuredFeedLines
-        )
-        ? Math.max(
-            2,
-            Math.min(
-                12,
-                configuredFeedLines
-            )
-        )
-        : 6;
-
-    const MINIMUM_COLUMN_GAP = 3;
-    const STORAGE_KEY =
-        "chido_wood_thermal_printer";
-
-    const thermalPrintButton =
-        document.getElementById(
-            "thermalPrintButton"
-        );
-
-    const selectPrinterButton =
-        document.getElementById(
-            "selectPrinterButton"
-        );
-
-    const browserPrintButton =
-        document.getElementById(
-            "browserPrintButton"
-        );
-
-    const printerPanel =
-        document.getElementById(
-            "printerPanel"
-        );
-
-    const printerSelect =
-        document.getElementById(
-            "printerSelect"
-        );
-
-    const savePrinterButton =
-        document.getElementById(
-            "savePrinterButton"
-        );
-
-    const printerStatus =
-        document.getElementById(
-            "printerStatus"
-        );
-
-    function setStatus(message, type) {
-        printerStatus.textContent =
-            message || "";
-
-        printerStatus.classList.remove(
-            "is-success",
-            "is-error",
-            "is-warning"
-        );
-
-        if (type) {
-            printerStatus.classList.add(
-                "is-" + type
-            );
-        }
-    }
-
-    function setBusy(
-        button,
-        busy,
-        busyText
-    ) {
-        if (!button) {
-            return;
-        }
-
-        if (busy) {
-            button.dataset.originalText =
-                button.textContent;
-
-            button.textContent =
-                busyText;
-
-            button.disabled = true;
-        } else {
-            button.textContent =
-                button.dataset.originalText
-                || button.textContent;
-
-            button.disabled = false;
-        }
-    }
-
-    function qzAvailable() {
-        return (
-            typeof window.qz !==
-                "undefined"
-            && window.qz
-            && window.qz.websocket
-            && window.qz.printers
-            && window.qz.configs
-        );
-    }
-
-    async function connectQz() {
-        if (!qzAvailable()) {
-            throw new Error(
-                "QZ Tray library did not load "
-                + "from /static/vendor/qz/qz-tray.js."
-            );
-        }
-
-        if (
-            qz.websocket.isActive()
-        ) {
-            return;
-        }
-
-        await qz.websocket.connect({
-            retries: 2,
-            delay: 1
-        });
-    }
-
-    function cleanText(value) {
-        return String(
-            value == null
-                ? ""
-                : value
-        )
-            .replace(
-                /[\r\n\t]+/g,
-                " "
-            )
-            .replace(
-                /\s{2,}/g,
-                " "
-            )
-            .trim();
-    }
-
-    function numberValue(value) {
-        const parsed =
-            Number.parseFloat(
-                String(
-                    value == null
-                        ? "0"
-                        : value
-                ).replace(/,/g, "")
-            );
-
-        return Number.isFinite(parsed)
-            ? parsed
-            : 0;
-    }
-
-    function money(value) {
-        return Math.round(
-            numberValue(value)
-        ).toLocaleString(
-            "en-US",
-            {
-                maximumFractionDigits: 0
-            }
-        );
-    }
-
-    function quantity(value) {
-        return numberValue(
-            value
-        ).toLocaleString(
-            "en-US",
-            {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 3
-            }
-        );
-    }
-
-    function repeat(char, count) {
-        return new Array(
-            Math.max(
-                0,
-                count
-            ) + 1
-        ).join(char);
-    }
-
-    function centered(
-        text,
-        width
-    ) {
-        const cleaned =
-            cleanText(text);
-
-        if (
-            cleaned.length >= width
-        ) {
-            return cleaned.slice(
-                0,
-                width
-            );
-        }
-
-        const left =
-            Math.floor(
-                (
-                    width
-                    - cleaned.length
-                ) / 2
-            );
-
-        return (
-            repeat(" ", left)
-            + cleaned
-        );
-    }
-
-    function twoColumns(
-        left,
-        right,
-        width
-    ) {
-        const leftText =
-            cleanText(left);
-
-        const rightText =
-            cleanText(right);
-
-        const maxRight =
-            Math.max(
-                1,
-                width
-                - MINIMUM_COLUMN_GAP
-                - 1
-            );
-
-        const rightClipped =
-            rightText.slice(
-                0,
-                maxRight
-            );
-
-        const availableLeft =
-            Math.max(
-                1,
-                width
-                - rightClipped.length
-                - MINIMUM_COLUMN_GAP
-            );
-
-        const clippedLeft =
-            leftText.slice(
-                0,
-                availableLeft
-            );
-
-        const spaces =
-            Math.max(
-                MINIMUM_COLUMN_GAP,
-                width
-                - clippedLeft.length
-                - rightClipped.length
-            );
-
-        return (
-            clippedLeft
-            + repeat(
-                " ",
-                spaces
-            )
-            + rightClipped
-        ).slice(
-            0,
-            width
-        );
-    }
-
-    function wrapText(
-        text,
-        width
-    ) {
-        const cleaned =
-            cleanText(text);
-
-        if (!cleaned) {
-            return [];
-        }
-
-        const words =
-            cleaned.split(" ");
-
-        const lines = [];
-        let line = "";
-
-        words.forEach(
-            function (word) {
-                if (
-                    word.length > width
-                ) {
-                    if (line) {
-                        lines.push(
-                            line
+            qz.security.setCertificatePromise(
+                async function () {
+                    const response =
+                        await fetch(
+                            certificateUrl,
+                            {
+                                method: "GET",
+                                credentials:
+                                    "same-origin",
+                                cache: "no-store",
+                                headers: {
+                                    "Accept":
+                                        "text/plain"
+                                }
+                            }
                         );
-                        line = "";
-                    }
 
-                    let remaining =
-                        word;
+                    const certificate =
+                        await response.text();
 
-                    while (
-                        remaining.length
-                        > width
-                    ) {
-                        lines.push(
-                            remaining.slice(
-                                0,
-                                width
+                    if (!response.ok) {
+                        throw new Error(
+                            certificate
+                            || (
+                                "Unable to load "
+                                + "QZ certificate."
                             )
                         );
-
-                        remaining =
-                            remaining.slice(
-                                width
-                            );
                     }
 
-                    line =
-                        remaining;
+                    return certificate;
+                }
+            );
 
+            qz.security.setSignatureAlgorithm(
+                "SHA512"
+            );
+
+            qz.security.setSignaturePromise(
+                async function (toSign) {
+                    const response =
+                        await fetch(
+                            signatureUrl,
+                            {
+                                method: "POST",
+                                credentials:
+                                    "same-origin",
+                                cache: "no-store",
+                                headers: {
+                                    "Accept":
+                                        "text/plain",
+                                    "Content-Type":
+                                        "application/json",
+                                    "X-CSRFToken":
+                                        csrfToken
+                                },
+                                body:
+                                    JSON.stringify({
+                                        request:
+                                            toSign
+                                    })
+                            }
+                        );
+
+                    const signature =
+                        await response.text();
+
+                    if (!response.ok) {
+                        throw new Error(
+                            signature
+                            || (
+                                "Unable to sign "
+                                + "QZ request."
+                            )
+                        );
+                    }
+
+                    return signature.trim();
+                }
+            );
+        })();
+    </script>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const paper =
+                document.getElementById(
+                    "receiptPaper"
+                );
+
+            const configuredWidth =
+                Number.parseInt(
+                    paper.dataset.receiptWidth
+                    || "42",
+                    10
+                );
+
+            const RECEIPT_WIDTH =
+                Number.isFinite(
+                    configuredWidth
+                )
+                ? Math.max(
+                    32,
+                    Math.min(
+                        64,
+                        configuredWidth
+                    )
+                )
+                : 42;
+
+            const configuredFeedLines =
+                Number.parseInt(
+                    paper.dataset.feedLines
+                    || "6",
+                    10
+                );
+
+            const FEED_LINES =
+                Number.isFinite(
+                    configuredFeedLines
+                )
+                ? Math.max(
+                    2,
+                    Math.min(
+                        12,
+                        configuredFeedLines
+                    )
+                )
+                : 6;
+
+            const MINIMUM_COLUMN_GAP = 3;
+
+            const STORAGE_KEY =
+                "chido_wood_thermal_printer";
+
+            const thermalPrintButton =
+                document.getElementById(
+                    "thermalPrintButton"
+                );
+
+            const selectPrinterButton =
+                document.getElementById(
+                    "selectPrinterButton"
+                );
+
+            const browserPrintButton =
+                document.getElementById(
+                    "browserPrintButton"
+                );
+
+            const printerPanel =
+                document.getElementById(
+                    "printerPanel"
+                );
+
+            const printerSelect =
+                document.getElementById(
+                    "printerSelect"
+                );
+
+            const savePrinterButton =
+                document.getElementById(
+                    "savePrinterButton"
+                );
+
+            const printerStatus =
+                document.getElementById(
+                    "printerStatus"
+                );
+
+            function setStatus(
+                message,
+                type
+            ) {
+                printerStatus.textContent =
+                    message || "";
+
+                printerStatus.classList.remove(
+                    "is-success",
+                    "is-error",
+                    "is-warning"
+                );
+
+                if (type) {
+                    printerStatus.classList.add(
+                        "is-" + type
+                    );
+                }
+            }
+
+            function setBusy(
+                button,
+                busy,
+                busyText
+            ) {
+                if (!button) {
                     return;
                 }
 
-                const candidate =
-                    line
-                    ? line
-                        + " "
-                        + word
-                    : word;
+                if (busy) {
+                    button.dataset.originalText =
+                        button.textContent;
 
-                if (
-                    candidate.length
-                    <= width
-                ) {
-                    line =
-                        candidate;
+                    button.textContent =
+                        busyText;
+
+                    button.disabled = true;
                 } else {
-                    if (line) {
-                        lines.push(
-                            line
-                        );
-                    }
+                    button.textContent =
+                        button.dataset.originalText
+                        || button.textContent;
 
-                    line = word;
+                    button.disabled = false;
                 }
             }
-        );
 
-        if (line) {
-            lines.push(line);
-        }
-
-        return lines;
-    }
-
-    function pushCenteredWrapped(
-        lines,
-        text,
-        width
-    ) {
-        wrapText(
-            text,
-            width
-        ).forEach(
-            function (line) {
-                lines.push(
-                    centered(
-                        line,
-                        width
-                    )
-                    + "\n"
+            function qzAvailable() {
+                return (
+                    typeof window.qz
+                        !== "undefined"
+                    && window.qz
+                    && window.qz.websocket
+                    && window.qz.printers
+                    && window.qz.configs
                 );
             }
-        );
-    }
 
-    function collectReceiptData() {
-        const items =
-            Array.from(
-                document.querySelectorAll(
-                    ".js-receipt-item"
-                )
-            ).map(
-                function (item) {
-                    return {
-                        name:
-                            cleanText(
-                                item.dataset.name
-                            ),
-                        quantity:
-                            item.dataset.quantity,
-                        unitPrice:
-                            item.dataset.unitPrice,
-                        lineDiscount:
-                            item.dataset.lineDiscount,
-                        lineTotal:
-                            item.dataset.lineTotal,
-                        notes:
-                            cleanText(
-                                item.dataset.notes
-                            )
-                    };
-                }
-            );
-
-        return {
-            businessName:
-                cleanText(
-                    paper.dataset.businessName
-                ),
-
-            receiptTitle:
-                cleanText(
-                    paper.dataset.receiptTitle
-                ),
-
-            businessAddress:
-                cleanText(
-                    paper.dataset.businessAddress
-                ),
-
-            businessPhone:
-                cleanText(
-                    paper.dataset.businessPhone
-                ),
-
-            businessEmail:
-                cleanText(
-                    paper.dataset.businessEmail
-                ),
-
-            businessTin:
-                cleanText(
-                    paper.dataset.businessTin
-                ),
-
-            businessVrn:
-                cleanText(
-                    paper.dataset.businessVrn
-                ),
-
-            headerNote:
-                cleanText(
-                    paper.dataset.headerNote
-                ),
-
-            footerLine1:
-                cleanText(
-                    paper.dataset.footerLine1
-                ),
-
-            footerLine2:
-                cleanText(
-                    paper.dataset.footerLine2
-                ),
-
-            showCustomerPhone:
-                paper.dataset.showCustomerPhone
-                === "1",
-
-            showCashier:
-                paper.dataset.showCashier
-                === "1",
-
-            saleNumber:
-                cleanText(
-                    paper.dataset.saleNumber
-                ),
-
-            date:
-                cleanText(
-                    paper.dataset.saleDate
-                ),
-
-            customer:
-                cleanText(
-                    paper.dataset.customer
-                ),
-
-            customerPhone:
-                cleanText(
-                    paper.dataset.customerPhone
-                ),
-
-            cashier:
-                cleanText(
-                    paper.dataset.cashier
-                ),
-
-            paymentMethod:
-                cleanText(
-                    paper.dataset.paymentMethod
-                ),
-
-            paymentStatus:
-                cleanText(
-                    paper.dataset.paymentStatus
-                ),
-
-            subtotal:
-                paper.dataset.subtotal,
-
-            discount:
-                paper.dataset.discount,
-
-            total:
-                paper.dataset.total,
-
-            tendered:
-                paper.dataset.tendered,
-
-            paid:
-                paper.dataset.paid,
-
-            change:
-                paper.dataset.change,
-
-            balance:
-                paper.dataset.balance,
-
-            items: items
-        };
-    }
-
-    function buildEscPosReceipt() {
-        const receipt =
-            collectReceiptData();
-
-        const lines = [];
-
-        const separator =
-            repeat(
-                "-",
-                RECEIPT_WIDTH
-            );
-
-        const ESC = "\x1B";
-        const GS = "\x1D";
-
-        const INIT =
-            ESC + "@";
-
-        const ALIGN_LEFT =
-            ESC + "a" + "\x00";
-
-        const ALIGN_CENTER =
-            ESC + "a" + "\x01";
-
-        const BOLD_ON =
-            ESC + "E" + "\x01";
-
-        const BOLD_OFF =
-            ESC + "E" + "\x00";
-
-        const DOUBLE_ON =
-            GS + "!" + "\x11";
-
-        const DOUBLE_OFF =
-            GS + "!" + "\x00";
-
-        const FULL_CUT =
-            GS + "V" + "\x30";
-
-        lines.push(INIT);
-        lines.push(
-            ALIGN_CENTER
-        );
-
-        lines.push(
-            BOLD_ON
-            + DOUBLE_ON
-            + receipt.businessName
-            + "\n"
-        );
-
-        lines.push(
-            DOUBLE_OFF
-            + BOLD_OFF
-        );
-
-        pushCenteredWrapped(
-            lines,
-            receipt.receiptTitle,
-            RECEIPT_WIDTH
-        );
-
-        if (
-            receipt.businessAddress
-        ) {
-            pushCenteredWrapped(
-                lines,
-                receipt.businessAddress,
-                RECEIPT_WIDTH
-            );
-        }
-
-        if (
-            receipt.businessPhone
-        ) {
-            pushCenteredWrapped(
-                lines,
-                "Tel: "
-                + receipt.businessPhone,
-                RECEIPT_WIDTH
-            );
-        }
-
-        if (
-            receipt.businessEmail
-        ) {
-            pushCenteredWrapped(
-                lines,
-                receipt.businessEmail,
-                RECEIPT_WIDTH
-            );
-        }
-
-        if (
-            receipt.businessTin
-            || receipt.businessVrn
-        ) {
-            let taxLine = "";
-
-            if (
-                receipt.businessTin
-            ) {
-                taxLine +=
-                    "TIN: "
-                    + receipt.businessTin;
-            }
-
-            if (
-                receipt.businessTin
-                && receipt.businessVrn
-            ) {
-                taxLine += "   ";
-            }
-
-            if (
-                receipt.businessVrn
-            ) {
-                taxLine +=
-                    "VRN: "
-                    + receipt.businessVrn;
-            }
-
-            pushCenteredWrapped(
-                lines,
-                taxLine,
-                RECEIPT_WIDTH
-            );
-        }
-
-        if (
-            receipt.headerNote
-        ) {
-            pushCenteredWrapped(
-                lines,
-                receipt.headerNote,
-                RECEIPT_WIDTH
-            );
-        }
-
-        lines.push(
-            ALIGN_LEFT
-        );
-
-        lines.push(
-            separator + "\n"
-        );
-
-        lines.push(
-            twoColumns(
-                "Receipt",
-                receipt.saleNumber,
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(
-            twoColumns(
-                "Date",
-                receipt.date,
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        wrapText(
-            "Customer: "
-            + receipt.customer,
-            RECEIPT_WIDTH
-        ).forEach(
-            function (line) {
-                lines.push(
-                    line + "\n"
-                );
-            }
-        );
-
-        if (
-            receipt.showCustomerPhone
-            && receipt.customerPhone
-        ) {
-            lines.push(
-                twoColumns(
-                    "Phone",
-                    receipt.customerPhone,
-                    RECEIPT_WIDTH
-                ) + "\n"
-            );
-        }
-
-        if (
-            receipt.showCashier
-        ) {
-            wrapText(
-                "Cashier: "
-                + receipt.cashier,
-                RECEIPT_WIDTH
-            ).forEach(
-                function (line) {
-                    lines.push(
-                        line + "\n"
+            async function connectQz() {
+                if (!qzAvailable()) {
+                    throw new Error(
+                        "QZ Tray library did not "
+                        + "load from "
+                        + "/static/vendor/qz/"
+                        + "qz-tray.js."
                     );
                 }
-            );
-        }
 
-        lines.push(
-            twoColumns(
-                "Payment",
-                receipt.paymentMethod,
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
+                if (
+                    qz.websocket.isActive()
+                ) {
+                    return;
+                }
 
-        lines.push(
-            separator + "\n"
-        );
+                await qz.websocket.connect({
+                    retries: 2,
+                    delay: 1
+                });
+            }
 
-        receipt.items.forEach(
-            function (
-                item,
-                index
+            function cleanText(value) {
+                return String(
+                    value == null
+                    ? ""
+                    : value
+                )
+                    .replace(
+                        /[\r\n\t]+/g,
+                        " "
+                    )
+                    .replace(
+                        /\s{2,}/g,
+                        " "
+                    )
+                    .trim();
+            }
+
+            function numberValue(value) {
+                const parsed =
+                    Number.parseFloat(
+                        String(
+                            value == null
+                            ? "0"
+                            : value
+                        ).replace(
+                            /,/g,
+                            ""
+                        )
+                    );
+
+                return Number.isFinite(
+                    parsed
+                )
+                    ? parsed
+                    : 0;
+            }
+
+            function money(value) {
+                return Math.round(
+                    numberValue(value)
+                ).toLocaleString(
+                    "en-US",
+                    {
+                        maximumFractionDigits:
+                            0
+                    }
+                );
+            }
+
+            function quantity(value) {
+                return numberValue(
+                    value
+                ).toLocaleString(
+                    "en-US",
+                    {
+                        minimumFractionDigits:
+                            0,
+                        maximumFractionDigits:
+                            3
+                    }
+                );
+            }
+
+            function repeat(
+                char,
+                count
+            ) {
+                return new Array(
+                    Math.max(
+                        0,
+                        count
+                    ) + 1
+                ).join(char);
+            }
+
+            function centered(
+                text,
+                width
+            ) {
+                const cleaned =
+                    cleanText(text);
+
+                if (
+                    cleaned.length >= width
+                ) {
+                    return cleaned.slice(
+                        0,
+                        width
+                    );
+                }
+
+                const left =
+                    Math.floor(
+                        (
+                            width
+                            - cleaned.length
+                        ) / 2
+                    );
+
+                return (
+                    repeat(
+                        " ",
+                        left
+                    )
+                    + cleaned
+                );
+            }
+
+            function twoColumns(
+                left,
+                right,
+                width
+            ) {
+                const leftText =
+                    cleanText(left);
+
+                const rightText =
+                    cleanText(right);
+
+                const maxRight =
+                    Math.max(
+                        1,
+                        width
+                        - MINIMUM_COLUMN_GAP
+                        - 1
+                    );
+
+                const rightClipped =
+                    rightText.slice(
+                        0,
+                        maxRight
+                    );
+
+                const availableLeft =
+                    Math.max(
+                        1,
+                        width
+                        - rightClipped.length
+                        - MINIMUM_COLUMN_GAP
+                    );
+
+                const clippedLeft =
+                    leftText.slice(
+                        0,
+                        availableLeft
+                    );
+
+                const spaces =
+                    Math.max(
+                        MINIMUM_COLUMN_GAP,
+                        width
+                        - clippedLeft.length
+                        - rightClipped.length
+                    );
+
+                return (
+                    clippedLeft
+                    + repeat(
+                        " ",
+                        spaces
+                    )
+                    + rightClipped
+                ).slice(
+                    0,
+                    width
+                );
+            }
+
+            function wrapText(
+                text,
+                width
+            ) {
+                const cleaned =
+                    cleanText(text);
+
+                if (!cleaned) {
+                    return [];
+                }
+
+                const words =
+                    cleaned.split(" ");
+
+                const lines = [];
+                let line = "";
+
+                words.forEach(
+                    function (word) {
+                        if (
+                            word.length
+                            > width
+                        ) {
+                            if (line) {
+                                lines.push(
+                                    line
+                                );
+
+                                line = "";
+                            }
+
+                            let remaining =
+                                word;
+
+                            while (
+                                remaining.length
+                                > width
+                            ) {
+                                lines.push(
+                                    remaining.slice(
+                                        0,
+                                        width
+                                    )
+                                );
+
+                                remaining =
+                                    remaining.slice(
+                                        width
+                                    );
+                            }
+
+                            line = remaining;
+
+                            return;
+                        }
+
+                        const candidate =
+                            line
+                            ? (
+                                line
+                                + " "
+                                + word
+                            )
+                            : word;
+
+                        if (
+                            candidate.length
+                            <= width
+                        ) {
+                            line =
+                                candidate;
+                        } else {
+                            if (line) {
+                                lines.push(
+                                    line
+                                );
+                            }
+
+                            line = word;
+                        }
+                    }
+                );
+
+                if (line) {
+                    lines.push(line);
+                }
+
+                return lines;
+            }
+
+            function pushCenteredWrapped(
+                lines,
+                text,
+                width
             ) {
                 wrapText(
-                    item.name,
-                    RECEIPT_WIDTH
+                    text,
+                    width
                 ).forEach(
                     function (line) {
                         lines.push(
-                            BOLD_ON
-                            + line
-                            + BOLD_OFF
+                            centered(
+                                line,
+                                width
+                            )
+                            + "\n"
+                        );
+                    }
+                );
+            }
+
+            function buildCompanyHeaderLines(
+                businessName
+            ) {
+                const name =
+                    cleanText(
+                        businessName
+                    );
+
+                if (!name) {
+                    return [];
+                }
+
+                /*
+                    For a long company name,
+                    prefer two balanced lines.
+
+                    Example:
+                    CHIDO WOOD
+                    COMPANY LTD
+                */
+                if (
+                    name.length > 18
+                ) {
+                    const words =
+                        name.split(" ");
+
+                    let bestIndex = 1;
+                    let bestDifference =
+                        Number.POSITIVE_INFINITY;
+
+                    for (
+                        let index = 1;
+                        index < words.length;
+                        index += 1
+                    ) {
+                        const first =
+                            words
+                            .slice(
+                                0,
+                                index
+                            )
+                            .join(" ");
+
+                        const second =
+                            words
+                            .slice(index)
+                            .join(" ");
+
+                        const difference =
+                            Math.abs(
+                                first.length
+                                - second.length
+                            );
+
+                        if (
+                            difference
+                            < bestDifference
+                        ) {
+                            bestDifference =
+                                difference;
+
+                            bestIndex =
+                                index;
+                        }
+                    }
+
+                    const first =
+                        words
+                        .slice(
+                            0,
+                            bestIndex
+                        )
+                        .join(" ");
+
+                    const second =
+                        words
+                        .slice(
+                            bestIndex
+                        )
+                        .join(" ");
+
+                    if (
+                        first
+                        && second
+                    ) {
+                        return [
+                            first,
+                            second
+                        ];
+                    }
+                }
+
+                return wrapText(
+                    name,
+                    RECEIPT_WIDTH
+                );
+            }
+
+            function collectReceiptData() {
+                const items =
+                    Array.from(
+                        document.querySelectorAll(
+                            ".js-receipt-item"
+                        )
+                    ).map(
+                        function (item) {
+                            return {
+                                name:
+                                    cleanText(
+                                        item.dataset.name
+                                    ),
+                                quantity:
+                                    item.dataset.quantity,
+                                unitPrice:
+                                    item.dataset.unitPrice,
+                                lineDiscount:
+                                    item.dataset.lineDiscount,
+                                lineTotal:
+                                    item.dataset.lineTotal,
+                                notes:
+                                    cleanText(
+                                        item.dataset.notes
+                                    )
+                            };
+                        }
+                    );
+
+                return {
+                    businessName:
+                        cleanText(
+                            paper.dataset.businessName
+                        ),
+
+                    receiptTitle:
+                        cleanText(
+                            paper.dataset.receiptTitle
+                        ),
+
+                    businessAddress:
+                        cleanText(
+                            paper.dataset.businessAddress
+                        ),
+
+                    businessPhone:
+                        cleanText(
+                            paper.dataset.businessPhone
+                        ),
+
+                    businessEmail:
+                        cleanText(
+                            paper.dataset.businessEmail
+                        ),
+
+                    businessTin:
+                        cleanText(
+                            paper.dataset.businessTin
+                        ),
+
+                    businessVrn:
+                        cleanText(
+                            paper.dataset.businessVrn
+                        ),
+
+                    headerNote:
+                        cleanText(
+                            paper.dataset.headerNote
+                        ),
+
+                    footerLine1:
+                        cleanText(
+                            paper.dataset.footerLine1
+                        ),
+
+                    footerLine2:
+                        cleanText(
+                            paper.dataset.footerLine2
+                        ),
+
+                    showCustomerPhone:
+                        cleanText(
+                            paper.dataset.showCustomerPhone
+                        ) === "1",
+
+                    showCashier:
+                        cleanText(
+                            paper.dataset.showCashier
+                        ) === "1",
+
+                    saleNumber:
+                        cleanText(
+                            paper.dataset.saleNumber
+                        ),
+
+                    date:
+                        cleanText(
+                            paper.dataset.saleDate
+                        ),
+
+                    customer:
+                        cleanText(
+                            paper.dataset.customer
+                        ),
+
+                    customerPhone:
+                        cleanText(
+                            paper.dataset.customerPhone
+                        ),
+
+                    cashier:
+                        cleanText(
+                            paper.dataset.cashier
+                        ),
+
+                    paymentMethod:
+                        cleanText(
+                            paper.dataset.paymentMethod
+                        ),
+
+                    paymentStatus:
+                        cleanText(
+                            paper.dataset.paymentStatus
+                        ),
+
+                    subtotal:
+                        paper.dataset.subtotal,
+
+                    discount:
+                        paper.dataset.discount,
+
+                    total:
+                        paper.dataset.total,
+
+                    tendered:
+                        paper.dataset.tendered,
+
+                    paid:
+                        paper.dataset.paid,
+
+                    change:
+                        paper.dataset.change,
+
+                    balance:
+                        paper.dataset.balance,
+
+                    items:
+                        items
+                };
+            }
+
+            function buildEscPosReceipt() {
+                const receipt =
+                    collectReceiptData();
+
+                const lines = [];
+
+                const separator =
+                    repeat(
+                        "-",
+                        RECEIPT_WIDTH
+                    );
+
+                const ESC = "\x1B";
+                const GS = "\x1D";
+
+                const INIT =
+                    ESC + "@";
+
+                const ALIGN_LEFT =
+                    ESC + "a" + "\x00";
+
+                const ALIGN_CENTER =
+                    ESC + "a" + "\x01";
+
+                const BOLD_ON =
+                    ESC + "E" + "\x01";
+
+                const BOLD_OFF =
+                    ESC + "E" + "\x00";
+
+                /*
+                    We intentionally DO NOT
+                    use DOUBLE_ON for long
+                    business names.
+
+                    That was the reason
+                    CHIDO WOOD COMPANY LTD
+                    overflowed and looked
+                    off-center.
+                */
+
+                const FULL_CUT =
+                    GS + "V" + "\x30";
+
+                lines.push(INIT);
+
+                /*
+                    Manual text centering is
+                    used instead of relying
+                    only on printer ALIGN_CENTER.
+                    This gives a more consistent
+                    result on many XP/ZK style
+                    80mm printers.
+                */
+                lines.push(
+                    ALIGN_LEFT
+                );
+
+                const companyLines =
+                    buildCompanyHeaderLines(
+                        receipt.businessName
+                    );
+
+                lines.push(BOLD_ON);
+
+                companyLines.forEach(
+                    function (line) {
+                        lines.push(
+                            centered(
+                                line,
+                                RECEIPT_WIDTH
+                            )
                             + "\n"
                         );
                     }
                 );
 
+                lines.push(BOLD_OFF);
+
+                if (
+                    receipt.receiptTitle
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.receiptTitle,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.businessAddress
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.businessAddress,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.businessPhone
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        "Tel: "
+                        + receipt.businessPhone,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.businessEmail
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.businessEmail,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.businessTin
+                    || receipt.businessVrn
+                ) {
+                    let taxLine = "";
+
+                    if (
+                        receipt.businessTin
+                    ) {
+                        taxLine +=
+                            "TIN: "
+                            + receipt.businessTin;
+                    }
+
+                    if (
+                        receipt.businessTin
+                        && receipt.businessVrn
+                    ) {
+                        taxLine += "   ";
+                    }
+
+                    if (
+                        receipt.businessVrn
+                    ) {
+                        taxLine +=
+                            "VRN: "
+                            + receipt.businessVrn;
+                    }
+
+                    pushCenteredWrapped(
+                        lines,
+                        taxLine,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.headerNote
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.headerNote,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                lines.push(
+                    separator + "\n"
+                );
+
                 lines.push(
                     twoColumns(
-                        "  "
-                        + quantity(
-                            item.quantity
-                        )
-                        + " x "
-                        + money(
-                            item.unitPrice
-                        ),
-                        money(
-                            item.lineTotal
-                        ),
+                        "Receipt",
+                        receipt.saleNumber,
                         RECEIPT_WIDTH
                     ) + "\n"
                 );
 
+                lines.push(
+                    twoColumns(
+                        "Date",
+                        receipt.date,
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
+
+                wrapText(
+                    "Customer: "
+                    + receipt.customer,
+                    RECEIPT_WIDTH
+                ).forEach(
+                    function (line) {
+                        lines.push(
+                            line + "\n"
+                        );
+                    }
+                );
+
                 if (
-                    numberValue(
-                        item.lineDiscount
-                    ) > 0
+                    receipt.showCustomerPhone
+                    && receipt.customerPhone
                 ) {
                     lines.push(
                         twoColumns(
-                            "  Line discount",
-                            "-"
-                            + money(
-                                item.lineDiscount
-                            ),
+                            "Phone",
+                            receipt.customerPhone,
                             RECEIPT_WIDTH
                         ) + "\n"
                     );
                 }
 
                 if (
-                    item.notes
+                    receipt.showCashier
                 ) {
                     wrapText(
-                        "  Note: "
-                        + item.notes,
+                        "Cashier: "
+                        + receipt.cashier,
                         RECEIPT_WIDTH
                     ).forEach(
                         function (line) {
@@ -1573,472 +1836,557 @@
                     );
                 }
 
-                if (
-                    index
-                    < receipt.items.length
-                    - 1
-                ) {
-                    lines.push("\n");
-                }
-            }
-        );
-
-        lines.push(
-            separator + "\n"
-        );
-
-        lines.push(
-            twoColumns(
-                "Subtotal",
-                "TZS "
-                + money(
-                    receipt.subtotal
-                ),
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        if (
-            numberValue(
-                receipt.discount
-            ) > 0
-        ) {
-            lines.push(
-                twoColumns(
-                    "Sale discount",
-                    "-TZS "
-                    + money(
-                        receipt.discount
-                    ),
-                    RECEIPT_WIDTH
-                ) + "\n"
-            );
-        }
-
-        lines.push(BOLD_ON);
-
-        lines.push(
-            twoColumns(
-                "TOTAL",
-                "TZS "
-                + money(
-                    receipt.total
-                ),
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(BOLD_OFF);
-
-        lines.push(
-            twoColumns(
-                "Tendered",
-                "TZS "
-                + money(
-                    receipt.tendered
-                ),
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(
-            twoColumns(
-                "Paid",
-                "TZS "
-                + money(
-                    receipt.paid
-                ),
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(
-            twoColumns(
-                "Change",
-                "TZS "
-                + money(
-                    receipt.change
-                ),
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        if (
-            numberValue(
-                receipt.balance
-            ) > 0
-        ) {
-            lines.push(BOLD_ON);
-
-            lines.push(
-                twoColumns(
-                    "BALANCE",
-                    "TZS "
-                    + money(
-                        receipt.balance
-                    ),
-                    RECEIPT_WIDTH
-                ) + "\n"
-            );
-
-            lines.push(BOLD_OFF);
-        }
-
-        lines.push(
-            twoColumns(
-                "Status",
-                receipt.paymentStatus,
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(
-            separator + "\n"
-        );
-
-        lines.push(
-            ALIGN_CENTER
-        );
-
-        if (
-            receipt.footerLine1
-        ) {
-            pushCenteredWrapped(
-                lines,
-                receipt.footerLine1,
-                RECEIPT_WIDTH
-            );
-        }
-
-        if (
-            receipt.footerLine2
-        ) {
-            lines.push(
-                BOLD_ON
-            );
-
-            pushCenteredWrapped(
-                lines,
-                receipt.footerLine2,
-                RECEIPT_WIDTH
-            );
-
-            lines.push(
-                BOLD_OFF
-            );
-        }
-
-        lines.push(
-            centered(
-                receipt.saleNumber,
-                RECEIPT_WIDTH
-            ) + "\n"
-        );
-
-        lines.push(
-            repeat(
-                "\n",
-                FEED_LINES
-            )
-        );
-
-        lines.push(
-            FULL_CUT
-        );
-
-        return lines;
-    }
-
-    async function listPrinters() {
-        await connectQz();
-
-        const printers =
-            await qz.printers.find();
-
-        const saved =
-            localStorage.getItem(
-                STORAGE_KEY
-            ) || "";
-
-        printerSelect.innerHTML = "";
-
-        if (
-            !Array.isArray(
-                printers
-            )
-            || printers.length === 0
-        ) {
-            const option =
-                document.createElement(
-                    "option"
+                lines.push(
+                    twoColumns(
+                        "Payment",
+                        receipt.paymentMethod,
+                        RECEIPT_WIDTH
+                    ) + "\n"
                 );
 
-            option.value = "";
-            option.textContent =
-                "No printers found";
-
-            printerSelect.appendChild(
-                option
-            );
-
-            return [];
-        }
-
-        printers.forEach(
-            function (printer) {
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-                option.value =
-                    printer;
-
-                option.textContent =
-                    printer;
-
-                if (
-                    printer === saved
-                ) {
-                    option.selected =
-                        true;
-                }
-
-                printerSelect.appendChild(
-                    option
+                lines.push(
+                    separator + "\n"
                 );
-            }
-        );
 
-        return printers;
-    }
+                receipt.items.forEach(
+                    function (
+                        item,
+                        index
+                    ) {
+                        wrapText(
+                            item.name,
+                            RECEIPT_WIDTH
+                        ).forEach(
+                            function (line) {
+                                lines.push(
+                                    BOLD_ON
+                                    + line
+                                    + BOLD_OFF
+                                    + "\n"
+                                );
+                            }
+                        );
 
-    async function resolvePrinter() {
-        await connectQz();
+                        lines.push(
+                            twoColumns(
+                                "  "
+                                + quantity(
+                                    item.quantity
+                                )
+                                + " x "
+                                + money(
+                                    item.unitPrice
+                                ),
+                                money(
+                                    item.lineTotal
+                                ),
+                                RECEIPT_WIDTH
+                            ) + "\n"
+                        );
 
-        const saved =
-            localStorage.getItem(
-                STORAGE_KEY
-            );
+                        if (
+                            numberValue(
+                                item.lineDiscount
+                            ) > 0
+                        ) {
+                            lines.push(
+                                twoColumns(
+                                    "  Line discount",
+                                    "-"
+                                    + money(
+                                        item.lineDiscount
+                                    ),
+                                    RECEIPT_WIDTH
+                                ) + "\n"
+                            );
+                        }
 
-        if (saved) {
-            try {
-                const found =
-                    await qz.printers.find(
-                        saved
-                    );
+                        if (
+                            item.notes
+                        ) {
+                            wrapText(
+                                "  Note: "
+                                + item.notes,
+                                RECEIPT_WIDTH
+                            ).forEach(
+                                function (line) {
+                                    lines.push(
+                                        line + "\n"
+                                    );
+                                }
+                            );
+                        }
 
-                if (found) {
-                    return found;
-                }
-            } catch (error) {
-                localStorage.removeItem(
-                    STORAGE_KEY
-                );
-            }
-        }
-
-        const defaultPrinter =
-            await qz.printers.getDefault();
-
-        if (!defaultPrinter) {
-            throw new Error(
-                "No default printer found. "
-                + "Click Select printer first."
-            );
-        }
-
-        return defaultPrinter;
-    }
-
-    async function printThermal() {
-        setBusy(
-            thermalPrintButton,
-            true,
-            "Printing..."
-        );
-
-        setStatus(
-            "Connecting to QZ Tray...",
-            "warning"
-        );
-
-        try {
-            const printer =
-                await resolvePrinter();
-
-            const config =
-                qz.configs.create(
-                    printer,
-                    {
-                        encoding: "CP437",
-                        jobName:
-                            "CHIDO Receipt "
-                            + paper.dataset.saleNumber
+                        if (
+                            index
+                            < receipt.items.length
+                            - 1
+                        ) {
+                            lines.push("\n");
+                        }
                     }
                 );
 
-            setStatus(
-                "Printing to "
-                + printer
-                + "...",
-                "warning"
-            );
+                lines.push(
+                    separator + "\n"
+                );
 
-            await qz.print(
-                config,
-                buildEscPosReceipt()
-            );
+                lines.push(
+                    twoColumns(
+                        "Subtotal",
+                        "TZS "
+                        + money(
+                            receipt.subtotal
+                        ),
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
 
-            setStatus(
-                "Receipt sent to "
-                + printer
-                + ".",
-                "success"
-            );
-        } catch (error) {
-            console.error(error);
+                if (
+                    numberValue(
+                        receipt.discount
+                    ) > 0
+                ) {
+                    lines.push(
+                        twoColumns(
+                            "Sale discount",
+                            "-TZS "
+                            + money(
+                                receipt.discount
+                            ),
+                            RECEIPT_WIDTH
+                        ) + "\n"
+                    );
+                }
 
-            const message =
-                error
-                && error.message
-                ? error.message
-                : String(error);
+                lines.push(BOLD_ON);
 
-            setStatus(
-                "Thermal print failed: "
-                + message,
-                "error"
-            );
-        } finally {
-            setBusy(
-                thermalPrintButton,
-                false
-            );
-        }
-    }
+                lines.push(
+                    twoColumns(
+                        "TOTAL",
+                        "TZS "
+                        + money(
+                            receipt.total
+                        ),
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
 
-    async function openPrinterPanel() {
-        printerPanel.classList.add(
-            "is-open"
-        );
+                lines.push(BOLD_OFF);
 
-        setBusy(
-            selectPrinterButton,
-            true,
-            "Loading..."
-        );
+                lines.push(
+                    twoColumns(
+                        "Tendered",
+                        "TZS "
+                        + money(
+                            receipt.tendered
+                        ),
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
 
-        setStatus(
-            "Finding printers...",
-            "warning"
-        );
+                lines.push(
+                    twoColumns(
+                        "Paid",
+                        "TZS "
+                        + money(
+                            receipt.paid
+                        ),
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
 
-        try {
-            const printers =
-                await listPrinters();
+                lines.push(
+                    twoColumns(
+                        "Change",
+                        "TZS "
+                        + money(
+                            receipt.change
+                        ),
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
 
-            if (
-                printers.length
-            ) {
+                if (
+                    numberValue(
+                        receipt.balance
+                    ) > 0
+                ) {
+                    lines.push(BOLD_ON);
+
+                    lines.push(
+                        twoColumns(
+                            "BALANCE",
+                            "TZS "
+                            + money(
+                                receipt.balance
+                            ),
+                            RECEIPT_WIDTH
+                        ) + "\n"
+                    );
+
+                    lines.push(BOLD_OFF);
+                }
+
+                lines.push(
+                    twoColumns(
+                        "Status",
+                        receipt.paymentStatus,
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
+
+                lines.push(
+                    separator + "\n"
+                );
+
+                lines.push(
+                    ALIGN_LEFT
+                );
+
+                if (
+                    receipt.footerLine1
+                ) {
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.footerLine1,
+                        RECEIPT_WIDTH
+                    );
+                }
+
+                if (
+                    receipt.footerLine2
+                ) {
+                    lines.push(BOLD_ON);
+
+                    pushCenteredWrapped(
+                        lines,
+                        receipt.footerLine2,
+                        RECEIPT_WIDTH
+                    );
+
+                    lines.push(BOLD_OFF);
+                }
+
+                lines.push(
+                    centered(
+                        receipt.saleNumber,
+                        RECEIPT_WIDTH
+                    ) + "\n"
+                );
+
+                lines.push(
+                    repeat(
+                        "\n",
+                        FEED_LINES
+                    )
+                );
+
+                lines.push(
+                    FULL_CUT
+                );
+
+                return lines;
+            }
+
+            async function listPrinters() {
+                await connectQz();
+
+                const printers =
+                    await qz.printers.find();
+
+                const saved =
+                    localStorage.getItem(
+                        STORAGE_KEY
+                    ) || "";
+
+                printerSelect.innerHTML =
+                    "";
+
+                if (
+                    !Array.isArray(
+                        printers
+                    )
+                    || printers.length === 0
+                ) {
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value = "";
+
+                    option.textContent =
+                        "No printers found";
+
+                    printerSelect.appendChild(
+                        option
+                    );
+
+                    return [];
+                }
+
+                printers.forEach(
+                    function (printer) {
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+                        option.value =
+                            printer;
+
+                        option.textContent =
+                            printer;
+
+                        if (
+                            printer === saved
+                        ) {
+                            option.selected =
+                                true;
+                        }
+
+                        printerSelect.appendChild(
+                            option
+                        );
+                    }
+                );
+
+                return printers;
+            }
+
+            async function resolvePrinter() {
+                await connectQz();
+
+                const saved =
+                    localStorage.getItem(
+                        STORAGE_KEY
+                    );
+
+                if (saved) {
+                    try {
+                        const found =
+                            await qz.printers.find(
+                                saved
+                            );
+
+                        if (found) {
+                            return found;
+                        }
+                    } catch (error) {
+                        localStorage.removeItem(
+                            STORAGE_KEY
+                        );
+                    }
+                }
+
+                const defaultPrinter =
+                    await qz.printers.getDefault();
+
+                if (!defaultPrinter) {
+                    throw new Error(
+                        "No default printer "
+                        + "found. Click Select "
+                        + "printer first."
+                    );
+                }
+
+                return defaultPrinter;
+            }
+
+            async function printThermal() {
+                setBusy(
+                    thermalPrintButton,
+                    true,
+                    "Printing..."
+                );
+
                 setStatus(
-                    "Choose your 80mm printer "
-                    + "and click Use printer.",
+                    "Connecting to QZ Tray...",
+                    "warning"
+                );
+
+                try {
+                    const printer =
+                        await resolvePrinter();
+
+                    const config =
+                        qz.configs.create(
+                            printer,
+                            {
+                                encoding:
+                                    "CP437",
+                                jobName:
+                                    "CHIDO Receipt "
+                                    + paper.dataset.saleNumber
+                            }
+                        );
+
+                    setStatus(
+                        "Printing to "
+                        + printer
+                        + "...",
+                        "warning"
+                    );
+
+                    await qz.print(
+                        config,
+                        buildEscPosReceipt()
+                    );
+
+                    setStatus(
+                        "Receipt sent to "
+                        + printer
+                        + ".",
+                        "success"
+                    );
+                } catch (error) {
+                    console.error(error);
+
+                    const message =
+                        error
+                        && error.message
+                        ? error.message
+                        : String(error);
+
+                    setStatus(
+                        "Thermal print failed: "
+                        + message,
+                        "error"
+                    );
+                } finally {
+                    setBusy(
+                        thermalPrintButton,
+                        false
+                    );
+                }
+            }
+
+            async function openPrinterPanel() {
+                printerPanel.classList.add(
+                    "is-open"
+                );
+
+                setBusy(
+                    selectPrinterButton,
+                    true,
+                    "Loading..."
+                );
+
+                setStatus(
+                    "Finding printers...",
+                    "warning"
+                );
+
+                try {
+                    const printers =
+                        await listPrinters();
+
+                    if (
+                        printers.length
+                    ) {
+                        setStatus(
+                            "Choose your 80mm "
+                            + "printer and click "
+                            + "Use printer.",
+                            "success"
+                        );
+                    } else {
+                        setStatus(
+                            "QZ Tray connected, "
+                            + "but no printer "
+                            + "was found.",
+                            "error"
+                        );
+                    }
+                } catch (error) {
+                    console.error(error);
+
+                    setStatus(
+                        "Could not connect "
+                        + "to QZ Tray.",
+                        "error"
+                    );
+                } finally {
+                    setBusy(
+                        selectPrinterButton,
+                        false
+                    );
+                }
+            }
+
+            function saveSelectedPrinter() {
+                const printer =
+                    printerSelect.value;
+
+                if (!printer) {
+                    setStatus(
+                        "Select a printer first.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    printer
+                );
+
+                printerPanel.classList.remove(
+                    "is-open"
+                );
+
+                setStatus(
+                    printer
+                    + " saved as "
+                    + "thermal printer.",
+                    "success"
+                );
+            }
+
+            thermalPrintButton.addEventListener(
+                "click",
+                printThermal
+            );
+
+            selectPrinterButton.addEventListener(
+                "click",
+                openPrinterPanel
+            );
+
+            savePrinterButton.addEventListener(
+                "click",
+                saveSelectedPrinter
+            );
+
+            browserPrintButton.addEventListener(
+                "click",
+                function () {
+                    window.print();
+                }
+            );
+
+            const savedPrinter =
+                localStorage.getItem(
+                    STORAGE_KEY
+                );
+
+            if (savedPrinter) {
+                setStatus(
+                    "Thermal printer: "
+                    + savedPrinter,
                     "success"
                 );
             } else {
                 setStatus(
-                    "QZ Tray connected, "
-                    + "but no printer was found.",
-                    "error"
+                    "Select the 80mm thermal "
+                    + "printer before "
+                    + "first print.",
+                    "warning"
                 );
             }
-        } catch (error) {
-            console.error(error);
-
-            setStatus(
-                "Could not connect to QZ Tray.",
-                "error"
-            );
-        } finally {
-            setBusy(
-                selectPrinterButton,
-                false
-            );
-        }
-    }
-
-    function saveSelectedPrinter() {
-        const printer =
-            printerSelect.value;
-
-        if (!printer) {
-            setStatus(
-                "Select a printer first.",
-                "error"
-            );
-            return;
-        }
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            printer
-        );
-
-        printerPanel.classList.remove(
-            "is-open"
-        );
-
-        setStatus(
-            printer
-            + " saved as thermal printer.",
-            "success"
-        );
-    }
-
-    thermalPrintButton.addEventListener(
-        "click",
-        printThermal
-    );
-
-    selectPrinterButton.addEventListener(
-        "click",
-        openPrinterPanel
-    );
-
-    savePrinterButton.addEventListener(
-        "click",
-        saveSelectedPrinter
-    );
-
-    browserPrintButton.addEventListener(
-        "click",
-        function () {
-            window.print();
-        }
-    );
-
-    const savedPrinter =
-        localStorage.getItem(
-            STORAGE_KEY
-        );
-
-    if (
-        savedPrinter
-    ) {
-        setStatus(
-            "Thermal printer: "
-            + savedPrinter,
-            "success"
-        );
-    } else {
-        setStatus(
-            "Select the 80mm thermal printer "
-            + "before first print.",
-            "warning"
-        );
-    }
-})();
-</script>
+        })();
+    </script>
 </body>
 </html>
