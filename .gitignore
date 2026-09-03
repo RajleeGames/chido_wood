@@ -196,3 +196,10 @@ pnpm-debug.log*
 
 # Keep your project static/ directory committed.
 # Only collected staticfiles/ is ignored.
+
+private-key.pem
+digital-certificate.txt
+public-key.txt
+*.pfx
+*.p12
+*.key

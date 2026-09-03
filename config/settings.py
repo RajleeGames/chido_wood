@@ -34,7 +34,7 @@ SECRET_KEY = (
 )
 
 # Production mode.
-DEBUG = False
+DEBUG = True
 
 # Domains permitted to access the Django application.
 ALLOWED_HOSTS = [
@@ -69,7 +69,7 @@ SECURE_PROXY_SSL_HEADER = (
 )
 
 # Redirect normal HTTP traffic to HTTPS.
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 
 # Cookies are sent over HTTPS only.
 SESSION_COOKIE_SECURE = True
@@ -438,3 +438,77 @@ LOGGING = {
     },
 }
 
+
+# =========================================================
+# QZ TRAY - THERMAL RECEIPT PRINTING
+# =========================================================
+
+QZ_KEYS_DIR = Path(
+    os.getenv(
+        "QZ_KEYS_DIR",
+        str(BASE_DIR / "qz_keys"),
+    )
+).expanduser().resolve()
+
+
+QZ_CERT_PATH = Path(
+    os.getenv(
+        "QZ_CERT_PATH",
+        str(
+            QZ_KEYS_DIR
+            / "digital-certificate.txt"
+        ),
+    )
+).expanduser().resolve()
+
+
+QZ_PRIVATE_KEY_PATH = Path(
+    os.getenv(
+        "QZ_PRIVATE_KEY_PATH",
+        str(
+            QZ_KEYS_DIR
+            / "private-key.pem"
+        ),
+    )
+).expanduser().resolve()
+
+
+QZ_SIGNATURE_ALGORITHM = "SHA512"
+
+QZ_MAX_SIGNING_BYTES = 1024 * 1024
+
+
+# Exact Windows printer name.
+# Leave empty "" if you want JS auto-detection.
+QZ_PRINTER_NAME = (
+    os.getenv(
+        "QZ_PRINTER_NAME",
+        "XP-80C (Copy 1)",
+    ).strip()
+)
+
+
+if DEBUG:
+    print(
+        "[QZ] KEYS DIR:",
+        QZ_KEYS_DIR,
+    )
+
+    print(
+        "[QZ] CERT:",
+        QZ_CERT_PATH,
+        "| exists:",
+        QZ_CERT_PATH.exists(),
+    )
+
+    print(
+        "[QZ] PRIVATE KEY:",
+        QZ_PRIVATE_KEY_PATH,
+        "| exists:",
+        QZ_PRIVATE_KEY_PATH.exists(),
+    )
+
+    print(
+        "[QZ] PRINTER:",
+        QZ_PRINTER_NAME or "AUTO DETECT",
+    )

@@ -23,6 +23,12 @@ urlpatterns = [
         name="logout",
     ),
 
+    # QZ Tray certificate + signed-message endpoints.
+    path(
+        "qz/",
+        include("core.qz_urls"),
+    ),
+
     path(
         "products/",
         include("products.urls"),
@@ -34,52 +40,56 @@ urlpatterns = [
     ),
 
     path(
-    "suppliers/",
-    include("suppliers.urls"),
-),
+        "suppliers/",
+        include("suppliers.urls"),
+    ),
 
-path(
-    "purchases/",
-    include("purchases.urls"),
-),
+    path(
+        "purchases/",
+        include("purchases.urls"),
+    ),
 
-path(
-    "inventory/",
-    include("inventory.urls"),
-),
-path(
-    "customers/",
-    include("customers.urls"),
-),
+    path(
+        "inventory/",
+        include("inventory.urls"),
+    ),
 
-path(
-    "sales/",
-    include("sales.urls"),
-),
+    path(
+        "customers/",
+        include("customers.urls"),
+    ),
 
+    path(
+        "sales/",
+        include("sales.urls"),
+    ),
 
-path(
-    "expenses/",
-    include("expenses.urls"),
-),
+    path(
+        "expenses/",
+        include("expenses.urls"),
+    ),
 
-path(
-    "reports/",
-    include("reports.urls"),
-),
+    path(
+        "reports/",
+        include("reports.urls"),
+    ),
 
-path(
-    "accounts/", include("accounts.urls"),
-),
+    path(
+        "accounts/",
+        include("accounts.urls"),
+    ),
 
-path("sms/", include("sms.urls")),
+    path(
+        "sms/",
+        include("sms.urls"),
+    ),
 
-path(
-    "transport/",
-    include("transport.urls"),
-),
-
+    path(
+        "transport/",
+        include("transport.urls"),
+    ),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(
