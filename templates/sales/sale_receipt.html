@@ -770,19 +770,23 @@
             <hr class="receipt-rule">
 
             <footer class="receipt-footer">
-                {% if receipt_cfg.footer_line_1 %}
-                    <p>
-                        <strong>
+                <p>
+                    <strong>
+                        {% if receipt_cfg.footer_line_1 %}
                             {{ receipt_cfg.footer_line_1 }}
-                        </strong>
-                    </p>
-                {% endif %}
+                        {% else %}
+                            Thank you for your business.
+                        {% endif %}
+                    </strong>
+                </p>
 
-                {% if receipt_cfg.footer_line_2 %}
-                    <p>
+                <p>
+                    {% if receipt_cfg.footer_line_2 %}
                         {{ receipt_cfg.footer_line_2 }}
-                    </p>
-                {% endif %}
+                    {% else %}
+                        Karibu tena.
+                    {% endif %}
+                </p>
 
                 <p class="receipt-small">
                     {{ sale.sale_number }}
@@ -1529,13 +1533,19 @@
                         ),
 
                     footerLine1:
-                        cleanText(
-                            paper.dataset.footerLine1
+                        (
+                            cleanText(
+                                paper.dataset.footerLine1
+                            )
+                            || "Thank you for your business."
                         ),
 
                     footerLine2:
-                        cleanText(
-                            paper.dataset.footerLine2
+                        (
+                            cleanText(
+                                paper.dataset.footerLine2
+                            )
+                            || "Karibu tena."
                         ),
 
                     showCustomerPhone:
