@@ -1,0 +1,639 @@
+.docs-page {
+    --docs-primary: var(--primary, #81532b);
+    --docs-primary-hover: var(--primary-hover, #68401f);
+    --docs-primary-soft: var(--primary-soft, #f4ece5);
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 6px 0 30px;
+}
+
+.docs-page-head,
+.docs-preview-toolbar,
+.docs-form-actions,
+.docs-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.docs-page-head {
+    margin-bottom: 18px;
+}
+
+.docs-page-head h1 {
+    margin: 0;
+    color: #111827;
+    font-size: clamp(
+        1.45rem,
+        2vw,
+        2rem
+    );
+    font-weight: 700;
+}
+
+.docs-page-head p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.docs-eyebrow {
+    margin: 0 0 4px !important;
+    color: var(--docs-primary) !important;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.docs-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #111827;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        border-color .18s ease,
+        transform .18s ease,
+        background .18s ease;
+}
+
+.docs-btn:hover {
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.docs-btn-primary {
+    border-color: var(--docs-primary);
+    background: var(--docs-primary);
+    color: #ffffff;
+}
+
+.docs-btn-primary:hover {
+    border-color: var(--docs-primary-hover);
+    background: var(--docs-primary-hover);
+}
+
+.docs-btn-add {
+    min-width: 112px;
+    border-color: #fecaca;
+    background: var(--docs-primary-soft);
+    color: var(--docs-primary-hover);
+}
+
+.docs-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow:
+        0 8px 24px
+        rgba(17, 24, 39, .05);
+}
+
+.docs-form-section {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.docs-section-heading {
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.docs-section-heading h2 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.02rem;
+    font-weight: 650;
+}
+
+.docs-section-heading p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: .82rem;
+    font-weight: 400;
+}
+
+.docs-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.docs-grid-3 {
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+}
+
+.docs-span-2 {
+    grid-column: span 2;
+}
+
+.docs-field label {
+    display: block;
+    margin: 0 0 6px;
+    color: #374151;
+    font-size: .80rem;
+    font-weight: 600;
+}
+
+.docs-field small {
+    display: block;
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: .72rem;
+    font-weight: 400;
+}
+
+.docs-field input,
+.docs-field select,
+.docs-field textarea,
+.docs-item-row input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    outline: none;
+    background: #ffffff;
+    color: #111827;
+    font: inherit;
+    font-weight: 400;
+}
+
+.docs-field textarea {
+    min-height: 86px;
+    resize: vertical;
+}
+
+.docs-field input:focus,
+.docs-field select:focus,
+.docs-field textarea:focus,
+.docs-item-row input:focus {
+    border-color: var(--docs-primary);
+    box-shadow:
+        0 0 0 3px
+        rgba(129, 83, 43, .10);
+}
+
+.docs-auto-number {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px dashed #d1d5db;
+    border-radius: 9px;
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+}
+
+.docs-alert {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.docs-error {
+    margin-top: 4px;
+    color: #b91c1c;
+    font-size: .74rem;
+    font-weight: 400;
+}
+
+.docs-items-wrap {
+    overflow-x: auto;
+}
+
+.docs-item-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(300px, 2fr)
+        92px
+        105px
+        145px
+        135px
+        42px;
+    gap: 8px;
+    align-items: center;
+    min-width: 900px;
+}
+
+.docs-item-head {
+    padding: 0 0 7px;
+    color: #6b7280;
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+}
+
+.docs-item-row {
+    position: relative;
+    padding: 8px 0;
+    border-top: 1px solid #eef0f3;
+}
+
+.docs-hidden-delete {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.docs-line-total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    background: #f9fafb;
+    color: #111827;
+    font-weight: 600;
+}
+
+.docs-row-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.docs-remove-row {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #b91c1c;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.docs-remove-row:hover {
+    background: #fef2f2;
+}
+
+.docs-live-summary {
+    width: min(
+        390px,
+        100%
+    );
+    margin: 18px 0 0 auto;
+    border-top: 1px solid #e5e7eb;
+}
+
+.docs-live-summary > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 8px 2px;
+    color: #4b5563;
+    font-size: .86rem;
+    font-weight: 400;
+}
+
+.docs-live-summary strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+.docs-live-summary .docs-live-grand {
+    border-top: 1px solid #d1d5db;
+    color: #111827;
+    font-size: .94rem;
+    font-weight: 600;
+}
+
+.docs-form-actions {
+    justify-content: flex-end;
+}
+
+.docs-preview-toolbar {
+    margin-bottom: 14px;
+}
+
+.docs-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.a4-preview-shell {
+    overflow-x: auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: #e5e7eb;
+}
+
+.docs-delete-form {
+    margin-top: 14px;
+    text-align: right;
+}
+
+.docs-danger-link {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #b91c1c;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.docs-filter {
+    display: grid;
+    grid-template-columns:
+        minmax(220px, 1fr)
+        190px
+        auto;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.docs-filter input,
+.docs-filter select {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    outline: none;
+    background: #ffffff;
+    color: #111827;
+    font: inherit;
+}
+
+.docs-table-wrap {
+    overflow-x: auto;
+}
+
+.docs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.docs-table th,
+.docs-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #eef0f3;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.docs-table th {
+    color: #6b7280;
+    font-size: .76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+}
+
+.docs-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.docs-right {
+    text-align: right !important;
+}
+
+.docs-actions a {
+    margin-left: 12px;
+    color: var(--docs-primary-hover);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.docs-status {
+    display: inline-flex;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+.docs-status-draft {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.docs-status-issued {
+    background: var(--docs-primary-soft);
+    color: var(--docs-primary-hover);
+}
+
+.docs-empty {
+    padding: 30px !important;
+    text-align: center !important;
+    color: #6b7280;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (
+    max-width: 900px
+) {
+    .docs-grid-3 {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .docs-span-2 {
+        grid-column: span 2;
+    }
+
+    .docs-page-head,
+    .docs-preview-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .docs-filter {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (
+    max-width: 600px
+) {
+    .docs-grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .docs-span-2 {
+        grid-column: span 1;
+    }
+
+    .docs-section-heading {
+        flex-direction: column;
+    }
+
+    .docs-btn-add {
+        width: 100%;
+    }
+
+    .docs-preview-actions {
+        width: 100%;
+    }
+
+    .docs-preview-actions .docs-btn {
+        flex: 1 1 auto;
+    }
+
+    .a4-preview-shell {
+        padding: 10px;
+    }
+}
+
+@media print {
+    .sidebar,
+    .topbar,
+    .page-loader,
+    .docs-preview-toolbar,
+    .docs-delete-form,
+    .app-header {
+        display: none !important;
+    }
+
+    .app-shell,
+    .main-content,
+    .content-area,
+    main,
+    .docs-page,
+    .a4-preview-shell {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: 0 !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+}
+
+
+/* ------------------------------------------------------------
+   CHIDO document module colour alignment
+   ------------------------------------------------------------ */
+
+.docs-btn-primary {
+    color: #ffffff;
+    background: var(--docs-primary);
+    border-color: var(--docs-primary);
+}
+
+.docs-btn-primary:hover {
+    background: var(--docs-primary-hover);
+    border-color: var(--docs-primary-hover);
+}
+
+.docs-btn-add {
+    color: var(--docs-primary-hover);
+    background: var(--docs-primary-soft);
+    border-color: rgba(129, 83, 43, .24);
+}
+
+.docs-eyebrow,
+.docs-actions a {
+    color: var(--docs-primary) !important;
+}
+
+.docs-field input:focus,
+.docs-field select:focus,
+.docs-field textarea:focus,
+.docs-item-row input:focus,
+.docs-filter input:focus,
+.docs-filter select:focus {
+    border-color: var(--docs-primary);
+    box-shadow:
+        0 0 0 3px
+        rgba(129, 83, 43, .10);
+}
+
+/* Red remains only for destructive actions/errors. */
+.docs-remove-row,
+.docs-danger-link,
+.docs-error {
+    color: #b91c1c;
+}
+
+
+/* ============================================================
+   V4 THEME GUARANTEE
+   General Documents UI = normal CHIDO Wood brown theme.
+   Invoice letterhead red is intentionally NOT used here.
+   ============================================================ */
+
+.docs-page {
+    --docs-primary: var(--primary, #81532b);
+    --docs-primary-hover: var(--primary-hover, #68401f);
+    --docs-primary-soft: var(--primary-soft, #f4ece5);
+}
+
+.docs-btn-primary {
+    background: var(--docs-primary) !important;
+    border-color: var(--docs-primary) !important;
+    color: #ffffff !important;
+}
+
+.docs-btn-primary:hover {
+    background: var(--docs-primary-hover) !important;
+    border-color: var(--docs-primary-hover) !important;
+}
+
+.docs-btn-add {
+    background: var(--docs-primary-soft) !important;
+    border-color: rgba(129, 83, 43, .24) !important;
+    color: var(--docs-primary-hover) !important;
+}
+
+.docs-eyebrow,
+.docs-actions a {
+    color: var(--docs-primary) !important;
+}
+
+.docs-field input:focus,
+.docs-field select:focus,
+.docs-field textarea:focus,
+.docs-item-row input:focus,
+.docs-filter input:focus,
+.docs-filter select:focus {
+    border-color: var(--docs-primary) !important;
+    box-shadow:
+        0 0 0 3px
+        rgba(129, 83, 43, .10) !important;
+}
+
+/* Red remains semantic for delete/error only in the ERP UI. */
+.docs-remove-row,
+.docs-danger-link,
+.docs-error {
+    color: #b91c1c !important;
+}

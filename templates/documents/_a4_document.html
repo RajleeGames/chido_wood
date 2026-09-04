@@ -1,0 +1,357 @@
+{% load humanize static %}
+
+<div class="a4-sheet">
+
+    <table class="doc-header-table">
+        <tr class="doc-header-main-row">
+            <td class="doc-logo-cell">
+                {% if business.logo %}
+                    <div class="doc-logo-viewport">
+                        <img
+                            class="doc-logo"
+                            src="{{ business.logo.url }}"
+                            alt="{{ business.company_name }}"
+                        >
+                    </div>
+                {% else %}
+                    <div class="doc-logo-placeholder">
+                        <strong>CHIDO WOOD</strong>
+                        <span>PRODUCT</span>
+                    </div>
+                {% endif %}
+            </td>
+
+            <td class="doc-contact-shell">
+                <div class="doc-contact-block">
+                    {% if business.email %}
+                        <div>
+                            {{ business.email }}
+                        </div>
+                    {% endif %}
+
+                    {% if business.phone_1 or business.phone_2 %}
+                        <div>
+                            {{ business.phone_1 }}
+
+                            {% if business.phone_1 and business.phone_2 %}
+                                |
+                            {% endif %}
+
+                            {{ business.phone_2 }}
+                        </div>
+                    {% endif %}
+
+                    {% if business.address %}
+                        <div>
+                            {{ business.address }}
+                        </div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+
+        <tr class="doc-header-foot-row">
+            <td class="doc-header-foot-left">
+                <img
+                    class="doc-header-foot-wedge"
+                    src="{% static 'documents/header-foot-wedge.png' %}"
+                    alt=""
+                >
+            </td>
+
+            <td class="doc-header-foot-right">
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+
+    <div class="doc-title-row">
+        <div class="doc-title">
+            {{ document.get_document_type_display|upper }}
+        </div>
+    </div>
+
+    <table class="doc-meta-table">
+        <tr>
+            <td class="meta-label">
+                Name:
+            </td>
+
+            <td class="meta-value">
+                {{ document.customer_name }}
+            </td>
+
+            <td class="meta-label meta-right-label">
+                {% if document.is_invoice %}
+                    Invoice #:
+                {% else %}
+                    Delivery #:
+                {% endif %}
+            </td>
+
+            <td class="meta-number">
+                {{ document.display_document_number }}
+            </td>
+        </tr>
+
+        <tr>
+            <td class="meta-label">
+                Cell
+            </td>
+
+            <td class="meta-value">
+                {{ document.customer_phone|default:"-" }}
+            </td>
+
+            <td class="meta-label meta-right-label">
+                Date
+            </td>
+
+            <td class="meta-value">
+                {{ document.date|date:"d-M-Y" }}
+            </td>
+        </tr>
+
+        <tr>
+            <td class="meta-label">
+                Address:
+            </td>
+
+            <td class="meta-value">
+                {{ document.customer_address|default:"-" }}
+            </td>
+
+            <td class="meta-label meta-right-label">
+                Ref:
+            </td>
+
+            <td class="meta-value">
+                {{ document.customer_reference|default:"-" }}
+            </td>
+        </tr>
+    </table>
+
+    {% if document.subject %}
+        <div class="doc-subject">
+            {{ document.subject|upper }}
+        </div>
+    {% endif %}
+
+    <table class="doc-items-table">
+        <thead>
+            <tr>
+                <th class="col-no">
+                    #
+                </th>
+
+                <th class="col-desc">
+                    Items / Goods
+                </th>
+
+                <th class="col-qty">
+                    Qty
+                </th>
+
+                <th class="col-unit">
+                    Unit
+                </th>
+
+                {% if document.is_invoice %}
+                    <th class="col-price">
+                        Unit Price
+                    </th>
+
+                    <th class="col-total">
+                        Total Price
+                    </th>
+                {% endif %}
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td class="center">
+                        {{ forloop.counter }}
+                    </td>
+
+                    <td>
+                        {{ item.description }}
+                    </td>
+
+                    <td class="center">
+                        {{ item.quantity|floatformat:"-2" }}
+                    </td>
+
+                    <td class="center">
+                        {{ item.unit|default:"-" }}
+                    </td>
+
+                    {% if document.is_invoice %}
+                        <td class="money">
+                            {{ item.unit_price|floatformat:"-2"|intcomma }}
+                        </td>
+
+                        <td class="money">
+                            {{ item.line_total|floatformat:"-2"|intcomma }}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+
+            {% for row in blank_rows %}
+                <tr class="blank-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+
+                    {% if document.is_invoice %}
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+
+        {% if document.is_invoice %}
+            <tfoot>
+                <tr>
+                    <td
+                        colspan="4"
+                        class="totals-label"
+                    >
+                        ADD VAT
+                        {{ document.vat_percent|floatformat:"-2" }}%
+                    </td>
+
+                    <td
+                        colspan="2"
+                        class="money totals-value"
+                    >
+                        {{ document.vat_amount|floatformat:"-2"|intcomma }}
+                    </td>
+                </tr>
+
+                <tr class="grand-total-row">
+                    <td
+                        colspan="4"
+                        class="totals-label"
+                    >
+                        GRAND TOTAL
+                    </td>
+
+                    <td
+                        colspan="2"
+                        class="money totals-value"
+                    >
+                        {{ document.grand_total|floatformat:"-2"|intcomma }}
+                    </td>
+                </tr>
+            </tfoot>
+        {% endif %}
+    </table>
+
+    {% if document.notes %}
+        <div class="doc-note">
+            <strong>Note:</strong>
+            {{ document.notes|linebreaksbr }}
+        </div>
+    {% endif %}
+
+    {# Delivery Note acceptance footer only #}
+    {% if not document.is_invoice %}
+        <div class="delivery-received-footer">
+            <div class="delivery-received-text">
+                Received the above mentioned goods in good order and condition.
+            </div>
+
+            <table class="delivery-received-signature-table">
+                <tr>
+                    <td class="delivery-received-label">
+                        Full Name:
+                    </td>
+
+                    <td class="delivery-received-line">
+                        &nbsp;
+                    </td>
+
+                    <td class="delivery-received-label delivery-received-signature-label">
+                        Signature:
+                    </td>
+
+                    <td class="delivery-received-line delivery-received-signature-line">
+                        &nbsp;
+                    </td>
+                </tr>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if document.is_invoice %}
+        <table class="payment-footer-table">
+            <tr class="payment-footer-heading-row">
+                <td colspan="4">
+                    <span class="payment-footer-heading">
+                        Kindly deposit your payment into any of the following accounts:
+                    </span>
+                </td>
+            </tr>
+
+            <tr class="payment-footer-data-row">
+                <td class="payment-label-stack">
+                    <div>Bank Name:</div>
+                    <div>Account Name:</div>
+                    <div>Acc. No:</div>
+                </td>
+
+                <td class="payment-bank-stack">
+                    {% if bank_accounts.0 %}
+                        <div class="payment-bank-name">
+                            {{ bank_accounts.0.bank_name }}
+                        </div>
+
+                        <div class="payment-account-name">
+                            {{ bank_accounts.0.account_name }}
+                        </div>
+
+                        <div class="payment-account-number">
+                            {{ bank_accounts.0.account_number }}
+                        </div>
+                    {% endif %}
+                </td>
+
+                <td class="payment-bank-stack">
+                    {% if bank_accounts.1 %}
+                        <div class="payment-bank-name">
+                            {{ bank_accounts.1.bank_name }}
+                        </div>
+
+                        <div class="payment-account-name">
+                            {{ bank_accounts.1.account_name }}
+                        </div>
+
+                        <div class="payment-account-number">
+                            {{ bank_accounts.1.account_number }}
+                        </div>
+                    {% endif %}
+                </td>
+
+                <td class="payment-tax-stack">
+                    {% if business.tin %}
+                        <div>
+                            TIN {{ business.tin }}
+                        </div>
+                    {% endif %}
+
+                    {% if business.vrn %}
+                        <div>
+                            VRN {{ business.vrn }}
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    {% endif %}
+
+</div>

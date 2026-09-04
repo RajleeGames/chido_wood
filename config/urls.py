@@ -88,6 +88,13 @@ urlpatterns = [
         "transport/",
         include("transport.urls"),
     ),
+
+    path(
+    "documents/",
+    include("documents.urls"),
+),
+
+
 ]
 
 

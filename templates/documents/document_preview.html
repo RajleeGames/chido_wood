@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ document.display_document_number }} | CHIDO Wood{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'documents/documents.css' %}">
+<link rel="stylesheet" href="{% static 'documents/a4.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="docs-page">
+    <div class="docs-preview-toolbar">
+        <div>
+            <a class="docs-btn" href="{% url 'document-list' %}">Back</a>
+            <a class="docs-btn" href="{% url 'document-edit' document.pk %}">Edit</a>
+        </div>
+        <div class="docs-preview-actions">
+            <button class="docs-btn" type="button" onclick="window.print()">Print A4</button>
+            <a class="docs-btn docs-btn-primary" href="{% url 'document-pdf' document.pk %}">Download PDF</a>
+            <button class="docs-btn" type="button" id="copyShareLink" data-share-url="{{ share_url }}">Copy share link</button>
+        </div>
+    </div>
+
+    <div class="a4-preview-shell">
+        {% include "documents/_a4_document.html" %}
+    </div>
+
+    <form class="docs-delete-form" method="post" action="{% url 'document-delete' document.pk %}" onsubmit="return confirm('Delete this document?');">
+        {% csrf_token %}
+        <button type="submit" class="docs-danger-link">Delete document</button>
+    </form>
+</section>
+
+<script>
+(function () {
+    const button = document.getElementById("copyShareLink");
+    if (!button) return;
+    button.addEventListener("click", async function () {
+        const url = button.dataset.shareUrl;
+        try {
+            await navigator.clipboard.writeText(url);
+            button.textContent = "Link copied";
+            setTimeout(() => button.textContent = "Copy share link", 1800);
+        } catch (error) {
+            window.prompt("Copy this customer PDF link:", url);
+        }
+    });
+})();
+</script>
+{% endblock %}

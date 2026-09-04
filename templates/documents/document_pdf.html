@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>
+        {{ document.get_document_type_display }}
+        {{ document.display_document_number }}
+    </title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 5mm 13mm 5mm 13mm;
+        }
+
+        body {
+            margin: 0;
+            color: #111111;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 8.6pt;
+            line-height: 1.18;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        /* HEADER */
+        .doc-header-table {
+            width: 100%;
+            margin: 0;
+            border: 0;
+        }
+
+        .doc-header-table td {
+            border: 0;
+        }
+
+        .doc-header-main-row {
+            height: 76pt;
+        }
+
+        .doc-logo-cell {
+            width: 45%;
+            height: 76pt;
+            padding: 0;
+            vertical-align: middle;
+            text-align: center;
+            background: #050607;
+        }
+
+        .doc-logo-viewport {
+            width: 100%;
+            height: 76pt;
+            text-align: center;
+        }
+
+        .doc-logo {
+            width: 76%;
+            max-width: 205pt;
+            max-height: 52pt;
+            margin-top: 11pt;
+        }
+
+        .doc-logo-placeholder {
+            color: #ffffff;
+            text-align: center;
+            padding-top: 22pt;
+        }
+
+        .doc-logo-placeholder strong {
+            display: block;
+            font-size: 20pt;
+            font-weight: bold;
+        }
+
+        .doc-logo-placeholder span {
+            display: block;
+            font-size: 7pt;
+        }
+
+        .doc-contact-shell {
+            width: 55%;
+            height: 76pt;
+            padding: 0;
+            vertical-align: bottom;
+            background: #ffffff;
+        }
+
+        .doc-contact-block {
+            width: 100%;
+            height: 48pt;
+            padding: 6pt 9pt;
+            background: #d71920;
+            color: #ffffff;
+            text-align: right;
+            font-size: 8.4pt;
+            line-height: 1.3;
+            font-weight: bold;
+        }
+
+        .doc-header-foot-row {
+            height: 11pt;
+        }
+
+        .doc-header-foot-left {
+            width: 45%;
+            height: 11pt;
+            padding: 0;
+            text-align: right;
+            background: #ffffff;
+        }
+
+        .doc-header-foot-wedge {
+            width: 50%;
+            height: 11pt;
+        }
+
+        .doc-header-foot-right {
+            width: 55%;
+            height: 11pt;
+            padding: 0;
+            background: #d71920;
+        }
+
+        .doc-title-row {
+            width: 92%;
+            margin: 5pt 4% 7pt;
+            text-align: right;
+        }
+
+        .doc-title {
+            font-size: 18pt;
+            font-weight: bold;
+        }
+
+        /* BODY WIDTH */
+        .doc-meta-table,
+        .doc-items-table,
+        .payment-footer-table {
+            width: 92%;
+            margin-left: 4%;
+            margin-right: 4%;
+        }
+
+        .doc-meta-table {
+            margin-bottom: 1pt;
+        }
+
+        .doc-meta-table td {
+            border: 0;
+            padding: 0.8pt 2pt;
+            vertical-align: middle;
+            font-size: 8.6pt;
+        }
+
+        .meta-label {
+            width: 10%;
+            font-weight: bold;
+        }
+
+        .meta-right-label {
+            width: 14%;
+            text-align: right;
+        }
+
+        .meta-number {
+            width: 18%;
+            color: #d71920;
+            font-size: 10.5pt;
+            font-weight: bold;
+        }
+
+        .doc-subject {
+            width: 92%;
+            margin: 2pt 4%;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+
+        /* ITEMS */
+        .doc-items-table {
+            margin-top: 1pt;
+            border: 0.65pt solid #111111;
+        }
+
+        .doc-items-table th,
+        .doc-items-table td {
+            padding: 1.7pt 3pt;
+            border: 0.65pt solid #111111;
+            font-size: 8pt;
+            font-weight: normal;
+        }
+
+        .doc-items-table th {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .col-no { width: 5%; }
+        .col-desc { width: 42%; }
+        .col-qty { width: 9%; }
+        .col-unit { width: 10%; }
+        .col-price { width: 16%; }
+        .col-total { width: 18%; }
+
+        .center {
+            text-align: center;
+        }
+
+        .money {
+            text-align: right;
+        }
+
+        .blank-row td {
+            height: 6pt;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .totals-label {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-value {
+            font-weight: bold;
+        }
+
+        .grand-total-row td {
+            font-size: 8.5pt;
+            font-weight: bold;
+        }
+
+        .doc-note {
+            width: 92%;
+            margin: 2pt 4% 0;
+            font-size: 7.5pt;
+        }
+
+        /* BANK FOOTER */
+        .payment-footer-table {
+            width: 92%;
+            margin-left: 4%;
+            margin-right: 4%;
+            margin-top: 6pt;
+        }
+
+        .payment-footer-heading-row,
+        .payment-footer-data-row {
+            page-break-inside: avoid;
+        }
+
+        .payment-footer-table td {
+            border: 0;
+        }
+
+        .payment-footer-heading-row td {
+            padding: 0 0 1.5pt;
+        }
+
+        .payment-footer-heading {
+            width: 52%;
+            padding-top: 1.5pt;
+            border-top: 0.6pt solid #111111;
+            font-size: 7.3pt;
+            line-height: 1.05;
+            font-weight: normal;
+        }
+
+        .payment-footer-data-row td {
+            padding: 0 2pt;
+            vertical-align: top;
+            font-size: 7.4pt;
+            line-height: 1.08;
+        }
+
+        .payment-label-stack {
+            width: 17%;
+            padding-left: 0;
+            font-weight: normal;
+        }
+
+        .payment-bank-stack {
+            width: 27%;
+        }
+
+        .payment-tax-stack {
+            width: 19%;
+            font-weight: bold;
+        }
+
+        .payment-label-stack div,
+        .payment-bank-stack div,
+        .payment-tax-stack div {
+            min-height: 9pt;
+            margin: 0;
+            padding: 0;
+            line-height: 9pt;
+        }
+
+        .payment-bank-name {
+            font-weight: bold;
+        }
+
+        .payment-account-name {
+            font-weight: normal;
+        }
+
+        .payment-account-number {
+            font-weight: normal;
+        }
+
+        /* DELIVERY NOTE RECEIVED FOOTER */
+        .delivery-received-footer {
+            width: 92%;
+            margin: 8pt 4% 0;
+            padding-top: 4pt;
+            border-top: 0.7pt solid #111111;
+            page-break-inside: avoid;
+        }
+
+        .delivery-received-text {
+            margin: 0 0 9pt;
+            font-size: 8.6pt;
+            line-height: 1.2;
+            font-weight: bold;
+        }
+
+        .delivery-received-signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .delivery-received-signature-table td {
+            border: 0;
+            padding: 0 3pt 1pt;
+            vertical-align: bottom;
+            font-size: 8.2pt;
+        }
+
+        .delivery-received-label {
+            width: 12%;
+            padding-left: 0;
+            font-weight: bold;
+        }
+
+        .delivery-received-line {
+            width: 34%;
+            height: 12pt;
+            border-bottom: 0.7pt solid #111111;
+        }
+
+        .delivery-received-signature-label {
+            width: 12%;
+            padding-left: 14pt;
+        }
+
+        .delivery-received-signature-line {
+            width: 22%;
+        }
+    </style>
+</head>
+
+<body>
+    {% include "documents/_a4_document.html" %}
+</body>
+</html>

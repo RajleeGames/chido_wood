@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Invoices & Delivery Notes | CHIDO Wood{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'documents/documents.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="docs-page">
+    <div class="docs-page-head">
+        <div>
+            <p class="docs-eyebrow">Manual customer documents</p>
+            <h1>Invoices & Delivery Notes</h1>
+            <p>Create A4 documents manually, download PDF, print, or share a link.</p>
+        </div>
+        <a class="docs-btn docs-btn-primary" href="{% url 'document-create' %}">+ New document</a>
+    </div>
+
+    <form class="docs-filter" method="get">
+        <input type="search" name="q" value="{{ query }}" placeholder="Search number or customer...">
+        <select name="type">
+            <option value="">All documents</option>
+            <option value="invoice" {% if document_type == "invoice" %}selected{% endif %}>Invoices</option>
+            <option value="delivery_note" {% if document_type == "delivery_note" %}selected{% endif %}>Delivery notes</option>
+        </select>
+        <button class="docs-btn" type="submit">Filter</button>
+    </form>
+
+    <div class="docs-card docs-table-wrap">
+        <table class="docs-table">
+            <thead>
+                <tr>
+                    <th>Number</th>
+                    <th>Type</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="docs-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                <tr>
+                    <td><strong>{{ document.display_document_number }}</strong></td>
+                    <td>{{ document.get_document_type_display }}</td>
+                    <td>{{ document.customer_name }}</td>
+                    <td>{{ document.date|date:"d M Y" }}</td>
+                    <td><span class="docs-status docs-status-{{ document.status }}">{{ document.get_status_display }}</span></td>
+                    <td class="docs-right docs-actions">
+                        <a href="{% url 'document-preview' document.pk %}">Preview</a>
+                        <a href="{% url 'document-edit' document.pk %}">Edit</a>
+                        <a href="{% url 'document-pdf' document.pk %}">PDF</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="docs-empty">No invoices or delivery notes yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

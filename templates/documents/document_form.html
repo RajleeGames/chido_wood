@@ -1,0 +1,1132 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }} | CHIDO Wood
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'documents/documents.css' %}"
+>
+{% endblock %}
+
+{% block content %}
+<section class="docs-page">
+
+    <div class="docs-page-head">
+        <div>
+            <p class="docs-eyebrow">
+                Manual A4 customer document
+            </p>
+
+            <h1>
+                {{ page_title }}
+            </h1>
+
+            <p>
+                Enter the customer and items manually.
+                The document number is generated automatically.
+            </p>
+        </div>
+
+        <a
+            class="docs-btn"
+            href="{% url 'document-list' %}"
+        >
+            Back
+        </a>
+    </div>
+
+    <form
+        method="post"
+        class="docs-form"
+        id="documentForm"
+        novalidate
+    >
+        {% csrf_token %}
+
+        {% if form.non_field_errors or formset.non_form_errors %}
+            <div class="docs-alert">
+                {{ form.non_field_errors }}
+                {{ formset.non_form_errors }}
+            </div>
+        {% endif %}
+
+        <div class="docs-card docs-form-section">
+            <div class="docs-section-heading">
+                <div>
+                    <h2>
+                        Document details
+                    </h2>
+
+                    <p>
+                        Invoice numbers run automatically:
+                        00001, 00002, 00003...
+                    </p>
+                </div>
+            </div>
+
+            <div class="docs-grid docs-grid-3">
+
+                <div class="docs-field">
+                    <label for="{{ form.document_type.id_for_label }}">
+                        Document type
+                    </label>
+
+                    {{ form.document_type }}
+
+                    {% for error in form.document_type.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label>
+                        Document number
+                    </label>
+
+                    <div class="docs-auto-number">
+                        {% if document.pk %}
+                            {{ document.display_document_number }}
+                        {% else %}
+                            Automatic
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.date.id_for_label }}">
+                        Date
+                    </label>
+
+                    {{ form.date }}
+
+                    {% for error in form.date.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.customer_name.id_for_label }}">
+                        Customer name
+                    </label>
+
+                    {{ form.customer_name }}
+
+                    {% for error in form.customer_name.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.customer_phone.id_for_label }}">
+                        Customer phone
+                    </label>
+
+                    {{ form.customer_phone }}
+
+                    {% for error in form.customer_phone.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.customer_address.id_for_label }}">
+                        Customer address
+                    </label>
+
+                    {{ form.customer_address }}
+
+                    {% for error in form.customer_address.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.customer_reference.id_for_label }}">
+                        Customer reference
+                    </label>
+
+                    {{ form.customer_reference }}
+
+                    {% for error in form.customer_reference.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field docs-span-2">
+                    <label for="{{ form.subject.id_for_label }}">
+                        Subject / heading
+                    </label>
+
+                    {{ form.subject }}
+
+                    {% for error in form.subject.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div
+                    class="docs-field js-vat-field"
+                    data-vat-field
+                >
+                    <label for="{{ form.vat_percent.id_for_label }}">
+                        VAT %
+                    </label>
+
+                    {{ form.vat_percent }}
+
+                    <small>
+                        Leave empty or use 0 when VAT does not apply.
+                    </small>
+
+                    {% for error in form.vat_percent.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field">
+                    <label for="{{ form.status.id_for_label }}">
+                        Status
+                    </label>
+
+                    {{ form.status }}
+
+                    {% for error in form.status.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-field docs-span-2">
+                    <label for="{{ form.notes.id_for_label }}">
+                        Note
+                    </label>
+
+                    {{ form.notes }}
+
+                    {% for error in form.notes.errors %}
+                        <div class="docs-error">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+        <div class="docs-card docs-form-section">
+            <div class="docs-section-heading docs-items-heading">
+                <div>
+                    <h2>
+                        Items / Goods
+                    </h2>
+
+                    <p>
+                        Start with one row. Add another only when you need it.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="docs-btn docs-btn-add"
+                    id="addItemButton"
+                >
+                    + Add item
+                </button>
+            </div>
+
+            {{ formset.management_form }}
+
+            <div class="docs-items-wrap">
+                <div
+                    class="docs-item-grid docs-item-head"
+                    data-item-header
+                >
+                    <span>
+                        Items / Goods
+                    </span>
+
+                    <span>
+                        Qty
+                    </span>
+
+                    <span>
+                        Unit
+                    </span>
+
+                    <span
+                        class="js-price-column"
+                    >
+                        Unit price
+                    </span>
+
+                    <span
+                        class="js-price-column"
+                    >
+                        Total
+                    </span>
+
+                    <span>
+                    </span>
+                </div>
+
+                <div
+                    id="itemRows"
+                    class="docs-item-rows"
+                >
+                    {% for item_form in formset %}
+                        <div
+                            class="docs-item-grid docs-item-row"
+                            data-item-row
+                        >
+                            {{ item_form.id }}
+                            {{ item_form.sort_order }}
+
+                            <div class="docs-hidden-delete">
+                                {{ item_form.DELETE }}
+                            </div>
+
+                            <div>
+                                {{ item_form.description }}
+
+                                {% for error in item_form.description.errors %}
+                                    <div class="docs-error">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div>
+                                {{ item_form.quantity }}
+
+                                {% for error in item_form.quantity.errors %}
+                                    <div class="docs-error">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div>
+                                {{ item_form.unit }}
+
+                                {% for error in item_form.unit.errors %}
+                                    <div class="docs-error">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="js-price-column">
+                                {{ item_form.unit_price }}
+
+                                {% for error in item_form.unit_price.errors %}
+                                    <div class="docs-error">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="js-price-column">
+                                <div
+                                    class="docs-line-total js-line-total"
+                                >
+                                    0
+                                </div>
+                            </div>
+
+                            <div class="docs-row-actions">
+                                <button
+                                    type="button"
+                                    class="docs-remove-row"
+                                    data-remove-row
+                                    aria-label="Remove item"
+                                    title="Remove item"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <template id="emptyItemTemplate">
+                <div
+                    class="docs-item-grid docs-item-row"
+                    data-item-row
+                >
+                    {{ formset.empty_form.id }}
+                    {{ formset.empty_form.sort_order }}
+
+                    <div class="docs-hidden-delete">
+                        {{ formset.empty_form.DELETE }}
+                    </div>
+
+                    <div>
+                        {{ formset.empty_form.description }}
+                    </div>
+
+                    <div>
+                        {{ formset.empty_form.quantity }}
+                    </div>
+
+                    <div>
+                        {{ formset.empty_form.unit }}
+                    </div>
+
+                    <div class="js-price-column">
+                        {{ formset.empty_form.unit_price }}
+                    </div>
+
+                    <div class="js-price-column">
+                        <div
+                            class="docs-line-total js-line-total"
+                        >
+                            0
+                        </div>
+                    </div>
+
+                    <div class="docs-row-actions">
+                        <button
+                            type="button"
+                            class="docs-remove-row"
+                            data-remove-row
+                            aria-label="Remove item"
+                            title="Remove item"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <div
+                class="docs-live-summary"
+                id="invoiceLiveSummary"
+            >
+                <div>
+                    <span>
+                        Subtotal
+                    </span>
+
+                    <strong id="liveSubtotal">
+                        0
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        VAT
+                    </span>
+
+                    <strong id="liveVat">
+                        0
+                    </strong>
+                </div>
+
+                <div class="docs-live-grand">
+                    <span>
+                        Grand total
+                    </span>
+
+                    <strong id="liveGrandTotal">
+                        0
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="docs-form-actions">
+            <a
+                class="docs-btn"
+                href="{% url 'document-list' %}"
+            >
+                Cancel
+            </a>
+
+            <button
+                class="docs-btn docs-btn-primary"
+                type="submit"
+            >
+                Save & preview
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        const form = document.getElementById(
+            "documentForm"
+        );
+
+        const rowsContainer = document.getElementById(
+            "itemRows"
+        );
+
+        const addButton = document.getElementById(
+            "addItemButton"
+        );
+
+        const template = document.getElementById(
+            "emptyItemTemplate"
+        );
+
+        const totalForms = document.getElementById(
+            "id_items-TOTAL_FORMS"
+        );
+
+        const documentType = document.getElementById(
+            "id_document_type"
+        );
+
+        const vatInput = document.getElementById(
+            "id_vat_percent"
+        );
+
+        const summary = document.getElementById(
+            "invoiceLiveSummary"
+        );
+
+        const subtotalOutput = document.getElementById(
+            "liveSubtotal"
+        );
+
+        const vatOutput = document.getElementById(
+            "liveVat"
+        );
+
+        const grandOutput = document.getElementById(
+            "liveGrandTotal"
+        );
+
+        /*
+         * Unit Price is displayed with commas for readability:
+         *
+         *     2000   -> 2,000
+         *     45000  -> 45,000
+         *
+         * The commas are DISPLAY formatting only.
+         *
+         * Before submit we remove commas from every Unit Price field,
+         * and the Django form also safely removes commas server-side.
+         * Therefore DecimalField still receives clean values.
+         */
+
+        function unformatMoney(value) {
+            return String(
+                value || ""
+            )
+                .replace(/,/g, "")
+                .trim();
+        }
+
+        function readNumber(value) {
+            const text = unformatMoney(
+                value
+            );
+
+            if (!text) {
+                return 0;
+            }
+
+            const number = Number(
+                text
+            );
+
+            if (!Number.isFinite(number)) {
+                return 0;
+            }
+
+            return number;
+        }
+
+        function formatMoneyText(value) {
+            let text = unformatMoney(
+                value
+            );
+
+            if (!text) {
+                return "";
+            }
+
+            /*
+             * Money is non-negative in this form.
+             * Keep only digits and one decimal point.
+             */
+            text = text.replace(
+                /[^0-9.]/g,
+                ""
+            );
+
+            const firstDot = text.indexOf(
+                "."
+            );
+
+            let integerPart = text;
+            let decimalPart = "";
+            let hasDecimalPoint = false;
+
+            if (firstDot !== -1) {
+                hasDecimalPoint = true;
+
+                integerPart = text.slice(
+                    0,
+                    firstDot
+                );
+
+                decimalPart = text
+                    .slice(
+                        firstDot + 1
+                    )
+                    .replace(/\./g, "")
+                    .slice(0, 2);
+            }
+
+            if (!integerPart) {
+                integerPart = "0";
+            }
+
+            integerPart = integerPart.replace(
+                /^0+(?=\d)/,
+                ""
+            );
+
+            const groupedInteger = (
+                integerPart.replace(
+                    /\B(?=(\d{3})+(?!\d))/g,
+                    ","
+                )
+            );
+
+            if (hasDecimalPoint) {
+                return (
+                    groupedInteger
+                    + "."
+                    + decimalPart
+                );
+            }
+
+            return groupedInteger;
+        }
+
+        function formatMoneyInput(input) {
+            if (
+                !input
+                || input.disabled
+            ) {
+                return;
+            }
+
+            const formatted = (
+                formatMoneyText(
+                    input.value
+                )
+            );
+
+            input.value = formatted;
+        }
+
+        function stripMoneyInputsForSubmit() {
+            document
+                .querySelectorAll(
+                    ".js-money-input"
+                )
+                .forEach(
+                    function (input) {
+                        if (!input.disabled) {
+                            input.value = (
+                                unformatMoney(
+                                    input.value
+                                )
+                            );
+                        }
+                    }
+                );
+        }
+
+        function displayNumber(number) {
+            const rounded = (
+                Math.round(
+                    (
+                        number
+                        + Number.EPSILON
+                    )
+                    * 100
+                )
+                / 100
+            );
+
+            return rounded.toLocaleString(
+                "en-US",
+                {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                }
+            );
+        }
+
+        function isDeleted(row) {
+            const deleteInput = row.querySelector(
+                'input[name$="-DELETE"]'
+            );
+
+            return Boolean(
+                deleteInput
+                && deleteInput.checked
+            );
+        }
+
+        function updateTotals() {
+            let subtotal = 0;
+
+            rowsContainer
+                .querySelectorAll(
+                    "[data-item-row]"
+                )
+                .forEach(
+                    function (row) {
+                        if (
+                            row.hidden
+                            || isDeleted(row)
+                        ) {
+                            return;
+                        }
+
+                        const quantityInput = (
+                            row.querySelector(
+                                ".js-item-qty"
+                            )
+                        );
+
+                        const priceInput = (
+                            row.querySelector(
+                                ".js-item-price"
+                            )
+                        );
+
+                        const lineOutput = (
+                            row.querySelector(
+                                ".js-line-total"
+                            )
+                        );
+
+                        const quantity = readNumber(
+                            quantityInput
+                            ? quantityInput.value
+                            : ""
+                        );
+
+                        const price = readNumber(
+                            priceInput
+                            ? priceInput.value
+                            : ""
+                        );
+
+                        const lineTotal = (
+                            quantity
+                            * price
+                        );
+
+                        subtotal += lineTotal;
+
+                        if (lineOutput) {
+                            lineOutput.textContent = (
+                                displayNumber(
+                                    lineTotal
+                                )
+                            );
+                        }
+                    }
+                );
+
+            const vatPercent = readNumber(
+                vatInput
+                ? vatInput.value
+                : ""
+            );
+
+            const vat = (
+                subtotal
+                * vatPercent
+                / 100
+            );
+
+            const grandTotal = (
+                subtotal
+                + vat
+            );
+
+            subtotalOutput.textContent = (
+                displayNumber(
+                    subtotal
+                )
+            );
+
+            vatOutput.textContent = (
+                displayNumber(
+                    vat
+                )
+            );
+
+            grandOutput.textContent = (
+                displayNumber(
+                    grandTotal
+                )
+            );
+        }
+
+        function syncDocumentType() {
+            const isDeliveryNote = (
+                documentType
+                && documentType.value
+                    === "delivery_note"
+            );
+
+            document
+                .querySelectorAll(
+                    ".js-price-column"
+                )
+                .forEach(
+                    function (element) {
+                        element.hidden = (
+                            isDeliveryNote
+                        );
+                    }
+                );
+
+            document
+                .querySelectorAll(
+                    "[data-vat-field]"
+                )
+                .forEach(
+                    function (element) {
+                        element.hidden = (
+                            isDeliveryNote
+                        );
+                    }
+                );
+
+            /*
+             * Delivery Note has no selling prices / VAT.
+             *
+             * Disable those form controls too, not only the visual
+             * columns. This prevents a hidden stale value from
+             * blocking a Delivery Note save.
+             */
+            document
+                .querySelectorAll(
+                    ".js-item-price"
+                )
+                .forEach(
+                    function (input) {
+                        input.disabled = (
+                            isDeliveryNote
+                        );
+
+                        if (isDeliveryNote) {
+                            input.value = "";
+                        }
+                    }
+                );
+
+            if (vatInput) {
+                vatInput.disabled = (
+                    isDeliveryNote
+                );
+
+                if (isDeliveryNote) {
+                    vatInput.value = "";
+                }
+            }
+
+            if (summary) {
+                summary.hidden = (
+                    isDeliveryNote
+                );
+            }
+
+            updateTotals();
+        }
+
+        function clearZeroOnFocus(input) {
+            if (
+                input.dataset.zeroClearReady
+                === "1"
+            ) {
+                return;
+            }
+
+            input.dataset.zeroClearReady = "1";
+
+            input.addEventListener(
+                "focus",
+                function () {
+                    const value = String(
+                        this.value || ""
+                    ).trim();
+
+                    if (
+                        /^0+(?:\.0+)?$/.test(
+                            value
+                        )
+                    ) {
+                        this.value = "";
+                    }
+                }
+            );
+        }
+
+        function prepareRow(row) {
+            row.querySelectorAll(
+                ".js-clear-zero"
+            ).forEach(
+                clearZeroOnFocus
+            );
+
+            row.querySelectorAll(
+                ".js-item-qty"
+            ).forEach(
+                function (input) {
+                    input.addEventListener(
+                        "input",
+                        updateTotals
+                    );
+                }
+            );
+
+            row.querySelectorAll(
+                ".js-item-price"
+            ).forEach(
+                function (input) {
+                    /*
+                     * Format Unit Price as the user types.
+                     * We do not use parseFloat to rewrite the field.
+                     * Formatting is string-based.
+                     */
+                    input.addEventListener(
+                        "input",
+                        function () {
+                            formatMoneyInput(
+                                input
+                            );
+
+                            updateTotals();
+                        }
+                    );
+
+                    input.addEventListener(
+                        "blur",
+                        function () {
+                            formatMoneyInput(
+                                input
+                            );
+                        }
+                    );
+
+                    /*
+                     * Existing invoice values such as 60000.00 are
+                     * formatted immediately when the edit page opens.
+                     */
+                    formatMoneyInput(
+                        input
+                    );
+                }
+            );
+
+            const removeButton = row.querySelector(
+                "[data-remove-row]"
+            );
+
+            if (removeButton) {
+                removeButton.addEventListener(
+                    "click",
+                    function () {
+                        const deleteInput = (
+                            row.querySelector(
+                                'input[name$="-DELETE"]'
+                            )
+                        );
+
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                        }
+
+                        row.hidden = true;
+
+                        updateTotals();
+                    }
+                );
+            }
+        }
+
+        rowsContainer
+            .querySelectorAll(
+                "[data-item-row]"
+            )
+            .forEach(
+                prepareRow
+            );
+
+        document
+            .querySelectorAll(
+                ".js-clear-zero"
+            )
+            .forEach(
+                clearZeroOnFocus
+            );
+
+        if (vatInput) {
+            vatInput.addEventListener(
+                "input",
+                updateTotals
+            );
+        }
+
+        if (documentType) {
+            documentType.addEventListener(
+                "change",
+                syncDocumentType
+            );
+        }
+
+        if (
+            addButton
+            && template
+            && totalForms
+        ) {
+            addButton.addEventListener(
+                "click",
+                function () {
+                    const index = Number(
+                        totalForms.value
+                    );
+
+                    const html = (
+                        template.innerHTML
+                        .replace(
+                            /__prefix__/g,
+                            String(index)
+                        )
+                    );
+
+                    const holder = (
+                        document.createElement(
+                            "div"
+                        )
+                    );
+
+                    holder.innerHTML = (
+                        html.trim()
+                    );
+
+                    const row = (
+                        holder.firstElementChild
+                    );
+
+                    if (!row) {
+                        return;
+                    }
+
+                    rowsContainer.appendChild(
+                        row
+                    );
+
+                    totalForms.value = (
+                        index + 1
+                    );
+
+                    prepareRow(
+                        row
+                    );
+
+                    syncDocumentType();
+
+                    const description = (
+                        row.querySelector(
+                            ".js-item-description"
+                        )
+                    );
+
+                    if (description) {
+                        description.focus();
+                    }
+                }
+            );
+        }
+
+        form.addEventListener(
+            "submit",
+            function () {
+                let order = 1;
+
+                rowsContainer
+                    .querySelectorAll(
+                        "[data-item-row]"
+                    )
+                    .forEach(
+                        function (row) {
+                            const sortInput = (
+                                row.querySelector(
+                                    'input[name$="-sort_order"]'
+                                )
+                            );
+
+                            if (
+                                sortInput
+                                && !row.hidden
+                                && !isDeleted(row)
+                            ) {
+                                sortInput.value = (
+                                    order
+                                );
+
+                                order += 1;
+                            }
+                        }
+                    );
+
+                /*
+                 * IMPORTANT:
+                 * Remove visual commas before browser form submission.
+                 *
+                 * Example:
+                 *     45,000 -> 45000
+                 *
+                 * Django also accepts commas server-side as a second
+                 * safety layer through CommaDecimalField.
+                 */
+                stripMoneyInputsForSubmit();
+            }
+        );
+
+        syncDocumentType();
+        updateTotals();
+    }
+);
+</script>
+{% endblock %}

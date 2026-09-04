@@ -1,344 +1,741 @@
 {% load static %}
+
 <!doctype html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="utf-8">
 
     <meta
+
         name="viewport"
+
         content="width=device-width, initial-scale=1"
+
     >
 
     <meta
+
         name="theme-color"
+
         content="#111827"
+
     >
 
     <title>
+
         {% block title %}
+
             {{ page_title|default:"CHIDO Wood ERP" }}
+
         {% endblock %}
+
     </title>
 
     <script>
+
         document.documentElement.classList.add("js");
 
         try {
+
             if (
+
                 window.innerWidth > 820
+
                 && localStorage.getItem("chido-sidebar-collapsed") === "true"
+
             ) {
+
                 document.documentElement.classList.add(
+
                     "sidebar-collapsed-preload"
+
                 );
+
             }
+
         } catch (error) {
+
             // The interface still works when browser storage is unavailable.
+
         }
+
     </script>
 
     <link
+
         rel="stylesheet"
+
         href="{% static 'css/app.css' %}"
+
     >
+
     {% block extra_css %}{% endblock %}
+
 </head>
 
 <body>
+
     <div
+
         class="page-loader is-visible"
+
         id="pageLoader"
+
         aria-hidden="true"
+
     >
+
         <div class="page-loader-content">
+
             <div class="loader-spinner" aria-hidden="true">
+
                 <span>C</span>
+
             </div>
 
             <p data-loader-text>Loading</p>
+
         </div>
+
     </div>
 
     <div class="app-shell">
 
         <aside
+
             class="sidebar"
+
             id="sidebar"
+
         >
+
             <div class="sidebar-inner">
 
                 <div class="sidebar-brand">
+
                     <div class="brand-mark">
+
                         C
+
                     </div>
 
                     <div class="brand-copy">
+
                         <strong>CHIDO Wood</strong>
+
                         <span>Inventory & POS</span>
+
                     </div>
 
                     <button
+
                         type="button"
+
                         class="icon-button sidebar-close"
+
                         data-sidebar-close
+
                         aria-label="Close sidebar"
+
                     >
+
                         ×
+
                     </button>
+
                 </div>
 
                 <nav class="sidebar-nav">
+
                     {% if request.user.is_manager_user %}
+
                         <a
+
                             href="{% url 'dashboard' %}"
+
                             class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+
                         >
+
                             <span class="sidebar-icon">⌂</span>
+
                             <span class="sidebar-link-label">Dashboard</span>
+
                         </a>
+
                     {% endif %}
 
                     <details
+
                         class="sidebar-group"
+
                         {% if request.resolver_match.url_name == 'product-list' or request.resolver_match.url_name == 'category-list' or request.resolver_match.url_name == 'inventory-list' or request.resolver_match.url_name == 'inventory-detail' or 'purchase-' in request.resolver_match.url_name or request.resolver_match.url_name == 'supplier-list' or 'stock-adjustment' in request.resolver_match.url_name or 'wood-conversion' in request.resolver_match.url_name %}
+
                             open
+
                         {% endif %}
+
                     >
+
                         <summary
+
                             class="sidebar-group-toggle
+
                                 {% if request.resolver_match.url_name == 'product-list' or request.resolver_match.url_name == 'category-list' or request.resolver_match.url_name == 'inventory-list' or request.resolver_match.url_name == 'inventory-detail' or 'purchase-' in request.resolver_match.url_name or request.resolver_match.url_name == 'supplier-list' or 'stock-adjustment' in request.resolver_match.url_name or 'wood-conversion' in request.resolver_match.url_name %}
+
                                     active
+
                                 {% endif %}
+
                             "
+
                         >
+
                             <span class="sidebar-icon">▦</span>
+
                             <span class="sidebar-link-label">Stock & inventory</span>
+
                             <span class="sidebar-group-chevron" aria-hidden="true">
+
                                 <svg viewBox="0 0 20 20" fill="none">
+
                                     <path
+
                                         d="M6.5 8l3.5 3.5L13.5 8"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.6"
+
                                         stroke-linecap="round"
+
                                         stroke-linejoin="round"
+
                                     />
+
                                 </svg>
+
                             </span>
+
                         </summary>
 
                         <div class="sidebar-subnav">
+
                             <a
+
                                 href="{% url 'product-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if request.resolver_match.url_name == 'product-list' or request.resolver_match.url_name == 'category-list' %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Products
+
                             </a>
 
                             <a
+
                                 href="{% url 'inventory-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if request.resolver_match.url_name == 'inventory-list' or request.resolver_match.url_name == 'inventory-detail' %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Inventory
+
                             </a>
 
                             <a
+
                                 href="{% url 'purchase-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'purchase-' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Purchases
+
                             </a>
 
                             <a
+
                                 href="{% url 'supplier-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if request.resolver_match.url_name == 'supplier-list' %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Suppliers
+
                             </a>
 
                             <a
+
                                 href="{% url 'stock-adjustment-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'stock-adjustment' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Stock adjustments
+
                             </a>
 
                             <a
+
                                 href="{% url 'wood-conversion-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'wood-conversion' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Wood conversions
+
                             </a>
+
                         </div>
+
                     </details>
 
                     <details
+
                         class="sidebar-group"
+
                         {% if 'sale-' in request.resolver_match.url_name or 'cutting-service' in request.resolver_match.url_name or 'customer-' in request.resolver_match.url_name %}
+
                             open
+
                         {% endif %}
+
                     >
+
                         <summary
+
                             class="sidebar-group-toggle
+
                                 {% if 'sale-' in request.resolver_match.url_name or 'cutting-service' in request.resolver_match.url_name or 'customer-' in request.resolver_match.url_name %}
+
                                     active
+
                                 {% endif %}
+
                             "
+
                         >
+
                             <span class="sidebar-icon">▣</span>
+
                             <span class="sidebar-link-label">Sales & customers</span>
+
                             <span class="sidebar-group-chevron" aria-hidden="true">
+
                                 <svg viewBox="0 0 20 20" fill="none">
+
                                     <path
+
                                         d="M6.5 8l3.5 3.5L13.5 8"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.6"
+
                                         stroke-linecap="round"
+
                                         stroke-linejoin="round"
+
                                     />
+
                                 </svg>
+
                             </span>
+
                         </summary>
 
                         <div class="sidebar-subnav">
+
                             <a
+
                                 href="{% url 'sale-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sale-' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Sales
+
                             </a>
 
                             <a
+
                                 href="{% url 'cutting-service-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'cutting-service' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Customer cutting
+
                             </a>
 
                             <a
+
                                 href="{% url 'customer-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'customer-' in request.resolver_match.url_name and 'customer-account' not in request.resolver_match.url_name and 'customer-payment' not in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Customers
+
                             </a>
 
                             <a
+
                                 href="{% url 'customer-account-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'customer-account' in request.resolver_match.url_name or 'customer-payment' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Customer accounts
+
                             </a>
+
                         </div>
+
                     </details>
 
                     <details
+
                         class="sidebar-group"
+
                         {% if 'expense-' in request.resolver_match.url_name or request.resolver_match.url_name == 'business-report' or request.resolver_match.url_name == 'business-report-csv' %}
+
                             open
+
                         {% endif %}
+
                     >
+
                         <summary
+
                             class="sidebar-group-toggle
+
                                 {% if 'expense-' in request.resolver_match.url_name or request.resolver_match.url_name == 'business-report' or request.resolver_match.url_name == 'business-report-csv' %}
+
                                     active
+
                                 {% endif %}
+
                             "
+
                         >
+
                             <span class="sidebar-icon">▤</span>
+
                             <span class="sidebar-link-label">Finance & reports</span>
+
                             <span class="sidebar-group-chevron" aria-hidden="true">
+
                                 <svg viewBox="0 0 20 20" fill="none">
+
                                     <path
+
                                         d="M6.5 8l3.5 3.5L13.5 8"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.6"
+
                                         stroke-linecap="round"
+
                                         stroke-linejoin="round"
+
                                     />
+
                                 </svg>
+
                             </span>
+
                         </summary>
 
                         <div class="sidebar-subnav">
+
                             <a
+
                                 href="{% url 'expense-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'expense-' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Expenses
+
                             </a>
 
                             <a
-                                href="{% url 'business-report' %}"
-                                class="sidebar-sublink
-                                    {% if request.resolver_match.url_name == 'business-report' or request.resolver_match.url_name == 'business-report-csv' %}
-                                        active
-                                    {% endif %}
-                                "
-                            >
-                                Business reports
-                            </a>
-                        </div>
-                    </details>
 
+                                href="{% url 'business-report' %}"
+
+                                class="sidebar-sublink
+
+                                    {% if request.resolver_match.url_name == 'business-report' or request.resolver_match.url_name == 'business-report-csv' %}
+
+                                        active
+
+                                    {% endif %}
+
+                                "
+
+                            >
+
+                                Business reports
+
+                            </a>
+
+                        </div>
+
+                    </details>
 
                                         <details
+
                         class="sidebar-group"
+
                         {% if 'transport-' in request.resolver_match.url_name %}
+
+                            open
+
+                        {% endif %}
+
+                    >
+
+                        <summary
+
+                            class="sidebar-group-toggle
+
+                                {% if 'transport-' in request.resolver_match.url_name %}
+
+                                    active
+
+                                {% endif %}
+
+                            "
+
+                        >
+
+                            <span class="sidebar-icon">▧</span>
+
+                            <span class="sidebar-link-label">Transport</span>
+
+                            <span class="sidebar-group-chevron" aria-hidden="true">
+
+                                <svg viewBox="0 0 20 20" fill="none">
+
+                                    <path
+
+                                        d="M6.5 8l3.5 3.5L13.5 8"
+
+                                        stroke="currentColor"
+
+                                        stroke-width="1.6"
+
+                                        stroke-linecap="round"
+
+                                        stroke-linejoin="round"
+
+                                    />
+
+                                </svg>
+
+                            </span>
+
+                        </summary>
+
+                        <div class="sidebar-subnav">
+
+                            <a
+
+                                href="{% url 'transport-dashboard' %}"
+
+                                class="sidebar-sublink {% if request.resolver_match.url_name == 'transport-dashboard' %}active{% endif %}"
+
+                            >
+
+                                Overview
+
+                            </a>
+
+                            <a
+
+                                href="{% url 'transport-trip-list' %}"
+
+                                class="sidebar-sublink {% if 'transport-trip-' in request.resolver_match.url_name %}active{% endif %}"
+
+                            >
+
+                                Trips
+
+                            </a>
+
+                            <a
+
+                                href="{% url 'transport-route-list' %}"
+
+                                class="sidebar-sublink {% if 'transport-route-' in request.resolver_match.url_name %}active{% endif %}"
+
+                            >
+
+                                Routes & prices
+
+                            </a>
+
+                            <a
+
+                                href="{% url 'transport-vehicle-list' %}"
+
+                                class="sidebar-sublink {% if 'transport-vehicle-' in request.resolver_match.url_name %}active{% endif %}"
+
+                            >
+
+                                Vehicles
+
+                            </a>
+
+                            <a
+
+                                href="{% url 'transport-driver-list' %}"
+
+                                class="sidebar-sublink {% if 'transport-driver-' in request.resolver_match.url_name %}active{% endif %}"
+
+                            >
+
+                                Drivers
+
+                            </a>
+
+                            <a
+
+                                href="{% url 'transport-expense-list' %}"
+
+                                class="sidebar-sublink {% if 'transport-expense-' in request.resolver_match.url_name %}active{% endif %}"
+
+                            >
+
+                                Transport expenses
+
+                            </a>
+
+                        </div>
+
+                    </details>
+
+
+                    <details
+                        class="sidebar-group"
+                        {% if 'document-' in request.resolver_match.url_name %}
                             open
                         {% endif %}
                     >
                         <summary
                             class="sidebar-group-toggle
-                                {% if 'transport-' in request.resolver_match.url_name %}
+                                {% if 'document-' in request.resolver_match.url_name %}
                                     active
                                 {% endif %}
                             "
                         >
                             <span class="sidebar-icon">▧</span>
-                            <span class="sidebar-link-label">Transport</span>
+                            <span class="sidebar-link-label">Documents</span>
                             <span class="sidebar-group-chevron" aria-hidden="true">
                                 <svg viewBox="0 0 20 20" fill="none">
                                     <path
@@ -354,669 +751,1117 @@
 
                         <div class="sidebar-subnav">
                             <a
-                                href="{% url 'transport-dashboard' %}"
-                                class="sidebar-sublink {% if request.resolver_match.url_name == 'transport-dashboard' %}active{% endif %}"
+                                href="{% url 'document-list' %}"
+                                class="sidebar-sublink
+                                    {% if request.resolver_match.url_name == 'document-list' or request.resolver_match.url_name == 'document-edit' or request.resolver_match.url_name == 'document-preview' %}
+                                        active
+                                    {% endif %}
+                                "
                             >
-                                Overview
+                                Invoices & delivery notes
                             </a>
 
                             <a
-                                href="{% url 'transport-trip-list' %}"
-                                class="sidebar-sublink {% if 'transport-trip-' in request.resolver_match.url_name %}active{% endif %}"
+                                href="{% url 'document-create' %}"
+                                class="sidebar-sublink
+                                    {% if request.resolver_match.url_name == 'document-create' %}
+                                        active
+                                    {% endif %}
+                                "
                             >
-                                Trips
-                            </a>
-
-                            <a
-                                href="{% url 'transport-route-list' %}"
-                                class="sidebar-sublink {% if 'transport-route-' in request.resolver_match.url_name %}active{% endif %}"
-                            >
-                                Routes & prices
-                            </a>
-
-                            <a
-                                href="{% url 'transport-vehicle-list' %}"
-                                class="sidebar-sublink {% if 'transport-vehicle-' in request.resolver_match.url_name %}active{% endif %}"
-                            >
-                                Vehicles
-                            </a>
-
-                            <a
-                                href="{% url 'transport-driver-list' %}"
-                                class="sidebar-sublink {% if 'transport-driver-' in request.resolver_match.url_name %}active{% endif %}"
-                            >
-                                Drivers
-                            </a>
-
-                            <a
-                                href="{% url 'transport-expense-list' %}"
-                                class="sidebar-sublink {% if 'transport-expense-' in request.resolver_match.url_name %}active{% endif %}"
-                            >
-                                Transport expenses
+                                New document
                             </a>
                         </div>
                     </details>
 
-
-
                     <details
+
                         class="sidebar-group"
+
                         {% if 'sms-' in request.resolver_match.url_name %}
+
                             open
+
                         {% endif %}
+
                     >
+
                         <summary
+
                             class="sidebar-group-toggle
+
                                 {% if 'sms-' in request.resolver_match.url_name %}
+
                                     active
+
                                 {% endif %}
+
                             "
+
                         >
+
                             <span class="sidebar-icon">◫</span>
+
                             <span class="sidebar-link-label">SMS Center</span>
+
                             <span class="sidebar-group-chevron" aria-hidden="true">
+
                                 <svg viewBox="0 0 20 20" fill="none">
+
                                     <path
+
                                         d="M6.5 8l3.5 3.5L13.5 8"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.6"
+
                                         stroke-linecap="round"
+
                                         stroke-linejoin="round"
+
                                     />
+
                                 </svg>
+
                             </span>
+
                         </summary>
 
                         <div class="sidebar-subnav">
+
                             <a
+
                                 href="{% url 'sms-dashboard' %}"
+
                                 class="sidebar-sublink
+
                                     {% if request.resolver_match.url_name == 'sms-dashboard' %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Overview
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-compose' %}"
+
                                 class="sidebar-sublink
+
                                     {% if request.resolver_match.url_name == 'sms-compose' %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Send SMS
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-contact-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sms-contact' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Contacts
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-campaign-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sms-campaign' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Campaigns
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-message-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sms-message' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Message history
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-template-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sms-template' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Templates
+
                             </a>
 
                             <a
+
                                 href="{% url 'sms-group-list' %}"
+
                                 class="sidebar-sublink
+
                                     {% if 'sms-group' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 Contact groups
+
                             </a>
 
                             {% if request.user.is_manager_user %}
+
                                 <a
+
                                     href="{% url 'sms-sender-list' %}"
+
                                     class="sidebar-sublink
+
                                         {% if 'sms-sender' in request.resolver_match.url_name %}
+
                                             active
+
                                         {% endif %}
+
                                     "
+
                                 >
+
                                     Sender IDs
+
                                 </a>
 
                                 <a
+
                                     href="{% url 'sms-settings' %}"
+
                                     class="sidebar-sublink
+
                                         {% if request.resolver_match.url_name == 'sms-settings' %}
+
                                             active
+
                                         {% endif %}
+
                                     "
+
                                 >
+
                                     SMS settings
+
                                 </a>
+
                             {% endif %}
+
                         </div>
+
                     </details>
 
                     {% if request.user.is_manager_user %}
+
                         <details
+
                             class="sidebar-group"
+
                             {% if 'user-' in request.resolver_match.url_name %}
+
                                 open
+
                             {% endif %}
+
                         >
+
                             <summary
+
                                 class="sidebar-group-toggle
+
                                     {% if 'user-' in request.resolver_match.url_name %}
+
                                         active
+
                                     {% endif %}
+
                                 "
+
                             >
+
                                 <span class="sidebar-icon">◉</span>
+
                                 <span class="sidebar-link-label">Administration</span>
+
                                 <span class="sidebar-group-chevron" aria-hidden="true">
+
                                 <svg viewBox="0 0 20 20" fill="none">
+
                                     <path
+
                                         d="M6.5 8l3.5 3.5L13.5 8"
+
                                         stroke="currentColor"
+
                                         stroke-width="1.6"
+
                                         stroke-linecap="round"
+
                                         stroke-linejoin="round"
+
                                     />
+
                                 </svg>
+
                             </span>
+
                             </summary>
 
                             <div class="sidebar-subnav">
+
                                 <a
+
                                     href="{% url 'user-list' %}"
+
                                     class="sidebar-sublink
+
                                         {% if 'user-' in request.resolver_match.url_name %}
+
                                             active
+
                                         {% endif %}
+
                                     "
+
                                 >
+
                                     Users & roles
+
                                 </a>
+
                             </div>
+
                         </details>
+
                     {% endif %}
 
                     <a
+
                         href="{% url 'profile' %}"
+
                         class="sidebar-link
+
                             {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'change-password' %}
+
                                 active
+
                             {% endif %}
+
                         "
+
                     >
+
                         <span class="sidebar-icon">○</span>
+
                         <span class="sidebar-link-label">My profile</span>
+
                     </a>
+
                 </nav>
 
                 <div class="sidebar-footer">
+
                     <a
+
                         href="{% url 'profile' %}"
+
                         class="sidebar-user sidebar-user-link"
+
                         title="Open my profile"
+
                     >
+
                         <div class="user-avatar">
+
                             {% if request.user.first_name %}
+
                                 {{ request.user.first_name|first|upper }}
+
                             {% else %}
+
                                 {{ request.user.username|first|upper }}
+
                             {% endif %}
+
                         </div>
 
                         <div class="user-details">
+
                             <strong>
+
                                 {% if request.user.get_full_name %}
+
                                     {{ request.user.get_full_name }}
+
                                 {% else %}
+
                                     {{ request.user.username }}
+
                                 {% endif %}
+
                             </strong>
 
                             <span>
+
                                 {{ request.user.get_role_display }}
+
                             </span>
+
                         </div>
+
                     </a>
+
                 </div>
 
             </div>
+
         </aside>
 
         <div
+
             class="sidebar-overlay"
+
             data-sidebar-overlay
+
         ></div>
 
         <main class="main-area">
+
             <header class="topbar">
+
                 <div class="topbar-left">
+
                     <button
+
                         type="button"
+
                         class="icon-button menu-button"
+
                         data-sidebar-toggle
+
                         aria-controls="sidebar"
+
                         aria-expanded="true"
+
                         aria-label="Hide or show sidebar"
+
                         title="Hide or show sidebar"
+
                     >
+
                         <svg
+
                             width="18"
+
                             height="18"
+
                             viewBox="0 0 24 24"
+
                             fill="none"
+
                             aria-hidden="true"
+
                         >
+
                             <path
+
                                 d="M4 6h16M4 12h16M4 18h16"
+
                                 stroke="currentColor"
+
                                 stroke-width="1.8"
+
                                 stroke-linecap="round"
+
                             />
+
                         </svg>
+
                     </button>
 
                     <div>
+
                         <h1>
+
                             {{ page_title|default:"Dashboard" }}
+
                         </h1>
 
                         {% block page_subtitle %}
+
                             <p>CHIDO Wood Company LTD</p>
+
                         {% endblock %}
+
                     </div>
+
                 </div>
 
                 <div class="topbar-right">
+
                     <div class="topbar-date">
+
                         <span class="topbar-date-day">
+
                             {% now "l" %}
+
                         </span>
 
                         <strong>
+
                             {% now "d M Y" %}
+
                         </strong>
+
                     </div>
 
                     <div class="topbar-user">
+
                         <div class="topbar-user-avatar">
+
                             {% if request.user.first_name %}
+
                                 {{ request.user.first_name|first|upper }}
+
                             {% else %}
+
                                 {{ request.user.username|first|upper }}
+
                             {% endif %}
+
                         </div>
 
                         <div class="topbar-user-details">
+
                             <strong>
+
                                 {% if request.user.get_full_name %}
+
                                     {{ request.user.get_full_name }}
+
                                 {% else %}
+
                                     {{ request.user.username }}
+
                                 {% endif %}
+
                             </strong>
 
                             <span>
+
                                 {{ request.user.get_role_display }}
+
                             </span>
+
                         </div>
+
                     </div>
 
                     <form
+
                         method="post"
+
                         action="{% url 'logout' %}"
+
                         class="topbar-logout-form"
+
                         data-loading-message="Signing out"
+
                     >
+
                         {% csrf_token %}
 
                         <button
+
                             type="submit"
+
                             class="topbar-logout-button"
+
                             title="Sign out"
+
                             aria-label="Sign out"
+
                         >
+
                             <svg
+
                                 width="17"
+
                                 height="17"
+
                                 viewBox="0 0 24 24"
+
                                 fill="none"
+
                                 aria-hidden="true"
+
                             >
+
                                 <path
+
                                     d="M10 17l5-5-5-5M15 12H3M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"
+
                                     stroke="currentColor"
+
                                     stroke-width="1.8"
+
                                     stroke-linecap="round"
+
                                     stroke-linejoin="round"
+
                                 />
+
                             </svg>
 
                             <span>Sign out</span>
+
                         </button>
+
                     </form>
+
                 </div>
+
             </header>
 
             <section class="page-content">
+
                 {% if messages %}
+
                     <div class="message-stack">
+
                         {% for message in messages %}
+
                             <div class="message message-{{ message.tags|default:'info' }}">
+
                                 <span>{{ message }}</span>
 
                                 <button
+
                                     type="button"
+
                                     class="message-close"
+
                                     data-message-close
+
                                     aria-label="Close message"
+
                                 >
+
                                     ×
+
                                 </button>
+
                             </div>
+
                         {% endfor %}
+
                     </div>
+
                 {% endif %}
 
                 {% block content %}{% endblock %}
+
             </section>
+
         </main>
+
     </div>
 
     <div
+
         class="app-modal"
+
         id="confirmationModal"
+
         aria-hidden="true"
+
     >
+
         <div
+
             class="modal-backdrop"
+
             data-modal-close
+
         ></div>
 
         <div
+
             class="modal-dialog"
+
             role="dialog"
+
             aria-modal="true"
+
             aria-labelledby="confirmationModalTitle"
+
         >
+
             <div class="modal-header">
+
                 <div>
+
                     <h2 id="confirmationModalTitle">
+
                         Confirm action
+
                     </h2>
 
                     <p id="confirmationModalMessage">
+
                         Are you sure you want to continue?
+
                     </p>
+
                 </div>
 
                 <button
+
                     type="button"
+
                     class="icon-button"
+
                     data-modal-close
+
                     aria-label="Close modal"
+
                 >
+
                     ×
+
                 </button>
+
             </div>
 
             <div class="modal-footer">
+
                 <button
+
                     type="button"
+
                     class="button button-secondary"
+
                     data-modal-close
+
                 >
+
                     Cancel
+
                 </button>
 
                 <button
+
                     type="button"
+
                     class="button button-primary"
+
                     id="confirmationModalButton"
+
                 >
+
                     Continue
+
                 </button>
+
             </div>
+
         </div>
+
     </div>
 
     <script src="{% static 'js/app.js' %}"></script>
 
     <script>
+
 document.addEventListener("DOMContentLoaded", function () {
 
     function getRawNumber(value) {
+
         return String(value || "")
+
             .replace(/,/g, "")
+
             .trim();
+
     }
 
     function formatSmartNumber(input) {
+
         let value = getRawNumber(input.value);
 
         if (!value) {
+
             return;
+
         }
 
         const decimalPlaces = parseInt(
+
             input.dataset.decimalPlaces || "0",
+
             10
+
         );
 
         // Remove unwanted characters.
+
         value = value.replace(/[^\d.]/g, "");
 
         // Allow only one decimal point.
+
         const firstDot = value.indexOf(".");
 
         if (firstDot !== -1) {
+
             value =
+
                 value.substring(0, firstDot + 1) +
+
                 value
+
                     .substring(firstDot + 1)
+
                     .replace(/\./g, "");
+
         }
 
         let parts = value.split(".");
 
         let whole = parts[0] || "0";
+
         let decimal = parts[1];
 
         // Remove unnecessary leading zeros.
+
         if (whole.length > 1) {
+
             whole = whole.replace(
+
                 /^0+(?=\d)/,
+
                 ""
+
             );
+
         }
 
         // Add thousands commas.
+
         whole = whole.replace(
+
             /\B(?=(\d{3})+(?!\d))/g,
+
             ","
+
         );
 
         if (
+
             decimal !== undefined &&
+
             decimalPlaces > 0
+
         ) {
+
             decimal = decimal.substring(
+
                 0,
+
                 decimalPlaces
+
             );
 
             input.value =
+
                 whole + "." + decimal;
 
             return;
+
         }
 
         input.value = whole;
-    }
 
+    }
 
     function initialiseSmartNumber(input) {
 
         /*
+
          * Format values already inside the field.
+
          *
+
          * Example:
+
          * 10000 -> 10,000
+
          */
+
         if (input.value) {
+
             formatSmartNumber(input);
+
         }
 
-
         /*
+
          * When user clicks a zero field:
+
          *
+
          * 0
+
          * 0.00
+
          * 0.000
+
          *
+
          * becomes empty immediately.
+
          */
+
         input.addEventListener(
+
             "focus",
+
             function () {
+
                 const raw = getRawNumber(
+
                     this.value
+
                 );
 
                 const number = Number(raw);
 
                 if (
+
                     raw !== "" &&
+
                     !Number.isNaN(number) &&
+
                     number === 0
+
                 ) {
+
                     this.value = "";
+
                 }
+
             }
+
         );
 
-
         /*
+
          * Format WHILE typing.
-         *
-         * 1
-         * 10
-         * 100
-         * 1,000
-         * 10,000
-         * 100,000
-         */
-        input.addEventListener(
-            "input",
-            function () {
-                formatSmartNumber(this);
-            }
-        );
 
+         *
+
+         * 1
+
+         * 10
+
+         * 100
+
+         * 1,000
+
+         * 10,000
+
+         * 100,000
+
+         */
+
+        input.addEventListener(
+
+            "input",
+
+            function () {
+
+                formatSmartNumber(this);
+
+            }
+
+        );
 
         /*
+
          * Extra protection:
+
          * mouse wheel cannot modify the value.
+
          */
+
         input.addEventListener(
+
             "wheel",
+
             function (event) {
+
                 event.preventDefault();
+
             },
+
             {
+
                 passive: false
+
             }
+
         );
+
     }
 
-
     document.querySelectorAll(
+
         '[data-smart-number="1"]'
+
     ).forEach(
+
         initialiseSmartNumber
+
     );
 
-
     /*
+
      * IMPORTANT
+
      *
+
      * Django DecimalField expects:
+
      *
+
      * 10000
+
      *
+
      * NOT:
+
      *
+
      * 10,000
+
      *
+
      * Therefore remove commas immediately
+
      * before submitting the form.
+
      */
+
     document.querySelectorAll(
+
         "form"
+
     ).forEach(function (form) {
 
         form.addEventListener(
+
             "submit",
+
             function () {
 
                 this.querySelectorAll(
+
                     '[data-smart-number="1"]'
+
                 ).forEach(
+
                     function (input) {
+
                         input.value =
+
                             getRawNumber(
+
                                 input.value
+
                             );
+
                     }
+
                 );
 
             }
+
         );
 
     });
 
 });
+
 </script>
 
     {% block extra_js %}{% endblock %}
+
 </body>
+
 </html>

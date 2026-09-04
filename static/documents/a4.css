@@ -1,0 +1,540 @@
+.a4-sheet {
+    width: 190mm;
+    min-height: 270mm;
+    margin: 0 auto;
+    padding: 7mm 8mm 7mm;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #111111;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11.5px;
+    line-height: 1.2;
+    box-shadow: 0 12px 35px rgba(17, 24, 39, .16);
+
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.a4-sheet table {
+    border-collapse: collapse;
+}
+
+/* ========================= HEADER - UNCHANGED GEOMETRY ========================= */
+
+.doc-header-table {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    table-layout: fixed;
+}
+
+.doc-header-table td {
+    border: 0 !important;
+}
+
+.doc-header-main-row {
+    height: 27mm;
+}
+
+.doc-logo-cell {
+    width: 45%;
+    height: 27mm;
+    padding: 0 !important;
+    vertical-align: middle;
+    overflow: hidden;
+    background: #050607;
+
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.doc-logo-viewport {
+    width: 100%;
+    height: 27mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.doc-logo {
+    display: block;
+    width: 80%;
+    max-width: none;
+    max-height: 18mm;
+    margin: 0 auto;
+    object-fit: contain;
+    transform: none;
+}
+
+.doc-logo-placeholder {
+    color: #ffffff;
+    text-align: center;
+}
+
+.doc-logo-placeholder strong {
+    display: block;
+    font-size: 27px;
+    font-weight: 800;
+}
+
+.doc-logo-placeholder span {
+    display: block;
+    margin-top: 4px;
+    font-size: 9px;
+    letter-spacing: 6px;
+}
+
+.doc-contact-shell {
+    width: 55%;
+    height: 27mm;
+    padding: 0 !important;
+    vertical-align: bottom !important;
+    background: #ffffff;
+}
+
+.doc-contact-block {
+    width: 100%;
+    height: 17mm;
+    box-sizing: border-box;
+    padding: 2.2mm 3.5mm 1.8mm;
+    background: #d71920;
+    color: #ffffff;
+    text-align: right;
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 700;
+
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.doc-header-foot-row {
+    height: 4mm;
+}
+
+.doc-header-foot-left {
+    width: 45%;
+    height: 4mm;
+    padding: 0 !important;
+    background: #ffffff;
+    text-align: right;
+    overflow: hidden;
+}
+
+.doc-header-foot-wedge {
+    display: block;
+    width: 50%;
+    height: 4mm;
+    margin: 0 0 0 auto;
+    object-fit: fill;
+}
+
+.doc-header-foot-right {
+    width: 55%;
+    height: 4mm;
+    padding: 0 !important;
+    background: #d71920;
+
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.doc-title-row {
+    width: 94%;
+    margin: 2mm auto 3mm;
+    text-align: right;
+}
+
+.doc-title {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 900;
+}
+
+/* ========================= COMPACT BODY ========================= */
+
+.doc-meta-table,
+.doc-items-table,
+.payment-footer-table {
+    width: 92% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.doc-meta-table {
+    margin-bottom: 2px !important;
+}
+
+.doc-meta-table td {
+    border: 0;
+    padding: 1px 3px !important;
+    vertical-align: middle;
+    font-size: 11.5px;
+}
+
+.meta-label {
+    width: 10%;
+    font-weight: 700;
+}
+
+.meta-value {
+    font-weight: 400;
+}
+
+.meta-right-label {
+    width: 14%;
+    text-align: right;
+}
+
+.meta-number {
+    width: 18%;
+    color: #d71920;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+}
+
+.doc-subject {
+    width: 92%;
+    margin: 2px auto 3px !important;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.doc-items-table {
+    margin-top: 1px !important;
+    border: 1px solid #111111;
+}
+
+.doc-items-table th,
+.doc-items-table td {
+    border: 1px solid #111111;
+    padding: 2px 4px !important;
+    font-size: 10.5px;
+    font-weight: 400;
+}
+
+.doc-items-table th {
+    background: #ffffff;
+    text-align: center;
+    font-weight: 700;
+}
+
+.col-no { width: 5%; }
+.col-desc { width: 42%; }
+.col-qty { width: 9%; }
+.col-unit { width: 10%; }
+.col-price { width: 16%; }
+.col-total { width: 18%; }
+
+.center {
+    text-align: center;
+}
+
+.money {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.blank-row td {
+    height: 8px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.totals-label {
+    text-align: right;
+    font-weight: 700 !important;
+}
+
+.totals-value {
+    font-weight: 700 !important;
+}
+
+.grand-total-row td {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.doc-note {
+    width: 92%;
+    margin: 3px auto 0;
+    font-size: 10px;
+}
+
+/* ========================= FOOTER AS ONE NORMAL TABLE ========================= */
+
+.payment-footer-table {
+    margin-top: 4px !important;
+    table-layout: fixed;
+}
+
+.payment-footer-table td {
+    border: 0 !important;
+    padding: 1.5px 3px !important;
+    vertical-align: top;
+    font-size: 9.8px;
+    line-height: 1.15;
+}
+
+.payment-footer-heading-row td {
+    padding-left: 0 !important;
+    padding-bottom: 2px !important;
+}
+
+.payment-footer-heading {
+    display: inline-block;
+    width: 52%;
+    padding-top: 2px;
+    border-top: 1px solid #111111;
+    font-weight: 400;
+}
+
+.payment-label {
+    width: 17%;
+    padding-left: 0 !important;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.payment-bank-name {
+    width: 24%;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.payment-account-name {
+    width: 24%;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.payment-account-number {
+    width: 24%;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.payment-tax-cell {
+    width: 18%;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* ========================= PRINT: FORCE NORMAL SINGLE FLOW ========================= */
+
+@page {
+    size: A4;
+    margin: 5mm 12mm 5mm 12mm;
+}
+
+@media print {
+    html,
+    body {
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .a4-sheet {
+        width: auto !important;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        page-break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+        break-inside: auto !important;
+    }
+
+    .payment-footer-table,
+    .payment-footer-table tr,
+    .payment-footer-table td {
+        page-break-before: auto !important;
+        page-break-after: auto !important;
+        page-break-inside: auto !important;
+        break-before: auto !important;
+        break-after: auto !important;
+        break-inside: auto !important;
+    }
+
+    .doc-logo-cell,
+    .doc-contact-block,
+    .doc-header-foot-right {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+
+/* ================================================================
+   FOOTER SINGLE-ROW HARD FIX
+   ================================================================ */
+
+.payment-footer-table {
+    width: 92% !important;
+    margin: 8px auto 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+.payment-footer-heading-row,
+.payment-footer-data-row {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+.payment-footer-table td {
+    border: 0 !important;
+}
+
+.payment-footer-heading-row td {
+    padding: 0 0 2px !important;
+}
+
+.payment-footer-heading {
+    display: inline-block;
+    width: 52%;
+    padding-top: 2px;
+    border-top: 1px solid #111111;
+    font-size: 9.5px;
+    line-height: 1.1;
+    font-weight: 400;
+}
+
+.payment-footer-data-row td {
+    padding: 0 3px !important;
+    vertical-align: top !important;
+    font-size: 9.6px !important;
+    line-height: 1.15 !important;
+}
+
+.payment-label-stack {
+    width: 17% !important;
+    padding-left: 0 !important;
+    font-weight: 500;
+}
+
+.payment-bank-stack {
+    width: 27% !important;
+}
+
+.payment-tax-stack {
+    width: 19% !important;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.payment-label-stack > div,
+.payment-bank-stack > div,
+.payment-tax-stack > div {
+    min-height: 12px;
+    margin: 0;
+    padding: 0;
+    line-height: 12px;
+}
+
+.payment-bank-name {
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.payment-account-name {
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.payment-account-number {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+@media print {
+    .payment-footer-table {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .payment-footer-data-row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .payment-footer-data-row td {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}
+
+
+/* ================================================================
+   DELIVERY NOTE - RECEIVED GOODS FOOTER
+   ================================================================ */
+
+.delivery-received-footer {
+    width: 92%;
+    margin: 12px auto 0;
+    padding-top: 5px;
+    border-top: 1.2px solid #111111;
+}
+
+.delivery-received-text {
+    margin: 0 0 13px;
+    font-size: 11.5px;
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.delivery-received-signature-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.delivery-received-signature-table td {
+    border: 0 !important;
+    padding: 0 4px 2px !important;
+    vertical-align: bottom;
+    font-size: 11px;
+}
+
+.delivery-received-label {
+    width: 12%;
+    padding-left: 0 !important;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.delivery-received-line {
+    width: 34%;
+    height: 18px;
+    border-bottom: 1px solid #111111 !important;
+}
+
+.delivery-received-signature-label {
+    width: 12%;
+    padding-left: 20px !important;
+}
+
+.delivery-received-signature-line {
+    width: 22%;
+}
+
+@media print {
+    .delivery-received-footer {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}

@@ -139,6 +139,7 @@ INSTALLED_APPS = [
     "reports",
     "sms.apps.SMSConfig",
     "transport.apps.TransportConfig",
+    "documents.apps.DocumentsConfig",
 ]
 
 
