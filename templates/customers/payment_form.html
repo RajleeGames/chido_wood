@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{ page_title }} | CHIDO Wood ERP
+{% endblock %}
+
+{% block page_subtitle %}
+<p>
+    Receive a customer account payment and reduce the outstanding debt.
+</p>
+{% endblock %}
+
+{% block content %}
+<form
+    method="post"
+    id="customerPaymentForm"
+    data-loading-message="Posting customer payment"
+>
+    {% csrf_token %}
+
+    <div class="page-header">
+        <div>
+            <h2>Record customer payment</h2>
+
+            <p>
+                {{ customer.name }}
+                ·
+                {{ customer.customer_code }}
+
+                {% if customer.phone %}
+                    · {{ customer.phone }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="page-header-actions">
+            <a
+                href="{% url 'customer-account-detail' customer.pk %}"
+                class="button button-secondary"
+            >
+                Back to account
+            </a>
+
+            <button
+                type="submit"
+                class="button button-primary"
+            >
+                Post payment
+            </button>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-error-box">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-card-header">
+                <span>Current debt</span>
+                <span class="stat-icon">DUE</span>
+            </div>
+
+            <strong class="stat-value">
+                TZS {{ current_debt|floatformat:0|intcomma }}
+            </strong>
+
+            <small>
+                Maximum payment that can be posted now
+            </small>
+        </article>
+
+        <article class="stat-card">
+            <div class="stat-card-header">
+                <span>Customer</span>
+                <span class="stat-icon">CUS</span>
+            </div>
+
+            <strong class="stat-value">
+                {{ customer.name }}
+            </strong>
+
+            <small>
+                {{ customer.customer_code }}
+            </small>
+        </article>
+
+        <article class="stat-card">
+            <div class="stat-card-header">
+                <span>Balance after payment</span>
+                <span class="stat-icon">BAL</span>
+            </div>
+
+            <strong
+                class="stat-value"
+                id="paymentBalanceAfter"
+            >
+                TZS {{ current_debt|floatformat:0|intcomma }}
+            </strong>
+
+            <small>
+                Updated automatically from the amount entered
+            </small>
+        </article>
+    </div>
+
+    <section class="card account-section">
+        <div class="card-header">
+            <div>
+                <h2>Payment information</h2>
+
+                <p>
+                    Enter the amount received and how the customer paid.
+                </p>
+            </div>
+        </div>
+
+        <div style="padding: 18px;">
+            <div class="form-grid form-grid-three">
+                <div class="form-group">
+                    <label for="{{ form.amount.id_for_label }}">
+                        Amount received
+                    </label>
+
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+
+                    <small class="field-help">
+                        Maximum:
+                        TZS {{ current_debt|floatformat:0|intcomma }}
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_method.id_for_label }}">
+                        Payment method
+                    </label>
+
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_date.id_for_label }}">
+                        Payment date
+                    </label>
+
+                    {{ form.payment_date }}
+                    {{ form.payment_date.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.reference.id_for_label }}">
+                        Reference
+                    </label>
+
+                    {{ form.reference }}
+                    {{ form.reference.errors }}
+
+                    <small class="field-help">
+                        Mobile transaction, bank, cheque or other reference.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">
+                        Payment notes
+                    </label>
+
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card account-section">
+        <div class="card-header">
+            <div>
+                <h2>How this payment is applied</h2>
+
+                <p>
+                    The system allocates the payment against the oldest
+                    outstanding customer debt first.
+                </p>
+            </div>
+        </div>
+
+        <div style="padding: 18px;">
+            <p style="margin: 0;">
+                After posting, the payment will appear in the customer's
+                payment history and statement. You can then open the payment
+                details and print its receipt.
+            </p>
+        </div>
+    </section>
+
+    <div class="page-header-actions" style="justify-content: flex-end;">
+        <a
+            href="{% url 'customer-account-detail' customer.pk %}"
+            class="button button-secondary"
+        >
+            Cancel
+        </a>
+
+        <button
+            type="submit"
+            class="button button-primary"
+        >
+            Post payment
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        const amountInput = document.getElementById(
+            "{{ form.amount.id_for_label }}"
+        );
+
+        const balanceOutput = document.getElementById(
+            "paymentBalanceAfter"
+        );
+
+        const currentDebt = Number(
+            "{{ current_debt|floatformat:2 }}"
+        ) || 0;
+
+        function parseNumber(value) {
+            if (
+                window.ChidoNumbers
+                && typeof window.ChidoNumbers.parse === "function"
+            ) {
+                return window.ChidoNumbers.parse(
+                    value,
+                    0
+                );
+            }
+
+            const cleaned = String(
+                value || ""
+            )
+                .replace(/,/g, "")
+                .trim();
+
+            const parsed = Number.parseFloat(
+                cleaned
+            );
+
+            return Number.isFinite(parsed)
+                ? parsed
+                : 0;
+        }
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    maximumFractionDigits: 0,
+                }
+            ).format(
+                Math.max(
+                    0,
+                    value
+                )
+            );
+        }
+
+        function updateBalance() {
+            if (!balanceOutput) {
+                return;
+            }
+
+            const amount = parseNumber(
+                amountInput
+                ? amountInput.value
+                : ""
+            );
+
+            const remaining = Math.max(
+                0,
+                currentDebt - amount
+            );
+
+            balanceOutput.textContent = (
+                `TZS ${formatMoney(remaining)}`
+            );
+        }
+
+        if (amountInput) {
+            amountInput.addEventListener(
+                "input",
+                updateBalance
+            );
+
+            amountInput.addEventListener(
+                "change",
+                updateBalance
+            );
+        }
+
+        updateBalance();
+    }
+);
+</script>
+{% endblock %}

@@ -1,0 +1,494 @@
+{% load humanize static receipt_settings %}
+{% get_receipt_settings as receipt_cfg %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {{ payment.payment_number }} |
+        Customer Payment Receipt
+    </title>
+
+    <style>
+        :root {
+            --page-bg: #f4f1ec;
+            --paper: #ffffff;
+            --ink: #16120f;
+            --muted: #6f665e;
+            --line: #d9d1c9;
+            --brand: #81532b;
+            --brand-dark: #5f3b1f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 20px;
+            background: var(--page-bg);
+            color: var(--ink);
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+        button,
+        a {
+            font: inherit;
+        }
+
+        .receipt-shell {
+            width: min(100%, 760px);
+            margin: 0 auto;
+        }
+
+        .receipt-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .receipt-button,
+        .receipt-link {
+            min-height: 40px;
+            padding: 9px 13px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .receipt-button-primary {
+            color: #ffffff;
+            background: var(--brand);
+        }
+
+        .receipt-button-primary:hover {
+            background: var(--brand-dark);
+        }
+
+        .receipt-link {
+            color: var(--ink);
+            background: #ffffff;
+            border-color: var(--line);
+        }
+
+        .receipt-paper {
+            width: 80mm;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 5mm 4mm;
+            background: var(--paper);
+            box-shadow:
+                0 12px 34px
+                rgba(40, 29, 20, 0.12);
+            font-family:
+                "Courier New",
+                Courier,
+                monospace;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .receipt-header {
+            text-align: center;
+        }
+
+        .receipt-brand {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.15;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-title {
+            margin: 4px 0 0;
+            font-size: 10px;
+            line-height: 1.15;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+        }
+
+        .receipt-header-line {
+            margin: 4px 0 0;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-rule {
+            margin: 10px 0;
+            border: 0;
+            border-top: 1px dashed var(--ink);
+        }
+
+        .receipt-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 4px 0;
+        }
+
+        .receipt-row > :first-child {
+            flex: 0 0 auto;
+        }
+
+        .receipt-row > :last-child {
+            min-width: 0;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-total {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--ink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .receipt-balance {
+            font-weight: 700;
+        }
+
+        .allocation-title {
+            margin: 0 0 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .allocation-item {
+            padding: 5px 0;
+            border-bottom: 1px dotted var(--line);
+        }
+
+        .allocation-item:last-child {
+            border-bottom: 0;
+        }
+
+        .allocation-reference {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 9px;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-notes {
+            margin-top: 6px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-footer {
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        .receipt-footer p {
+            margin: 4px 0;
+        }
+
+        .receipt-small {
+            font-size: 9px;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 12px 8px 20px;
+            }
+
+            .receipt-button,
+            .receipt-link {
+                flex:
+                    1 1
+                    calc(50% - 8px);
+                text-align: center;
+            }
+
+            .receipt-paper {
+                width: min(80mm, 100%);
+                padding: 4mm 3.5mm;
+            }
+        }
+
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 80mm;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                background: #ffffff;
+            }
+
+            .receipt-shell {
+                width: 80mm;
+                margin: 0;
+            }
+
+            .receipt-toolbar {
+                display: none !important;
+            }
+
+            .receipt-paper {
+                width: 80mm;
+                max-width: none;
+                margin: 0;
+                padding: 4mm;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="receipt-shell">
+
+        <div class="receipt-toolbar">
+            <button
+                type="button"
+                class="
+                    receipt-button
+                    receipt-button-primary
+                "
+                onclick="window.print()"
+            >
+                Print receipt
+            </button>
+
+            <a
+                href="{% url 'customer-payment-detail' payment.pk %}"
+                class="receipt-link"
+            >
+                Back
+            </a>
+        </div>
+
+        <main class="receipt-paper">
+            <header class="receipt-header">
+                <h1 class="receipt-brand">
+                    {{ receipt_cfg.business_name }}
+                </h1>
+
+                <p class="receipt-title">
+                    Customer Payment Receipt
+                </p>
+
+                {% if receipt_cfg.address %}
+                    <p class="receipt-header-line">
+                        {{ receipt_cfg.address }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.phone %}
+                    <p class="receipt-header-line">
+                        Tel: {{ receipt_cfg.phone }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.email %}
+                    <p class="receipt-header-line">
+                        {{ receipt_cfg.email }}
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.tin or receipt_cfg.vrn %}
+                    <p class="receipt-header-line">
+                        {% if receipt_cfg.tin %}
+                            TIN: {{ receipt_cfg.tin }}
+                        {% endif %}
+
+                        {% if receipt_cfg.tin and receipt_cfg.vrn %}
+                            &nbsp;&nbsp;
+                        {% endif %}
+
+                        {% if receipt_cfg.vrn %}
+                            VRN: {{ receipt_cfg.vrn }}
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </header>
+
+            <hr class="receipt-rule">
+
+            <div class="receipt-row">
+                <span>Receipt</span>
+
+                <strong>
+                    {{ payment.payment_number }}
+                </strong>
+            </div>
+
+            <div class="receipt-row">
+                <span>Date</span>
+
+                <span>
+                    {{ payment.payment_date|date:"d/m/Y H:i" }}
+                </span>
+            </div>
+
+            <div class="receipt-row">
+                <span>Customer</span>
+
+                <span>
+                    {{ payment.customer.name }}
+                </span>
+            </div>
+
+            <div class="receipt-row">
+                <span>Customer No.</span>
+
+                <span>
+                    {{ payment.customer.customer_code }}
+                </span>
+            </div>
+
+            {% if payment.customer.phone %}
+                <div class="receipt-row">
+                    <span>Phone</span>
+
+                    <span>
+                        {{ payment.customer.phone }}
+                    </span>
+                </div>
+            {% endif %}
+
+            <div class="receipt-row">
+                <span>Payment</span>
+
+                <span>
+                    {{ payment.get_payment_method_display }}
+                </span>
+            </div>
+
+            {% if payment.reference %}
+                <div class="receipt-row">
+                    <span>Reference</span>
+
+                    <span>
+                        {{ payment.reference }}
+                    </span>
+                </div>
+            {% endif %}
+
+            <div class="receipt-row">
+                <span>Received by</span>
+
+                <span>
+                    {{ payment.created_by.get_full_name|default:payment.created_by.username }}
+                </span>
+            </div>
+
+            <hr class="receipt-rule">
+
+            <div class="receipt-row receipt-total">
+                <span>AMOUNT PAID</span>
+
+                <strong>
+                    TZS {{ payment.amount|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            <div class="receipt-row receipt-balance">
+                <span>REMAINING DEBT</span>
+
+                <strong>
+                    TZS {{ remaining_balance|floatformat:0|intcomma }}
+                </strong>
+            </div>
+
+            {% if payment.allocations.all %}
+                <hr class="receipt-rule">
+
+                <div class="allocation-title">
+                    Payment Allocation
+                </div>
+
+                {% for allocation in payment.allocations.all %}
+                    <div class="allocation-item">
+                        <div class="receipt-row">
+                            <span>
+                                {{ allocation.get_allocation_type_display }}
+                            </span>
+
+                            <strong>
+                                TZS {{ allocation.amount|floatformat:0|intcomma }}
+                            </strong>
+                        </div>
+
+                        <div class="allocation-reference">
+                            {% if allocation.sale %}
+                                {{ allocation.sale.sale_number }}
+                            {% elif allocation.cutting_service %}
+                                {{ allocation.cutting_service.cutting_number }}
+                            {% else %}
+                                Customer opening balance
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if payment.notes %}
+                <hr class="receipt-rule">
+
+                <div class="receipt-notes">
+                    <strong>Note:</strong>
+                    {{ payment.notes }}
+                </div>
+            {% endif %}
+
+            <hr class="receipt-rule">
+
+            <footer class="receipt-footer">
+                {% if receipt_cfg.footer_line_1 %}
+                    <p>
+                        {{ receipt_cfg.footer_line_1 }}
+                    </p>
+                {% else %}
+                    <p>
+                        Thank you.
+                    </p>
+                {% endif %}
+
+                {% if receipt_cfg.footer_line_2 %}
+                    <p>
+                        {{ receipt_cfg.footer_line_2 }}
+                    </p>
+                {% endif %}
+
+                <p class="receipt-small">
+                    {{ payment.payment_number }}
+                </p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
