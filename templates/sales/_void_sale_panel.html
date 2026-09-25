@@ -1,0 +1,105 @@
+{% if sale.status == "completed" and request.user.is_admin_user %}
+<section class="card sale-detail-section">
+    <div class="card-header">
+        <div>
+            <h2>Void completed sale</h2>
+
+            <p>
+                Administrator only. Voiding restores the exact
+                FIFO stock batches used by this sale and removes
+                this sale from completed-sale revenue and debt.
+            </p>
+        </div>
+    </div>
+
+    <form
+        method="post"
+        action="{% url 'sale-void' sale.pk %}"
+        data-loading-message="Voiding sale and restoring stock"
+    >
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="void_reason">
+                Reason for voiding
+            </label>
+
+            <textarea
+                id="void_reason"
+                name="void_reason"
+                class="form-control"
+                rows="3"
+                minlength="3"
+                required
+                placeholder="Example: Wrong customer, wrong quantity, duplicate sale..."
+            ></textarea>
+        </div>
+
+        <div class="page-header-actions">
+            <button
+                type="submit"
+                class="button button-danger"
+                onclick="return confirm('Void this completed sale and restore its stock? This action cannot be repeated.');"
+            >
+                Void sale
+            </button>
+        </div>
+    </form>
+</section>
+{% endif %}
+
+{% if sale.is_voided %}
+<section class="card sale-detail-section">
+    <div class="card-header">
+        <div>
+            <h2>Sale void audit</h2>
+
+            <p>
+                This sale is no longer active. Its original values
+                remain visible for audit purposes and the FIFO stock
+                consumed by the sale has been restored.
+            </p>
+        </div>
+    </div>
+
+    <div class="sale-detail-grid">
+        <div>
+            <span>Status</span>
+
+            <strong>Voided</strong>
+        </div>
+
+        <div>
+            <span>Voided by</span>
+
+            <strong>
+                {% if sale.voided_by %}
+                    {{ sale.voided_by.get_full_name|default:sale.voided_by.username }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span>Voided at</span>
+
+            <strong>
+                {% if sale.voided_at %}
+                    {{ sale.voided_at|date:"d M Y H:i" }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div class="detail-grid-full">
+            <span>Void reason</span>
+
+            <strong>
+                {{ sale.void_reason|default:"—" }}
+            </strong>
+        </div>
+    </div>
+</section>
+{% endif %}

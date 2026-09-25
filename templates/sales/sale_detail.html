@@ -6,10 +6,11 @@
 {% endblock %}
 
 {% block page_subtitle %}
-<p>Sale products, FIFO costs, payment and profit.</p>
+<p>Sale details, payment, stock usage and audit.</p>
 {% endblock %}
 
 {% block content %}
+
 <div class="page-header">
     <div>
         <h2>{{ sale.sale_number }}</h2>
@@ -20,9 +21,7 @@
             {% else %}
                 Walk-in customer
             {% endif %}
-
-            ·
-            {{ sale.sale_date|date:"d M Y H:i" }}
+            · {{ sale.sale_date|date:"d M Y H:i" }}
         </p>
     </div>
 
@@ -40,17 +39,17 @@
                 class="button button-secondary"
                 target="_blank"
             >
-                Print receipt
+                Print
             </a>
-        {% endif %}
 
-        {% if sale.status == "completed" and has_cuttable_items %}
-            <a
-                href="{% url 'cutting-service-create' sale.pk %}"
-                class="button button-primary"
-            >
-                Add cutting service
-            </a>
+            {% if has_cuttable_items %}
+                <a
+                    href="{% url 'cutting-service-create' sale.pk %}"
+                    class="button button-primary"
+                >
+                    Add cutting
+                </a>
+            {% endif %}
         {% endif %}
 
         {% if sale.status == "draft" %}
@@ -64,7 +63,6 @@
             <form
                 method="post"
                 action="{% url 'sale-cancel' sale.pk %}"
-                data-loading-message="Cancelling sale"
             >
                 {% csrf_token %}
 
@@ -72,14 +70,13 @@
                     type="submit"
                     class="button button-danger"
                 >
-                    Cancel sale
+                    Cancel
                 </button>
             </form>
 
             <form
                 method="post"
                 action="{% url 'sale-complete' sale.pk %}"
-                data-loading-message="Completing sale"
             >
                 {% csrf_token %}
 
@@ -87,17 +84,18 @@
                     type="submit"
                     class="button button-primary"
                 >
-                    Complete sale
+                    Complete
                 </button>
             </form>
         {% endif %}
     </div>
 </div>
 
+
 <div class="stats-grid">
     <article class="stat-card">
         <div class="stat-card-header">
-            <span>Sale total</span>
+            <span>Total</span>
             <span class="stat-icon">TZS</span>
         </div>
 
@@ -113,7 +111,7 @@
 
     <article class="stat-card">
         <div class="stat-card-header">
-            <span>Amount paid</span>
+            <span>Paid</span>
             <span class="stat-icon">PAY</span>
         </div>
 
@@ -121,14 +119,12 @@
             TZS {{ sale.amount_paid|floatformat:0|intcomma }}
         </strong>
 
-        <small>
-            {{ sale.payment_status }}
-        </small>
+        <small>{{ sale.payment_status }}</small>
     </article>
 
     <article class="stat-card">
         <div class="stat-card-header">
-            <span>Customer balance</span>
+            <span>Balance</span>
             <span class="stat-icon">DUE</span>
         </div>
 
@@ -144,39 +140,44 @@
 
     <article class="stat-card">
         <div class="stat-card-header">
-            <span>Sale profit</span>
+            <span>Profit</span>
             <span class="stat-icon">GP</span>
         </div>
 
         <strong class="stat-value">
-            {% if sale.status == "completed" %}
+            {% if sale.status == "completed" or sale.status == "voided" %}
                 TZS {{ sale.net_profit|floatformat:0|intcomma }}
             {% else %}
-                Not calculated
+                —
             {% endif %}
         </strong>
 
-        <small>
-            {{ sale.get_status_display }}
-        </small>
+        <small>{{ sale.get_status_display }}</small>
     </article>
 </div>
 
-<section class="card sale-information-card">
+
+<section class="card sale-detail-card">
     <div class="card-header">
         <div>
             <h2>Sale information</h2>
-
-            <p>
-                Customer, payment and audit details.
-            </p>
+            <p>Customer, payment and audit details.</p>
         </div>
+
+        {% if sale.status == "completed" %}
+            <span class="badge badge-success">Completed</span>
+        {% elif sale.status == "draft" %}
+            <span class="badge badge-warning">Draft</span>
+        {% elif sale.status == "voided" %}
+            <span class="badge badge-danger">Voided</span>
+        {% else %}
+            <span class="badge badge-danger">Cancelled</span>
+        {% endif %}
     </div>
 
     <div class="sale-detail-grid">
         <div>
             <span>Customer</span>
-
             <strong>
                 {% if sale.customer %}
                     {{ sale.customer.name }}
@@ -188,71 +189,33 @@
 
         <div>
             <span>Payment method</span>
-
-            <strong>
-                {{ sale.get_payment_method_display }}
-            </strong>
+            <strong>{{ sale.get_payment_method_display }}</strong>
         </div>
 
         <div>
             <span>Payment status</span>
-
-            <strong>
-                {{ sale.payment_status }}
-            </strong>
+            <strong>{{ sale.payment_status }}</strong>
         </div>
 
         <div>
             <span>Amount tendered</span>
-
             <strong>
                 TZS {{ sale.amount_tendered|floatformat:0|intcomma }}
             </strong>
         </div>
 
         <div>
-            <span>Amount paid</span>
-
-            <strong>
-                TZS {{ sale.amount_paid|floatformat:0|intcomma }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Change due</span>
-
-            <strong>
-                TZS {{ sale.change_due|floatformat:0|intcomma }}
-            </strong>
-        </div>
-
-        <div>
             <span>Created by</span>
-
-            <strong>
-                {% if sale.created_by %}
-                    {{ sale.created_by.get_full_name|default:sale.created_by.username }}
-                {% else %}
-                    System
-                {% endif %}
-            </strong>
+            <strong>{{ sale.created_by|default:"System" }}</strong>
         </div>
 
         <div>
             <span>Completed by</span>
-
-            <strong>
-                {% if sale.completed_by %}
-                    {{ sale.completed_by.get_full_name|default:sale.completed_by.username }}
-                {% else %}
-                    —
-                {% endif %}
-            </strong>
+            <strong>{{ sale.completed_by|default:"—" }}</strong>
         </div>
 
         <div>
             <span>Completed at</span>
-
             <strong>
                 {% if sale.completed_at %}
                     {{ sale.completed_at|date:"d M Y H:i" }}
@@ -262,24 +225,19 @@
             </strong>
         </div>
 
-        <div class="detail-grid-full">
+        <div class="sale-detail-full">
             <span>Notes</span>
-
-            <strong>
-                {{ sale.notes|default:"—" }}
-            </strong>
+            <strong>{{ sale.notes|default:"—" }}</strong>
         </div>
     </div>
 </section>
 
+
 <section class="table-card sale-detail-section">
     <div class="card-header">
         <div>
-            <h2>Sale products</h2>
-
-            <p>
-                Selling amount, FIFO cost and profit.
-            </p>
+            <h2>Products</h2>
+            <p>Sold quantity, selling value, FIFO cost and profit.</p>
         </div>
     </div>
 
@@ -288,12 +246,11 @@
             <thead>
                 <tr>
                     <th>Product</th>
-                    <th>Category</th>
-                    <th>Quantity</th>
-                    <th>Unit price</th>
+                    <th>Qty</th>
+                    <th>Price</th>
                     <th>Discount</th>
-                    <th>Line total</th>
-                    <th>FIFO cost</th>
+                    <th>Total</th>
+                    <th>Cost</th>
                     <th>Profit</th>
                 </tr>
             </thead>
@@ -302,17 +259,11 @@
                 {% for item in sale.items.all %}
                     <tr>
                         <td>
-                            <strong>
-                                {{ item.product.name }}
-                            </strong>
+                            <strong>{{ item.product.name }}</strong>
 
                             <small class="table-subtitle">
                                 {{ item.product.code }}
                             </small>
-                        </td>
-
-                        <td>
-                            {{ item.product.category.name }}
                         </td>
 
                         <td>
@@ -328,7 +279,7 @@
                         </td>
 
                         <td>
-                            {% if sale.status == "completed" %}
+                            {% if sale.status == "completed" or sale.status == "voided" %}
                                 TZS {{ item.line_total|floatformat:0|intcomma }}
                             {% else %}
                                 TZS {{ item.calculated_line_total|floatformat:0|intcomma }}
@@ -336,7 +287,7 @@
                         </td>
 
                         <td>
-                            {% if sale.status == "completed" %}
+                            {% if sale.status == "completed" or sale.status == "voided" %}
                                 TZS {{ item.cost_total|floatformat:0|intcomma }}
                             {% else %}
                                 —
@@ -344,7 +295,7 @@
                         </td>
 
                         <td>
-                            {% if sale.status == "completed" %}
+                            {% if sale.status == "completed" or sale.status == "voided" %}
                                 TZS {{ item.profit_amount|floatformat:0|intcomma }}
                             {% else %}
                                 —
@@ -353,7 +304,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <div class="table-empty">
                                 No products were added.
                             </div>
@@ -361,114 +312,68 @@
                     </tr>
                 {% endfor %}
             </tbody>
-
-            {% if sale.items.exists %}
-                <tfoot>
-                    <tr>
-                        <th colspan="5">
-                            Products subtotal
-                        </th>
-
-                        <th>
-                            TZS {{ sale.current_subtotal|floatformat:0|intcomma }}
-                        </th>
-
-                        <th>
-                            {% if sale.status == "completed" %}
-                                TZS {{ sale.total_cost|floatformat:0|intcomma }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </th>
-
-                        <th>
-                            {% if sale.status == "completed" %}
-                                TZS {{ sale.gross_profit|floatformat:0|intcomma }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </th>
-                    </tr>
-                </tfoot>
-            {% endif %}
         </table>
     </div>
 </section>
 
-<section class="card sale-summary-card sale-detail-section">
-    <div class="card-header">
-        <div>
-            <h2>Sale totals</h2>
 
-            <p>
-                Final selling value, payment and balance.
-            </p>
-        </div>
+<section class="card sale-total-card">
+    <div>
+        <span>Subtotal</span>
+        <strong>
+            TZS {{ sale.current_subtotal|floatformat:0|intcomma }}
+        </strong>
     </div>
 
-    <div class="sale-summary">
-        <div>
-            <span>Products subtotal</span>
+    <div>
+        <span>Discount</span>
+        <strong>
+            TZS {{ sale.discount|floatformat:0|intcomma }}
+        </strong>
+    </div>
 
-            <strong>
-                TZS {{ sale.current_subtotal|floatformat:0|intcomma }}
-            </strong>
-        </div>
+    <div class="sale-total-main">
+        <span>Total</span>
+        <strong>
+            TZS {{ sale.current_total|floatformat:0|intcomma }}
+        </strong>
+    </div>
 
-        <div>
-            <span>Overall discount</span>
+    <div>
+        <span>Paid</span>
+        <strong>
+            TZS {{ sale.amount_paid|floatformat:0|intcomma }}
+        </strong>
+    </div>
 
-            <strong>
-                TZS {{ sale.discount|floatformat:0|intcomma }}
-            </strong>
-        </div>
+    <div>
+        <span>Balance</span>
+        <strong>
+            TZS {{ sale.balance_due|floatformat:0|intcomma }}
+        </strong>
+    </div>
 
-        <div class="sale-summary-total">
-            <span>Total amount</span>
-
-            <strong>
-                TZS {{ sale.current_total|floatformat:0|intcomma }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Amount paid</span>
-
-            <strong>
-                TZS {{ sale.amount_paid|floatformat:0|intcomma }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Balance due</span>
-
-            <strong>
-                TZS {{ sale.balance_due|floatformat:0|intcomma }}
-            </strong>
-        </div>
-
-        <div>
-            <span>Customer change</span>
-
-            <strong>
-                TZS {{ sale.change_due|floatformat:0|intcomma }}
-            </strong>
-        </div>
+    <div>
+        <span>Change</span>
+        <strong>
+            TZS {{ sale.change_due|floatformat:0|intcomma }}
+        </strong>
     </div>
 </section>
 
-{% if sale.status == "completed" %}
-    <section class="table-card sale-detail-section">
-        <div class="card-header">
-            <div>
-                <h2>FIFO batch usage</h2>
 
-                <p>
-                    Stock batches consumed by this sale.
-                </p>
-            </div>
+{% if sale.status == "completed" or sale.status == "voided" %}
+<details class="card sale-detail-more">
+    <summary>
+        <div>
+            <strong>FIFO stock usage</strong>
+            <small>View batches consumed by this sale.</small>
         </div>
 
+        <span>+</span>
+    </summary>
+
+    <div class="sale-detail-more-body">
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
@@ -476,9 +381,7 @@
                         <th>Product</th>
                         <th>Batch</th>
                         <th>Source</th>
-                        <th>Reference</th>
-                        <th>Supplier</th>
-                        <th>Quantity used</th>
+                        <th>Qty</th>
                         <th>Unit cost</th>
                         <th>Total cost</th>
                     </tr>
@@ -488,156 +391,85 @@
                     {% for item in sale.items.all %}
                         {% for usage in item.batch_usages.all %}
                             <tr>
-                                <td>
-                                    <strong>
-                                        {{ item.product.name }}
-                                    </strong>
-
-                                    <small class="table-subtitle">
-                                        {{ item.product.code }}
-                                    </small>
-                                </td>
-
-                                <td>
-                                    #{{ usage.batch.id }}
-                                </td>
-
+                                <td>{{ item.product.name }}</td>
+                                <td>#{{ usage.batch.id }}</td>
                                 <td>
                                     {{ usage.batch.get_source_type_display }}
                                 </td>
-
-                                <td>
-                                    {{ usage.batch.source_reference|default:"—" }}
-                                </td>
-
-                                <td>
-                                    {% if usage.batch.supplier %}
-                                        {{ usage.batch.supplier.name }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-
                                 <td>
                                     {{ usage.quantity_used|floatformat:3|intcomma }}
                                 </td>
-
                                 <td>
                                     TZS {{ usage.unit_cost|floatformat:2|intcomma }}
                                 </td>
-
                                 <td>
                                     TZS {{ usage.total_cost|floatformat:0|intcomma }}
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="8">
+                                <td colspan="6">
                                     <div class="table-empty">
-                                        No FIFO batch usage exists
-                                        for {{ item.product.name }}.
+                                        No FIFO usage for
+                                        {{ item.product.name }}.
                                     </div>
                                 </td>
                             </tr>
                         {% endfor %}
-                    {% empty %}
-                        <tr>
-                            <td colspan="8">
-                                <div class="table-empty">
-                                    No sale products exist.
-                                </div>
-                            </td>
-                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </section>
+    </div>
+</details>
 {% endif %}
 
+
 {% if sale.cutting_services.exists %}
-    <section class="table-card sale-detail-section">
-        <div class="card-header">
-            <div>
-                <h2>Customer cutting services</h2>
+<details class="card sale-detail-more">
+    <summary>
+        <div>
+            <strong>Customer cutting services</strong>
 
-                <p>
-                    Cutting income linked to this completed
-                    Timber sale.
-                </p>
-            </div>
-
-            {% if sale.status == "completed" and has_cuttable_items %}
-                <a
-                    href="{% url 'cutting-service-create' sale.pk %}"
-                    class="button button-secondary"
-                >
-                    Add another service
-                </a>
-            {% endif %}
+            <small>
+                TZS {{ cutting_total_fee|default:0|floatformat:0|intcomma }}
+                total ·
+                TZS {{ cutting_total_balance|default:0|floatformat:0|intcomma }}
+                balance
+            </small>
         </div>
 
+        <span>+</span>
+    </summary>
+
+    <div class="sale-detail-more-body">
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Service</th>
-                        <th>Date</th>
-                        <th>Timber product</th>
-                        <th>Pieces cut</th>
-                        <th>Machine cuts</th>
-                        <th>Fee per cut</th>
-                        <th>Total fee</th>
+                        <th>Product</th>
+                        <th>Cuts</th>
+                        <th>Total</th>
                         <th>Paid</th>
                         <th>Balance</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th></th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for service in sale.cutting_services.all %}
                         <tr>
-                            <td>
-                                <strong>
-                                    {{ service.cutting_number }}
-                                </strong>
-                            </td>
-
-                            <td>
-                                {{ service.service_date|date:"d M Y H:i" }}
-                            </td>
-
-                            <td>
-                                <strong>
-                                    {{ service.product.name }}
-                                </strong>
-
-                                <small class="table-subtitle">
-                                    {{ service.product.code }}
-                                </small>
-                            </td>
-
-                            <td>
-                                {{ service.quantity_cut|floatformat:3|intcomma }}
-                            </td>
-
-                            <td>
-                                {{ service.number_of_cuts|intcomma }}
-                            </td>
-
-                            <td>
-                                TZS {{ service.fee_per_cut|floatformat:0|intcomma }}
-                            </td>
-
+                            <td>{{ service.cutting_number }}</td>
+                            <td>{{ service.product.name }}</td>
+                            <td>{{ service.number_of_cuts|intcomma }}</td>
                             <td>
                                 TZS {{ service.current_total_fee|floatformat:0|intcomma }}
                             </td>
-
                             <td>
                                 TZS {{ service.amount_paid|floatformat:0|intcomma }}
                             </td>
-
                             <td>
                                 TZS {{ service.balance_due|floatformat:0|intcomma }}
                             </td>
@@ -667,66 +499,92 @@
                                 </a>
                             </td>
                         </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="11">
-                                <div class="table-empty">
-                                    No cutting services are linked
-                                    to this sale.
-                                </div>
-                            </td>
-                        </tr>
                     {% endfor %}
                 </tbody>
-
-                <tfoot>
-                    <tr>
-                        <th colspan="6">
-                            Cutting service totals
-                        </th>
-
-                        <th>
-                            TZS {{ cutting_total_fee|default:0|floatformat:0|intcomma }}
-                        </th>
-
-                        <th>
-                            TZS {{ cutting_total_paid|default:0|floatformat:0|intcomma }}
-                        </th>
-
-                        <th>
-                            TZS {{ cutting_total_balance|default:0|floatformat:0|intcomma }}
-                        </th>
-
-                        <th colspan="2"></th>
-                    </tr>
-                </tfoot>
             </table>
         </div>
-    </section>
-{% elif sale.status == "completed" and has_cuttable_items %}
-    <section class="card cutting-empty-card">
-        <div class="card-header">
-            <div>
-                <h2>Customer cutting service</h2>
+    </div>
+</details>
 
-                <p>
-                    This sale contains Timber products,
-                    but no cutting service has been recorded.
-                </p>
+{% elif sale.status == "completed" and has_cuttable_items %}
+<section class="card sale-cutting-empty">
+    <div>
+        <strong>Customer cutting</strong>
+        <span>No cutting service recorded yet.</span>
+    </div>
+
+    <a
+        href="{% url 'cutting-service-create' sale.pk %}"
+        class="button button-secondary"
+    >
+        Add cutting
+    </a>
+</section>
+{% endif %}
+
+
+{% if sale.status == "voided" %}
+<section class="sale-voided-box">
+    <div class="sale-voided-top">
+        <span class="badge badge-danger">Voided</span>
+
+        {% if sale.voided_at %}
+            <small>
+                {{ sale.voided_at|date:"d M Y H:i" }}
+            </small>
+        {% endif %}
+    </div>
+
+    <p>
+        <strong>Reason:</strong>
+        {{ sale.void_reason|default:"No reason recorded." }}
+    </p>
+
+    {% if sale.voided_by %}
+        <small>
+            Voided by {{ sale.voided_by }}
+        </small>
+    {% endif %}
+</section>
+
+{% elif sale.status == "completed" %}
+    {% if user.is_superuser or user.role == "admin" %}
+        <section class="sale-void-box">
+            <div class="sale-void-copy">
+                <strong>Void sale</strong>
+
+                <span>
+                    Use only when this completed sale
+                    was entered incorrectly.
+                </span>
             </div>
 
-            <a
-                href="{% url 'cutting-service-create' sale.pk %}"
-                class="button button-primary"
+            <form
+                method="post"
+                action="{% url 'sale-void' sale.pk %}"
+                class="sale-void-form"
+                data-loading-message="Voiding sale"
             >
-                Add cutting service
-            </a>
-        </div>
+                {% csrf_token %}
 
-        <div class="table-empty">
-            Cutting is recorded as separate service income.
-            It does not deduct stock a second time.
-        </div>
-    </section>
+                <textarea
+                    name="void_reason"
+                    rows="2"
+                    minlength="3"
+                    required
+                    placeholder="Reason for voiding..."
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="sale-void-button"
+                    onclick="return confirm('Void this sale and restore its stock?');"
+                >
+                    Void sale
+                </button>
+            </form>
+        </section>
+    {% endif %}
 {% endif %}
+
 {% endblock %}

@@ -1,10 +1,12 @@
 from django.contrib import admin
+
 from .models import (
     CustomerCuttingService,
     Sale,
     SaleItem,
     SaleItemBatchUsage,
 )
+
 
 @admin.register(CustomerCuttingService)
 class CustomerCuttingServiceAdmin(
@@ -57,6 +59,7 @@ class CustomerCuttingServiceAdmin(
 
     date_hierarchy = "service_date"
 
+
 class SaleItemBatchUsageInline(
     admin.TabularInline
 ):
@@ -105,12 +108,15 @@ class SaleAdmin(admin.ModelAdmin):
         "change_due",
         "status",
         "created_by",
+        "voided_by",
+        "voided_at",
     )
 
     list_filter = (
         "status",
         "payment_method",
         "sale_date",
+        "voided_at",
     )
 
     search_fields = (
@@ -118,12 +124,14 @@ class SaleAdmin(admin.ModelAdmin):
         "customer__name",
         "customer__phone",
         "notes",
+        "void_reason",
     )
 
     autocomplete_fields = (
         "customer",
         "created_by",
         "completed_by",
+        "voided_by",
     )
 
     readonly_fields = (
@@ -134,6 +142,9 @@ class SaleAdmin(admin.ModelAdmin):
         "change_due",
         "completed_by",
         "completed_at",
+        "voided_by",
+        "voided_at",
+        "void_reason",
         "created_at",
         "updated_at",
     )
@@ -176,7 +187,4 @@ class SaleItemAdmin(admin.ModelAdmin):
 
     inlines = [
         SaleItemBatchUsageInline,
-        
     ]
-
-    

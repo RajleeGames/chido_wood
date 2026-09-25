@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import void_views
 
 
 urlpatterns = [
@@ -50,11 +51,6 @@ urlpatterns = [
         name="sale-create",
     ),
     path(
-        "<int:pk>/",
-        views.sale_detail,
-        name="sale-detail",
-    ),
-    path(
         "<int:pk>/edit/",
         views.sale_edit,
         name="sale-edit",
@@ -70,8 +66,18 @@ urlpatterns = [
         name="sale-cancel",
     ),
     path(
+        "<int:pk>/void/",
+        void_views.sale_void,
+        name="sale-void",
+    ),
+    path(
         "<int:pk>/receipt/",
         views.sale_receipt,
         name="sale-receipt",
+    ),
+    path(
+        "<int:pk>/",
+        views.sale_detail,
+        name="sale-detail",
     ),
 ]

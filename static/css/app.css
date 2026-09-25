@@ -5427,3 +5427,318 @@ a.dashboard-activity-item:hover {
         flex: 1 1 100px;
     }
 }
+
+/* =========================================================
+   SALE DETAIL
+   Paste this at the VERY BOTTOM of static/css/app.css
+   ========================================================= */
+
+.sale-detail-card,
+.sale-detail-section,
+.sale-total-card,
+.sale-detail-more,
+.sale-cutting-empty,
+.sale-void-box,
+.sale-voided-box {
+    margin-bottom: 14px;
+}
+
+.sale-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 7px 15px 15px;
+}
+
+.sale-detail-grid > div {
+    display: grid;
+    gap: 4px;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sale-detail-grid span,
+.sale-total-card span {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.sale-detail-grid strong,
+.sale-total-card strong {
+    color: var(--heading);
+    font-size: 10.5px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.sale-detail-full {
+    grid-column: 1 / -1;
+}
+
+
+/* Sale totals */
+
+.sale-total-card {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    overflow: hidden;
+}
+
+.sale-total-card > div {
+    display: grid;
+    gap: 4px;
+    padding: 12px 13px;
+    border-right: 1px solid var(--border);
+}
+
+.sale-total-card > div:last-child {
+    border-right: 0;
+}
+
+.sale-total-main {
+    background: var(--primary-soft);
+}
+
+.sale-total-main strong {
+    color: var(--primary);
+    font-size: 13px;
+}
+
+
+/* Collapsible FIFO / cutting */
+
+.sale-detail-more {
+    overflow: hidden;
+}
+
+.sale-detail-more summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 15px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.sale-detail-more summary::-webkit-details-marker {
+    display: none;
+}
+
+.sale-detail-more summary div {
+    display: grid;
+    gap: 2px;
+}
+
+.sale-detail-more summary strong {
+    color: var(--heading);
+    font-size: 11px;
+}
+
+.sale-detail-more summary small {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.sale-detail-more summary > span {
+    color: var(--primary);
+    font-size: 18px;
+    line-height: 1;
+    transition: transform .15s ease;
+}
+
+.sale-detail-more[open] summary > span {
+    transform: rotate(45deg);
+}
+
+.sale-detail-more-body {
+    border-top: 1px solid var(--border);
+}
+
+
+/* Cutting empty */
+
+.sale-cutting-empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.sale-cutting-empty > div {
+    display: grid;
+    gap: 2px;
+}
+
+.sale-cutting-empty strong {
+    color: var(--heading);
+    font-size: 11px;
+}
+
+.sale-cutting-empty span {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+
+/* Small void section at bottom */
+
+.sale-void-box {
+    display: grid;
+    grid-template-columns:
+        minmax(160px, .35fr)
+        minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 11px 13px;
+    background: #fffafa;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+}
+
+.sale-void-copy {
+    display: grid;
+    gap: 2px;
+}
+
+.sale-void-copy strong {
+    color: var(--danger);
+    font-size: 11px;
+}
+
+.sale-void-copy span {
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.sale-void-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+.sale-void-form textarea {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 9px;
+    color: var(--text);
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    outline: none;
+    resize: vertical;
+    font-size: 10.5px;
+}
+
+.sale-void-form textarea:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .08);
+}
+
+.sale-void-button {
+    min-height: 38px;
+    padding: 7px 13px;
+    color: #ffffff;
+    background: #b91c1c;
+    border: 1px solid #b91c1c;
+    border-radius: 7px;
+    font-size: 10.5px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.sale-void-button:hover {
+    background: #991b1b;
+    border-color: #991b1b;
+}
+
+
+/* Voided audit */
+
+.sale-voided-box {
+    padding: 11px 13px;
+    background: #fffafa;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+}
+
+.sale-voided-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.sale-voided-top small,
+.sale-voided-box > small {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.sale-voided-box p {
+    margin: 8px 0 3px;
+    color: var(--text);
+    font-size: 10px;
+}
+
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+    .sale-detail-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .sale-total-card {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .sale-total-card > div {
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+@media (max-width: 720px) {
+    .sale-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sale-detail-full {
+        grid-column: auto;
+    }
+
+    .sale-total-card {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .sale-void-box {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .sale-total-card {
+        grid-template-columns: 1fr;
+    }
+
+    .sale-total-card > div {
+        border-right: 0;
+    }
+
+    .sale-void-form {
+        grid-template-columns: 1fr;
+    }
+
+    .sale-void-button {
+        width: 100%;
+    }
+
+    .sale-cutting-empty {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

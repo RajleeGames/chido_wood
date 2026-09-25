@@ -137,6 +137,15 @@ Sales | CHIDO Wood ERP
                 >
                     Cancelled
                 </option>
+
+                <option
+                    value="voided"
+                    {% if status_filter == "voided" %}
+                        selected
+                    {% endif %}
+                >
+                    Voided
+                </option>
             </select>
 
             <select
@@ -257,6 +266,10 @@ Sales | CHIDO Wood ERP
                             {% elif sale.status == "draft" %}
                                 <span class="badge badge-warning">
                                     Draft
+                                </span>
+                            {% elif sale.status == "voided" %}
+                                <span class="badge badge-danger">
+                                    Voided
                                 </span>
                             {% else %}
                                 <span class="badge badge-danger">

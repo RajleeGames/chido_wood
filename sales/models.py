@@ -23,6 +23,7 @@ def generate_sale_number():
 
     return f"SALE-{date_part}-{random_part}"
 
+
 def generate_cutting_service_number():
     date_part = timezone.localdate().strftime(
         "%Y%m%d"
@@ -38,6 +39,7 @@ class Sale(models.Model):
         DRAFT = "draft", "Draft"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
+        VOIDED = "voided", "Voided"
 
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Cash"
@@ -148,6 +150,24 @@ class Sale(models.Model):
         blank=True,
     )
 
+    voided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="voided_sales",
+        null=True,
+        blank=True,
+    )
+
+    voided_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+
+    void_reason = models.TextField(
+        blank=True,
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
@@ -193,6 +213,13 @@ class Sale(models.Model):
         return self.sale_number
 
     @property
+    def is_voided(self):
+        return (
+            self.status == self.Status.VOIDED
+            and self.voided_at is not None
+        )
+
+    @property
     def calculated_subtotal(self):
         return sum(
             (
@@ -216,20 +243,29 @@ class Sale(models.Model):
 
     @property
     def current_subtotal(self):
-        if self.status == self.Status.COMPLETED:
+        if self.status in {
+            self.Status.COMPLETED,
+            self.Status.VOIDED,
+        }:
             return self.subtotal
 
         return self.calculated_subtotal
 
     @property
     def current_total(self):
-        if self.status == self.Status.COMPLETED:
+        if self.status in {
+            self.Status.COMPLETED,
+            self.Status.VOIDED,
+        }:
             return self.total_amount
 
         return self.calculated_total
 
     @property
     def balance_due(self):
+        if self.status == self.Status.VOIDED:
+            return ZERO_MONEY
+
         balance = (
             self.current_total
             - self.amount_paid
@@ -242,6 +278,9 @@ class Sale(models.Model):
 
     @property
     def payment_status(self):
+        if self.status == self.Status.VOIDED:
+            return "Voided"
+
         if self.current_total <= ZERO_MONEY:
             return "Unpaid"
 
@@ -263,25 +302,22 @@ class Sale(models.Model):
             ZERO_MONEY,
         )
 
-
-
     @property
     def total_cost(self):
-      return sum(
-        (
-            item.cost_total
-            for item in self.items.all()
-        ),
-        ZERO_MONEY,
-    )
-
+        return sum(
+            (
+                item.cost_total
+                for item in self.items.all()
+            ),
+            ZERO_MONEY,
+        )
 
     @property
     def net_profit(self):
-       return (
-        self.gross_profit
-        - self.discount
-    )
+        return (
+            self.gross_profit
+            - self.discount
+        )
 
 
 class SaleItem(models.Model):
