@@ -8,56 +8,99 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
 from xhtml2pdf import pisa
 
-from .forms import DocumentForm, DocumentItemFormSet
-from .models import BusinessProfile, Document
+from .forms import (
+    DocumentForm,
+    DocumentItemFormSet,
+)
+from .models import (
+    BusinessProfile,
+    Document,
+)
 
 
 PRINT_EMPTY_ROWS = 6
 
 
+# ================================================================
+# VALID DOCUMENT TYPES
+# ================================================================
+
+VALID_DOCUMENT_TYPES = {
+    Document.DocumentType.INVOICE,
+    Document.DocumentType.PROFORMA_INVOICE,
+    Document.DocumentType.DELIVERY_NOTE,
+}
+
+
+# ================================================================
+# BUSINESS INFORMATION
+# ================================================================
+
 def business_context():
-    business = BusinessProfile.get_solo()
+    business = (
+        BusinessProfile.get_solo()
+    )
 
     bank_accounts = list(
         business.bank_accounts
-        .filter(is_active=True)
-        .order_by("sort_order", "pk")[:2]
+        .filter(
+            is_active=True
+        )
+        .order_by(
+            "sort_order",
+            "pk",
+        )[:2]
     )
 
-    return business, bank_accounts
+    return (
+        business,
+        bank_accounts,
+    )
 
 
-def build_document_context(document):
-    business, bank_accounts = business_context()
+# ================================================================
+# COMMON DOCUMENT CONTEXT
+# ================================================================
+
+def build_document_context(
+    document,
+):
+    business, bank_accounts = (
+        business_context()
+    )
 
     items = list(
         document.items.all()
     )
 
-    # Always show exactly SIX clean empty ruled rows
-    # after the real items, as requested.
-    #
-    # Example:
-    # 3 real items -> 3 rows + 6 blank rows
-    # 8 real items -> 8 rows + 6 blank rows
-    #
-    # This makes the A4 document look fuller/longer without
-    # creating fake DocumentItem records in the database.
     return {
         "document": document,
         "business": business,
         "bank_accounts": bank_accounts,
         "items": items,
-        "blank_rows": range(PRINT_EMPTY_ROWS),
+
+        # Keep the same document look currently used in the repo.
+        "blank_rows": range(
+            PRINT_EMPTY_ROWS
+        ),
     }
 
+
+# ================================================================
+# DOCUMENT LIST
+# ================================================================
 
 @login_required
 def document_list(request):
@@ -73,20 +116,29 @@ def document_list(request):
 
     documents = (
         Document.objects
-        .select_related("created_by")
+        .select_related(
+            "created_by"
+        )
         .all()
     )
 
     if query:
         documents = documents.filter(
-            Q(document_number__icontains=query)
-            | Q(customer_name__icontains=query)
+            Q(
+                document_number__icontains=query
+            )
+            | Q(
+                customer_name__icontains=query
+            )
+            | Q(
+                customer_phone__icontains=query
+            )
+            | Q(
+                subject__icontains=query
+            )
         )
 
-    if type_filter in {
-        Document.DocumentType.INVOICE,
-        Document.DocumentType.DELIVERY_NOTE,
-    }:
+    if type_filter in VALID_DOCUMENT_TYPES:
         documents = documents.filter(
             document_type=type_filter
         )
@@ -98,20 +150,44 @@ def document_list(request):
             "documents": documents,
             "query": query,
             "document_type": type_filter,
-            "page_title": "Invoices & Delivery Notes",
+            "page_title": (
+                "Invoices, Proformas & Delivery Notes"
+            ),
         },
     )
 
 
+# ================================================================
+# CREATE DOCUMENT
+# ================================================================
+
 @login_required
 @transaction.atomic
 def document_create(request):
+
+    requested_type = (
+        request.GET.get(
+            "type",
+            "",
+        ).strip()
+    )
+
+    if (
+        requested_type
+        not in VALID_DOCUMENT_TYPES
+    ):
+        requested_type = (
+            Document.DocumentType.INVOICE
+        )
+
     document = Document(
         created_by=request.user,
         date=timezone.localdate(),
+        document_type=requested_type,
     )
 
     if request.method == "POST":
+
         form = DocumentForm(
             request.POST,
             instance=document,
@@ -123,15 +199,21 @@ def document_create(request):
             prefix="items",
         )
 
-        if form.is_valid() and formset.is_valid():
+        if (
+            form.is_valid()
+            and formset.is_valid()
+        ):
             document = form.save(
                 commit=False
             )
 
-            document.created_by = request.user
+            document.created_by = (
+                request.user
+            )
 
             document.document_number = (
-                Document.allocate_document_number(
+                Document
+                .allocate_document_number(
                     document.document_type
                 )
             )
@@ -141,12 +223,17 @@ def document_create(request):
             formset.instance = document
             formset.save()
 
+            # Rebuild clean item ordering.
             for index, item in enumerate(
                 document.items.all(),
                 start=1,
             ):
-                if item.sort_order != index:
+                if (
+                    item.sort_order
+                    != index
+                ):
                     item.sort_order = index
+
                     item.save(
                         update_fields=[
                             "sort_order",
@@ -157,7 +244,8 @@ def document_create(request):
                 request,
                 (
                     f"{document.get_document_type_display()} "
-                    f"{document.display_document_number} saved."
+                    f"{document.display_document_number} "
+                    f"saved."
                 ),
             )
 
@@ -165,6 +253,7 @@ def document_create(request):
                 "document-preview",
                 pk=document.pk,
             )
+
     else:
         form = DocumentForm(
             instance=document,
@@ -182,20 +271,30 @@ def document_create(request):
             "form": form,
             "formset": formset,
             "document": document,
-            "page_title": "Create document",
+            "page_title": (
+                "Create document"
+            ),
         },
     )
 
 
+# ================================================================
+# EDIT DOCUMENT
+# ================================================================
+
 @login_required
 @transaction.atomic
-def document_edit(request, pk):
+def document_edit(
+    request,
+    pk,
+):
     document = get_object_or_404(
         Document,
         pk=pk,
     )
 
     if request.method == "POST":
+
         form = DocumentForm(
             request.POST,
             instance=document,
@@ -207,7 +306,10 @@ def document_edit(request, pk):
             prefix="items",
         )
 
-        if form.is_valid() and formset.is_valid():
+        if (
+            form.is_valid()
+            and formset.is_valid()
+        ):
             form.save()
             formset.save()
 
@@ -215,8 +317,12 @@ def document_edit(request, pk):
                 document.items.all(),
                 start=1,
             ):
-                if item.sort_order != index:
+                if (
+                    item.sort_order
+                    != index
+                ):
                     item.sort_order = index
+
                     item.save(
                         update_fields=[
                             "sort_order",
@@ -232,6 +338,7 @@ def document_edit(request, pk):
                 "document-preview",
                 pk=document.pk,
             )
+
     else:
         form = DocumentForm(
             instance=document,
@@ -251,14 +358,22 @@ def document_edit(request, pk):
             "document": document,
             "page_title": (
                 f"Edit "
+                f"{document.get_document_type_display()} "
                 f"{document.display_document_number}"
             ),
         },
     )
 
 
+# ================================================================
+# PREVIEW DOCUMENT
+# ================================================================
+
 @login_required
-def document_preview(request, pk):
+def document_preview(
+    request,
+    pk,
+):
     document = get_object_or_404(
         Document.objects.prefetch_related(
             "items"
@@ -266,8 +381,10 @@ def document_preview(request, pk):
         pk=pk,
     )
 
-    context = build_document_context(
-        document
+    context = (
+        build_document_context(
+            document
+        )
     )
 
     context.update(
@@ -277,11 +394,14 @@ def document_preview(request, pk):
                     reverse(
                         "document-public-pdf",
                         kwargs={
-                            "token": document.share_token
+                            "token": (
+                                document.share_token
+                            )
                         },
                     )
                 )
             ),
+
             "page_title": (
                 f"{document.get_document_type_display()} "
                 f"{document.display_document_number}"
@@ -296,29 +416,58 @@ def document_preview(request, pk):
     )
 
 
-def link_callback(uri, rel):
-    parsed = urlparse(uri)
-    path = parsed.path or uri
+# ================================================================
+# XHTML2PDF STATIC / MEDIA FILE RESOLUTION
+# ================================================================
+
+def link_callback(
+    uri,
+    rel,
+):
+    parsed = urlparse(
+        uri
+    )
+
+    path = (
+        parsed.path
+        or uri
+    )
+
+    # ------------------------------------------------------------
+    # MEDIA FILES
+    # ------------------------------------------------------------
 
     if path.startswith(
         settings.MEDIA_URL
     ):
         relative = path[
-            len(settings.MEDIA_URL):
+            len(
+                settings.MEDIA_URL
+            ):
         ]
 
         absolute = (
-            Path(settings.MEDIA_ROOT)
+            Path(
+                settings.MEDIA_ROOT
+            )
             / relative
         )
 
-        return str(absolute)
+        return str(
+            absolute
+        )
+
+    # ------------------------------------------------------------
+    # STATIC FILES
+    # ------------------------------------------------------------
 
     if path.startswith(
         settings.STATIC_URL
     ):
         relative = path[
-            len(settings.STATIC_URL):
+            len(
+                settings.STATIC_URL
+            ):
         ]
 
         for directory in getattr(
@@ -327,12 +476,16 @@ def link_callback(uri, rel):
             [],
         ):
             candidate = (
-                Path(directory)
+                Path(
+                    directory
+                )
                 / relative
             )
 
             if candidate.exists():
-                return str(candidate)
+                return str(
+                    candidate
+                )
 
         static_root = getattr(
             settings,
@@ -342,19 +495,31 @@ def link_callback(uri, rel):
 
         if static_root:
             candidate = (
-                Path(static_root)
+                Path(
+                    static_root
+                )
                 / relative
             )
 
             if candidate.exists():
-                return str(candidate)
+                return str(
+                    candidate
+                )
 
     return uri
 
 
-def render_pdf(document):
-    context = build_document_context(
-        document
+# ================================================================
+# RENDER PDF
+# ================================================================
+
+def render_pdf(
+    document,
+):
+    context = (
+        build_document_context(
+            document
+        )
     )
 
     html = get_template(
@@ -380,8 +545,15 @@ def render_pdf(document):
     return output.getvalue()
 
 
+# ================================================================
+# AUTHENTICATED PDF DOWNLOAD
+# ================================================================
+
 @login_required
-def document_pdf(request, pk):
+def document_pdf(
+    request,
+    pk,
+):
     document = get_object_or_404(
         Document.objects.prefetch_related(
             "items"
@@ -393,6 +565,7 @@ def document_pdf(request, pk):
         pdf = render_pdf(
             document
         )
+
     except Exception as exc:
         return HttpResponse(
             (
@@ -400,11 +573,21 @@ def document_pdf(request, pk):
                 f"{exc}"
             ),
             status=500,
-            content_type="text/plain",
+            content_type=(
+                "text/plain"
+            ),
         )
 
+    filename_type = (
+        document.document_type
+        .replace(
+            "_",
+            "-",
+        )
+    )
+
     filename = (
-        f"{document.document_type}-"
+        f"{filename_type}-"
         f"{document.display_document_number}.pdf"
     ).replace(
         "/",
@@ -413,7 +596,9 @@ def document_pdf(request, pk):
 
     response = HttpResponse(
         pdf,
-        content_type="application/pdf",
+        content_type=(
+            "application/pdf"
+        ),
     )
 
     response[
@@ -425,7 +610,14 @@ def document_pdf(request, pk):
     return response
 
 
-def public_document_pdf(request, token):
+# ================================================================
+# PUBLIC SHARE PDF
+# ================================================================
+
+def public_document_pdf(
+    request,
+    token,
+):
     document = get_object_or_404(
         Document.objects.prefetch_related(
             "items"
@@ -437,13 +629,22 @@ def public_document_pdf(request, token):
         pdf = render_pdf(
             document
         )
+
     except Exception:
         raise Http404(
             "Document could not be generated."
         )
 
+    filename_type = (
+        document.document_type
+        .replace(
+            "_",
+            "-",
+        )
+    )
+
     filename = (
-        f"{document.document_type}-"
+        f"{filename_type}-"
         f"{document.display_document_number}.pdf"
     ).replace(
         "/",
@@ -452,7 +653,9 @@ def public_document_pdf(request, token):
 
     response = HttpResponse(
         pdf,
-        content_type="application/pdf",
+        content_type=(
+            "application/pdf"
+        ),
     )
 
     response[
@@ -470,9 +673,16 @@ def public_document_pdf(request, token):
     return response
 
 
+# ================================================================
+# DELETE DOCUMENT
+# ================================================================
+
 @login_required
 @require_POST
-def document_delete(request, pk):
+def document_delete(
+    request,
+    pk,
+):
     document = get_object_or_404(
         Document,
         pk=pk,

@@ -11,38 +11,75 @@ class BusinessProfile(models.Model):
         max_length=180,
         default="CHIDO WOOD PRODUCT",
     )
+
     logo = models.ImageField(
         upload_to="documents/company/",
         blank=True,
         null=True,
-        help_text="Logo used on invoices and delivery notes.",
+        help_text=(
+            "Logo used on invoices, proforma invoices "
+            "and delivery notes."
+        ),
     )
-    email = models.EmailField(blank=True)
-    phone_1 = models.CharField(max_length=40, blank=True)
-    phone_2 = models.CharField(max_length=40, blank=True)
-    address = models.CharField(max_length=255, blank=True)
-    tin = models.CharField("TIN", max_length=80, blank=True)
-    vrn = models.CharField("VRN", max_length=80, blank=True)
 
-    # Automatic document-number counters.
+    email = models.EmailField(
+        blank=True,
+    )
+
+    phone_1 = models.CharField(
+        max_length=40,
+        blank=True,
+    )
+
+    phone_2 = models.CharField(
+        max_length=40,
+        blank=True,
+    )
+
+    address = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    tin = models.CharField(
+        "TIN",
+        max_length=80,
+        blank=True,
+    )
+
+    vrn = models.CharField(
+        "VRN",
+        max_length=80,
+        blank=True,
+    )
+
+    # =========================================================
+    # AUTOMATIC DOCUMENT NUMBER COUNTERS
+    # =========================================================
+
     next_invoice_number = models.PositiveBigIntegerField(
         default=1,
         editable=False,
     )
+
+    next_proforma_invoice_number = models.PositiveBigIntegerField(
+        default=1,
+        editable=False,
+    )
+
     next_delivery_note_number = models.PositiveBigIntegerField(
         default=1,
         editable=False,
     )
 
-    # Kept for compatibility with the first version of the module.
-    # It is intentionally not printed on the new A4 layout because
-    # the bank-account block is the clean document footer.
     footer_note = models.TextField(
         blank=True,
         default="Thank you for doing business with us.",
     )
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         verbose_name = "Business profile"
@@ -53,8 +90,16 @@ class BusinessProfile(models.Model):
 
     @classmethod
     def get_solo(cls):
-        obj = cls.objects.order_by("pk").first()
-        return obj or cls.objects.create()
+        obj = (
+            cls.objects
+            .order_by("pk")
+            .first()
+        )
+
+        return (
+            obj
+            or cls.objects.create()
+        )
 
 
 class BankAccount(models.Model):
@@ -63,27 +108,72 @@ class BankAccount(models.Model):
         on_delete=models.CASCADE,
         related_name="bank_accounts",
     )
-    bank_name = models.CharField(max_length=100)
-    account_name = models.CharField(max_length=180)
-    account_number = models.CharField(max_length=100)
-    sort_order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+
+    bank_name = models.CharField(
+        max_length=100,
+    )
+
+    account_name = models.CharField(
+        max_length=180,
+    )
+
+    account_number = models.CharField(
+        max_length=100,
+    )
+
+    sort_order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
 
     class Meta:
-        ordering = ["sort_order", "pk"]
+        ordering = [
+            "sort_order",
+            "pk",
+        ]
 
     def __str__(self):
-        return f"{self.bank_name} - {self.account_number}"
+        return (
+            f"{self.bank_name} - "
+            f"{self.account_number}"
+        )
 
 
 class Document(models.Model):
+
+    # =========================================================
+    # DOCUMENT TYPES
+    # =========================================================
+
     class DocumentType(models.TextChoices):
-        INVOICE = "invoice", "Invoice"
-        DELIVERY_NOTE = "delivery_note", "Delivery Note"
+        INVOICE = (
+            "invoice",
+            "Invoice",
+        )
+
+        PROFORMA_INVOICE = (
+            "proforma_invoice",
+            "Proforma Invoice",
+        )
+
+        DELIVERY_NOTE = (
+            "delivery_note",
+            "Delivery Note",
+        )
 
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        ISSUED = "issued", "Issued"
+        DRAFT = (
+            "draft",
+            "Draft",
+        )
+
+        ISSUED = (
+            "issued",
+            "Issued",
+        )
 
     document_type = models.CharField(
         max_length=20,
@@ -91,26 +181,62 @@ class Document(models.Model):
         default=DocumentType.INVOICE,
     )
 
-    # This is now assigned automatically on first save:
-    # 00001, 00002, 00003, ...
+    # Assigned automatically.
+    #
+    # Each document type has its own independent sequence:
+    #
+    # Invoice:
+    # 00001, 00002...
+    #
+    # Proforma:
+    # 00001, 00002...
+    #
+    # Delivery Note:
+    # 00001, 00002...
     document_number = models.CharField(
         max_length=60,
         editable=False,
     )
 
     date = models.DateField()
-    customer_name = models.CharField(max_length=180)
-    customer_phone = models.CharField(max_length=50, blank=True)
-    customer_address = models.CharField(max_length=255, blank=True)
-    customer_reference = models.CharField(max_length=120, blank=True)
-    subject = models.CharField(max_length=180, blank=True)
-    notes = models.TextField(blank=True)
+
+    customer_name = models.CharField(
+        max_length=180,
+    )
+
+    customer_phone = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    customer_address = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    customer_reference = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+
+    subject = models.CharField(
+        max_length=180,
+        blank=True,
+    )
+
+    notes = models.TextField(
+        blank=True,
+    )
 
     vat_percent = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=Decimal("0.00"),
-        validators=[MinValueValidator(Decimal("0.00"))],
+        validators=[
+            MinValueValidator(
+                Decimal("0.00")
+            )
+        ],
     )
 
     status = models.CharField(
@@ -131,15 +257,29 @@ class Document(models.Model):
         related_name="manual_documents",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
-        ordering = ["-date", "-pk"]
+        ordering = [
+            "-date",
+            "-pk",
+        ]
+
         constraints = [
             models.UniqueConstraint(
-                fields=["document_type", "document_number"],
-                name="uniq_manual_document_number_by_type",
+                fields=[
+                    "document_type",
+                    "document_number",
+                ],
+                name=(
+                    "uniq_manual_document_number_by_type"
+                ),
             )
         ]
 
@@ -149,18 +289,24 @@ class Document(models.Model):
             f"{self.document_number}"
         )
 
+    # =========================================================
+    # DISPLAY NUMBER
+    # =========================================================
+
     @property
     def display_document_number(self):
         """
-        Display numeric document numbers with five digits.
+        Display numeric document numbers using five digits.
 
         Examples:
+
         1     -> 00001
         25    -> 00025
         00042 -> 00042
 
-        Non-numeric legacy references are left unchanged.
+        Legacy non-numeric numbers remain untouched.
         """
+
         value = str(
             self.document_number
             or ""
@@ -171,6 +317,10 @@ class Document(models.Model):
 
         return value
 
+    # =========================================================
+    # DOCUMENT TYPE HELPERS
+    # =========================================================
+
     @property
     def is_invoice(self):
         return (
@@ -179,18 +329,54 @@ class Document(models.Model):
         )
 
     @property
+    def is_proforma_invoice(self):
+        return (
+            self.document_type
+            == self.DocumentType.PROFORMA_INVOICE
+        )
+
+    @property
+    def is_delivery_note(self):
+        return (
+            self.document_type
+            == self.DocumentType.DELIVERY_NOTE
+        )
+
+    @property
+    def has_prices(self):
+        """
+        Invoice and Proforma Invoice both show:
+        - unit price
+        - line total
+        - VAT
+        - grand total
+
+        Delivery Note does not.
+        """
+
+        return self.document_type in {
+            self.DocumentType.INVOICE,
+            self.DocumentType.PROFORMA_INVOICE,
+        }
+
+    # =========================================================
+    # TOTALS
+    # =========================================================
+
+    @property
     def subtotal(self):
         return sum(
             (
                 item.line_total
-                for item in self.items.all()
+                for item
+                in self.items.all()
             ),
             Decimal("0.00"),
         )
 
     @property
     def vat_amount(self):
-        if not self.is_invoice:
+        if not self.has_prices:
             return Decimal("0.00")
 
         return (
@@ -203,7 +389,7 @@ class Document(models.Model):
 
     @property
     def grand_total(self):
-        if not self.is_invoice:
+        if not self.has_prices:
             return Decimal("0.00")
 
         return (
@@ -211,21 +397,33 @@ class Document(models.Model):
             + self.vat_amount
         )
 
+    # =========================================================
+    # NUMBER ALLOCATION
+    # =========================================================
+
     @classmethod
     def allocate_document_number(
         cls,
         document_type,
     ):
         """
-        Allocate a five-digit number safely inside the caller's
-        transaction.
+        Allocate a five-digit number safely.
 
-        Invoice and Delivery Note have separate counters.
+        Each type has its own sequence:
 
-        Existing purely numeric document numbers are also checked
-        so upgrading from the first module cannot accidentally reuse
-        a number that already exists.
+        Invoice:
+            next_invoice_number
+
+        Proforma Invoice:
+            next_proforma_invoice_number
+
+        Delivery Note:
+            next_delivery_note_number
+
+        Existing numeric numbers are also checked to prevent
+        accidental reuse.
         """
+
         profile = (
             BusinessProfile.objects
             .select_for_update()
@@ -234,12 +432,22 @@ class Document(models.Model):
         )
 
         if profile is None:
-            profile = BusinessProfile.objects.create()
+            profile = (
+                BusinessProfile.objects
+                .create()
+            )
+
             profile = (
                 BusinessProfile.objects
                 .select_for_update()
-                .get(pk=profile.pk)
+                .get(
+                    pk=profile.pk
+                )
             )
+
+        # -----------------------------------------------------
+        # Select the correct counter.
+        # -----------------------------------------------------
 
         if (
             document_type
@@ -248,6 +456,15 @@ class Document(models.Model):
             counter_field = (
                 "next_delivery_note_number"
             )
+
+        elif (
+            document_type
+            == cls.DocumentType.PROFORMA_INVOICE
+        ):
+            counter_field = (
+                "next_proforma_invoice_number"
+            )
+
         else:
             counter_field = (
                 "next_invoice_number"
@@ -264,6 +481,10 @@ class Document(models.Model):
             ),
             1,
         )
+
+        # -----------------------------------------------------
+        # Find highest existing numeric number for this type.
+        # -----------------------------------------------------
 
         highest_existing = 0
 
@@ -293,6 +514,10 @@ class Document(models.Model):
             counter_value,
             highest_existing + 1,
         )
+
+        # -----------------------------------------------------
+        # Move counter forward.
+        # -----------------------------------------------------
 
         setattr(
             profile,
